@@ -69,6 +69,15 @@
         .btn-add:hover { background-color: #2ecc71; }
         .btn-add:disabled { background-color: #95a5a6; cursor: not-allowed; }
         
+        .btn-cancel { background-color: #e74c3c; display: none; margin-left: 10px; }
+        .btn-cancel:hover { background-color: #c0392b; }
+        .btn-delete { background-color: #f39c12; margin-bottom: 15px; margin-left: 10px; }
+        .btn-delete:hover { background-color: #d35400; }
+        .btn-confirm { background-color: #c0392b; display: none; margin-left: 10px; }
+        .btn-confirm:hover { background-color: #922b21; }
+        .checkbox-del { transform: scale(1.5); cursor: pointer; }
+        .hide-col { display: none; }
+        
         /* Ẩn/Hiện Tab */
         .tab-content { display: none; }
         .tab-active { display: block; }
@@ -88,19 +97,25 @@
         <!-- Bảng Thành Viên -->
         <div id="tab-members" class="box tab-content tab-active">
             <h2>Danh Sách Thành Viên</h2>
-            <button id="btnAddMember" class="btn btn-add">➕ Thêm Thành Viên Mới</button>
+            <div style="margin-bottom: 15px;">
+                <button id="btnAddMember" class="btn btn-add">➕ Thêm Thành Viên Mới</button>
+                <button id="btnCancelAdd" class="btn btn-cancel">❌ Hủy thêm</button>
+                <button id="btnToggleDelete" class="btn btn-delete">🗑️ Xóa thành viên</button>
+                <button id="btnConfirmDelete" class="btn btn-confirm">⚠️ Xác nhận xóa</button>
+            </div>
             <p id="addStatus" style="color: #e67e22; font-weight: bold; display: none;">⏳ Đang chờ quét thẻ trên thiết bị (Đèn RGB đang nháy xanh)...</p>
             
             <table>
                 <thead>
                     <tr>
+                        <th class="delete-col hide-col">Chọn</th>
                         <th>UID Thẻ</th>
                         <th>Họ và Tên</th>
                         <th>Mã Số</th>
                     </tr>
                 </thead>
                 <tbody id="membersTable">
-                    <tr><td colspan="3" class="empty-row">Đang tải dữ liệu...</td></tr>
+                    <tr><td colspan="4" class="empty-row">Đang tải dữ liệu...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -114,10 +129,11 @@
                         <th>Thời Gian</th>
                         <th>Họ và Tên</th>
                         <th>UID Thẻ</th>
+                        <th>Trạng Thái</th>
                     </tr>
                 </thead>
                 <tbody id="attendanceTable">
-                    <tr><td colspan="3" class="empty-row">Đang tải dữ liệu...</td></tr>
+                    <tr><td colspan="4" class="empty-row">Đang tải dữ liệu...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -126,8 +142,8 @@
     <!-- Tải Firebase SDK (Modular v9+) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        // Bổ sung import lệnh 'set' để ghi dữ liệu
-        import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        // Import thêm lệnh 'remove' để xóa dữ liệu
+        import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD8UhkdBIf2WF9EWXGaXRAgjLORrT3E450",
@@ -138,8 +154,9 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         let membersData = {};
+        let isDeleteMode = false;
 
-        // === CHỨC NĂNG MENU CHUYỂN TAB ===
+        // === GIAO DIỆN CHUYỂN TAB ===
         window.switchTab = function(tabName) {
             document.getElementById('tab-members').classList.remove('tab-active');
             document.getElementById('tab-history').classList.remove('tab-active');
@@ -155,94 +172,148 @@
             }
         };
 
-        // === CHỨC NĂNG THÊM THÀNH VIÊN ===
+        // === CÁC NÚT ĐIỀU KHIỂN ===
         const btnAdd = document.getElementById('btnAddMember');
+        const btnCancelAdd = document.getElementById('btnCancelAdd');
+        const btnToggleDelete = document.getElementById('btnToggleDelete');
+        const btnConfirmDelete = document.getElementById('btnConfirmDelete');
         const addStatus = document.getElementById('addStatus');
 
+        // Bắt đầu quy trình thêm
         btnAdd.addEventListener('click', () => {
-            // Ghi lệnh kích hoạt chế độ thêm thẻ xuống Firebase để ESP nhận
             set(ref(db, 'Command/mode'), 1);
-            set(ref(db, 'Command/new_uid'), ""); // Reset uid chờ sẵn
-            
+            set(ref(db, 'Command/new_uid'), ""); 
             addStatus.style.display = "block";
-            btnAdd.disabled = true;
+            btnAdd.style.display = "none";
+            btnCancelAdd.style.display = "inline-block";
         });
 
-        // Lắng nghe thẻ mới từ mạch ESP32
+        // Hủy quy trình thêm
+        btnCancelAdd.addEventListener('click', () => {
+            set(ref(db, 'Command/mode'), 0);
+            set(ref(db, 'Command/new_uid'), ""); 
+            addStatus.style.display = "none";
+            btnAdd.style.display = "inline-block";
+            btnCancelAdd.style.display = "none";
+        });
+
+        // Bật/Tắt chế độ Xóa
+        btnToggleDelete.addEventListener('click', () => {
+            isDeleteMode = !isDeleteMode;
+            btnConfirmDelete.style.display = isDeleteMode ? "inline-block" : "none";
+            btnToggleDelete.innerText = isDeleteMode ? "🔙 Thoát chế độ xóa" : "🗑️ Xóa thành viên";
+            
+            // Hiện/Ẩn cột checkbox
+            const cols = document.querySelectorAll('.delete-col');
+            cols.forEach(col => isDeleteMode ? col.classList.remove('hide-col') : col.classList.add('hide-col'));
+        });
+
+        // Xác nhận xóa các thẻ đã đánh dấu
+        btnConfirmDelete.addEventListener('click', () => {
+            const checkboxes = document.querySelectorAll('.checkbox-del:checked');
+            if(checkboxes.length === 0) {
+                alert("Vui lòng chọn ít nhất 1 thành viên để xóa!");
+                return;
+            }
+            if(confirm(`Bạn chắc chắn muốn xóa ${checkboxes.length} thành viên? Toàn bộ dữ liệu điểm danh của họ cũng sẽ bị xóa.`)) {
+                checkboxes.forEach(cb => {
+                    remove(ref(db, 'Members/' + cb.value));
+                });
+                btnToggleDelete.click(); // Thoát chế độ xóa
+            }
+        });
+
+        // === LẮNG NGHE THẺ MỚI (CHỐNG TRÙNG LẶP) ===
         onValue(ref(db, 'Command/new_uid'), (snapshot) => {
             const newUid = snapshot.val();
             if (newUid && newUid !== "") {
+                // Kiểm tra xem thẻ đã tồn tại chưa
+                if (membersData[newUid]) {
+                    alert(`Thẻ (UID: ${newUid}) đã tồn tại trong hệ thống! Kết thúc phiên đăng ký.`);
+                    btnCancelAdd.click();
+                    return;
+                }
+
                 addStatus.style.display = "none";
-                btnAdd.disabled = false;
+                btnAdd.style.display = "inline-block";
+                btnCancelAdd.style.display = "none";
                 
-                // Mở hộp thoại nhập thông tin
                 setTimeout(() => {
                     const name = prompt(`Phát hiện thẻ mới (UID: ${newUid})\nNhập Họ và Tên thành viên:`);
                     if (name) {
                         const id = prompt("Nhập Mã Số (MSSV/ID):");
-                        // Đẩy thông tin tạo mới lên danh sách
                         set(ref(db, 'Members/' + newUid), {
                             name: name,
-                            id: id || "N/A"
+                            id: id || "N/A",
+                            lastStatus: "Ra" // Thiết lập mặc định để quét lần đầu thành "Vào"
                         });
                         alert("Đã thêm thành viên thành công!");
                     }
-                    // Reset trạng thái
                     set(ref(db, 'Command/new_uid'), "");
-                }, 500); // Đợi 0.5s để đèn mạch kịp sáng xác nhận
+                }, 500); 
             }
         });
 
-        // 1. Lắng nghe và hiển thị Danh sách thành viên
-        const membersRef = ref(db, 'Members');
-        onValue(membersRef, (snapshot) => {
+        // === TỔNG HỢP VÀ RENDER DỮ LIỆU ĐỒNG THỜI ===
+        onValue(ref(db, 'Members'), (snapshot) => {
             const data = snapshot.val();
-            const tbody = document.getElementById('membersTable');
-            tbody.innerHTML = ""; 
+            const tbodyMembers = document.getElementById('membersTable');
+            const tbodyAtt = document.getElementById('attendanceTable');
+            
+            tbodyMembers.innerHTML = ""; 
+            tbodyAtt.innerHTML = "";
+            let allAttendance = []; // Mảng gộp tất cả lịch sử điểm danh
             
             if (data) {
                 membersData = data; 
                 for (const [uid, info] of Object.entries(data)) {
-                    tbody.innerHTML += `
+                    // Render Bảng Thành Viên
+                    tbodyMembers.innerHTML += `
                         <tr>
+                            <td class="delete-col ${isDeleteMode ? '' : 'hide-col'}"><input type="checkbox" class="checkbox-del" value="${uid}"></td>
                             <td><strong>${uid}</strong></td>
                             <td>${info.name || 'N/A'}</td>
                             <td>${info.id || 'N/A'}</td>
                         </tr>
                     `;
+
+                    // Trích xuất Lịch Sử Điểm Danh của thành viên này
+                    if(info.Attendance) {
+                        for (const [timestamp, att] of Object.entries(info.Attendance)) {
+                            allAttendance.push({
+                                timeKey: parseInt(timestamp),
+                                timeString: att.time,
+                                name: info.name,
+                                uid: uid,
+                                status: att.status || 'Vào'
+                            });
+                        }
+                    }
                 }
+
+                // Render Bảng Lịch Sử
+                if(allAttendance.length > 0) {
+                    // Sắp xếp thời gian mới nhất lên đầu
+                    allAttendance.sort((a, b) => b.timeKey - a.timeKey);
+                    allAttendance.forEach(att => {
+                        const color = att.status === "Vào" ? "green" : "red";
+                        tbodyAtt.innerHTML += `
+                            <tr>
+                                <td>${att.timeString}</td>
+                                <td>${att.name}</td>
+                                <td>${att.uid}</td>
+                                <td style="color:${color}; font-weight:bold;">${att.status}</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    tbodyAtt.innerHTML = `<tr><td colspan="4" class="empty-row">Chưa có dữ liệu điểm danh</td></tr>`;
+                }
+
             } else {
                 membersData = {};
-                tbody.innerHTML = `<tr><td colspan="3" class="empty-row">Chưa có dữ liệu thành viên</td></tr>`;
-            }
-        });
-
-        // 2. Lắng nghe và hiển thị Lịch sử điểm danh
-        const attendanceRef = ref(db, 'Attendance');
-        onValue(attendanceRef, (snapshot) => {
-            const data = snapshot.val();
-            const tbody = document.getElementById('attendanceTable');
-            tbody.innerHTML = "";
-
-            if (data) {
-                const sortedKeys = Object.keys(data).sort((a, b) => b - a); 
-                
-                sortedKeys.forEach(key => {
-                    const record = data[key];
-                    const memberName = membersData[record.uid] 
-                                        ? membersData[record.uid].name 
-                                        : "<span class='unknown'>Chưa đăng ký</span>";
-                    
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${record.time}</td>
-                            <td>${memberName}</td>
-                            <td>${record.uid}</td>
-                        </tr>
-                    `;
-                });
-            } else {
-                tbody.innerHTML = `<tr><td colspan="3" class="empty-row">Chưa có dữ liệu điểm danh</td></tr>`;
+                tbodyMembers.innerHTML = `<tr><td colspan="4" class="empty-row">Chưa có dữ liệu thành viên</td></tr>`;
+                tbodyAtt.innerHTML = `<tr><td colspan="4" class="empty-row">Chưa có dữ liệu điểm danh</td></tr>`;
             }
         });
     </script>
