@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Điểm Danh RFID</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 20px; 
+            background-color: #f4f7f6; 
+            color: #333; 
+        }
+        h1 { text-align: center; color: #2c3e50; }
+        .container { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 20px; 
+            justify-content: center; 
+        }
+        .box { 
+            flex: 1; 
+            min-width: 300px; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 10px; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
+        }
+        h2 { 
+            color: #2980b9; 
+            border-bottom: 2px solid #3498db; 
+            padding-bottom: 5px; 
+        }
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 15px; 
+        }
+        th, td { 
+            border: 1px solid #ddd; 
+            padding: 12px; 
+            text-align: left; 
+        }
+        th { background-color: #3498db; color: white; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .unknown { color: #e74c3c; font-weight: bold; }
+        .empty-row { text-align: center; color: #7f8c8d; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <h1>Dashboard Quản Lý Điểm Danh</h1>
+    
+    <div class="container">
+        <!-- Bảng Thành Viên -->
+        <div class="box">
+            <h2>Danh Sách Thành Viên</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>UID Thẻ</th>
+                        <th>Họ và Tên</th>
+                        <th>Mã Số</th>
+                    </tr>
+                </thead>
+                <tbody id="membersTable">
+                    <tr><td colspan="3" class="empty-row">Đang tải dữ liệu...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Bảng Lịch Sử -->
+        <div class="box">
+            <h2>Lịch Sử Điểm Danh (Real-time)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Thời Gian</th>
+                        <th>Họ và Tên</th>
+                        <th>UID Thẻ</th>
+                    </tr>
+                </thead>
+                <tbody id="attendanceTable">
+                    <tr><td colspan="3" class="empty-row">Đang tải dữ liệu...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Tải Firebase SDK (Modular v9+) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        // Cấu hình Firebase của bạn
+        const firebaseConfig = {
+            apiKey: "AIzaSyD8UhkdBIf2WF9EWXGaXRAgjLORrT3E450",
+            databaseURL: "https://rfid-project-c315c-default-rtdb.asia-southeast1.firebasedatabase.app/",
+            projectId: "rfid-project-c315c"
+        };
+
+        // Khởi tạo Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let membersData = {};
+
+        // 1. Lắng nghe và hiển thị Danh sách thành viên
+        const membersRef = ref(db, 'Members');
+        onValue(membersRef, (snapshot) => {
+            const data = snapshot.val();
+            const tbody = document.getElementById('membersTable');
+            tbody.innerHTML = ""; 
+            
+            if (data) {
+                membersData = data; // Lưu dữ liệu thành viên để map tên với bảng lịch sử
+                for (const [uid, info] of Object.entries(data)) {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${uid}</strong></td>
+                            <td>${info.name || 'N/A'}</td>
+                            <td>${info.id || 'N/A'}</td>
+                        </tr>
+                    `;
+                }
+            } else {
+                tbody.innerHTML = `<tr><td colspan="3" class="empty-row">Chưa có dữ liệu thành viên</td></tr>`;
+            }
+        });
+
+        // 2. Lắng nghe và hiển thị Lịch sử điểm danh
+        const attendanceRef = ref(db, 'Attendance');
+        onValue(attendanceRef, (snapshot) => {
+            const data = snapshot.val();
+            const tbody = document.getElementById('attendanceTable');
+            tbody.innerHTML = "";
+
+            if (data) {
+                // Lấy các key (Unix timestamp) và sắp xếp giảm dần để thời gian mới nhất lên đầu
+                const sortedKeys = Object.keys(data).sort((a, b) => b - a); 
+                
+                sortedKeys.forEach(key => {
+                    const record = data[key];
+                    // Tìm tên thành viên từ biến membersData dựa trên UID
+                    const memberName = membersData[record.uid] 
+                                        ? membersData[record.uid].name 
+                                        : "<span class='unknown'>Chưa đăng ký</span>";
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${record.time}</td>
+                            <td>${memberName}</td>
+                            <td>${record.uid}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                tbody.innerHTML = `<tr><td colspan="3" class="empty-row">Chưa có dữ liệu điểm danh</td></tr>`;
+            }
+        });
+    </script>
+</body>
+</html>
