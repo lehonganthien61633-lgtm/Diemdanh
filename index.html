@@ -45,16 +45,52 @@
         tr:nth-child(even) { background-color: #f9f9f9; }
         .unknown { color: #e74c3c; font-weight: bold; }
         .empty-row { text-align: center; color: #7f8c8d; font-style: italic; }
+    /* === BỔ SUNG CSS CHO MENU VÀ NÚT === */
+        .menu-bar {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+        .btn:hover { background-color: #2980b9; }
+        .btn-active { background-color: #2c3e50; font-weight: bold; }
+        
+        .btn-add { background-color: #27ae60; margin-bottom: 15px; }
+        .btn-add:hover { background-color: #2ecc71; }
+        .btn-add:disabled { background-color: #95a5a6; cursor: not-allowed; }
+        
+        /* Ẩn/Hiện Tab */
+        .tab-content { display: none; }
+        .tab-active { display: block; }
     </style>
 </head>
 <body>
 
     <h1>Dashboard Quản Lý Điểm Danh</h1>
     
+    <!-- Menu Điều Hướng Tab -->
+    <div class="menu-bar">
+        <button id="btnMembers" class="btn btn-active" onclick="switchTab('members')">📋 Danh Sách Thành Viên</button>
+        <button id="btnHistory" class="btn" onclick="switchTab('history')">🕒 Lịch Sử Điểm Danh</button>
+    </div>
+    
     <div class="container">
         <!-- Bảng Thành Viên -->
-        <div class="box">
+        <div id="tab-members" class="box tab-content tab-active">
             <h2>Danh Sách Thành Viên</h2>
+            <button id="btnAddMember" class="btn btn-add">➕ Thêm Thành Viên Mới</button>
+            <p id="addStatus" style="color: #e67e22; font-weight: bold; display: none;">⏳ Đang chờ quét thẻ trên thiết bị (Đèn RGB đang nháy xanh)...</p>
+            
             <table>
                 <thead>
                     <tr>
@@ -70,7 +106,7 @@
         </div>
 
         <!-- Bảng Lịch Sử -->
-        <div class="box">
+        <div id="tab-history" class="box tab-content">
             <h2>Lịch Sử Điểm Danh (Real-time)</h2>
             <table>
                 <thead>
@@ -90,20 +126,72 @@
     <!-- Tải Firebase SDK (Modular v9+) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        // Bổ sung import lệnh 'set' để ghi dữ liệu
+        import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // Cấu hình Firebase của bạn
         const firebaseConfig = {
             apiKey: "AIzaSyD8UhkdBIf2WF9EWXGaXRAgjLORrT3E450",
             databaseURL: "https://rfid-project-c315c-default-rtdb.asia-southeast1.firebasedatabase.app/",
             projectId: "rfid-project-c315c"
         };
 
-        // Khởi tạo Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-
         let membersData = {};
+
+        // === CHỨC NĂNG MENU CHUYỂN TAB ===
+        window.switchTab = function(tabName) {
+            document.getElementById('tab-members').classList.remove('tab-active');
+            document.getElementById('tab-history').classList.remove('tab-active');
+            document.getElementById('btnMembers').classList.remove('btn-active');
+            document.getElementById('btnHistory').classList.remove('btn-active');
+
+            if(tabName === 'members') {
+                document.getElementById('tab-members').classList.add('tab-active');
+                document.getElementById('btnMembers').classList.add('btn-active');
+            } else {
+                document.getElementById('tab-history').classList.add('tab-active');
+                document.getElementById('btnHistory').classList.add('btn-active');
+            }
+        };
+
+        // === CHỨC NĂNG THÊM THÀNH VIÊN ===
+        const btnAdd = document.getElementById('btnAddMember');
+        const addStatus = document.getElementById('addStatus');
+
+        btnAdd.addEventListener('click', () => {
+            // Ghi lệnh kích hoạt chế độ thêm thẻ xuống Firebase để ESP nhận
+            set(ref(db, 'Command/mode'), 1);
+            set(ref(db, 'Command/new_uid'), ""); // Reset uid chờ sẵn
+            
+            addStatus.style.display = "block";
+            btnAdd.disabled = true;
+        });
+
+        // Lắng nghe thẻ mới từ mạch ESP32
+        onValue(ref(db, 'Command/new_uid'), (snapshot) => {
+            const newUid = snapshot.val();
+            if (newUid && newUid !== "") {
+                addStatus.style.display = "none";
+                btnAdd.disabled = false;
+                
+                // Mở hộp thoại nhập thông tin
+                setTimeout(() => {
+                    const name = prompt(`Phát hiện thẻ mới (UID: ${newUid})\nNhập Họ và Tên thành viên:`);
+                    if (name) {
+                        const id = prompt("Nhập Mã Số (MSSV/ID):");
+                        // Đẩy thông tin tạo mới lên danh sách
+                        set(ref(db, 'Members/' + newUid), {
+                            name: name,
+                            id: id || "N/A"
+                        });
+                        alert("Đã thêm thành viên thành công!");
+                    }
+                    // Reset trạng thái
+                    set(ref(db, 'Command/new_uid'), "");
+                }, 500); // Đợi 0.5s để đèn mạch kịp sáng xác nhận
+            }
+        });
 
         // 1. Lắng nghe và hiển thị Danh sách thành viên
         const membersRef = ref(db, 'Members');
@@ -113,7 +201,7 @@
             tbody.innerHTML = ""; 
             
             if (data) {
-                membersData = data; // Lưu dữ liệu thành viên để map tên với bảng lịch sử
+                membersData = data; 
                 for (const [uid, info] of Object.entries(data)) {
                     tbody.innerHTML += `
                         <tr>
@@ -124,6 +212,7 @@
                     `;
                 }
             } else {
+                membersData = {};
                 tbody.innerHTML = `<tr><td colspan="3" class="empty-row">Chưa có dữ liệu thành viên</td></tr>`;
             }
         });
@@ -136,12 +225,10 @@
             tbody.innerHTML = "";
 
             if (data) {
-                // Lấy các key (Unix timestamp) và sắp xếp giảm dần để thời gian mới nhất lên đầu
                 const sortedKeys = Object.keys(data).sort((a, b) => b - a); 
                 
                 sortedKeys.forEach(key => {
                     const record = data[key];
-                    // Tìm tên thành viên từ biến membersData dựa trên UID
                     const memberName = membersData[record.uid] 
                                         ? membersData[record.uid].name 
                                         : "<span class='unknown'>Chưa đăng ký</span>";
