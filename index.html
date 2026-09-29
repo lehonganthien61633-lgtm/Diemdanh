@@ -81,6 +81,12 @@
         /* Ẩn/Hiện Tab */
         .tab-content { display: none; }
         .tab-active { display: block; }
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #27ae60; }
+        input:checked + .slider:before { transform: translateX(20px); }
     </style>
 </head>
 <body>
@@ -91,9 +97,31 @@
     <div class="menu-bar">
         <button id="btnMembers" class="btn btn-active" onclick="switchTab('members')">📋 Danh Sách Thành Viên</button>
         <button id="btnHistory" class="btn" onclick="switchTab('history')">🕒 Lịch Sử Điểm Danh</button>
+        <button id="btnDevices" class="btn" onclick="switchTab('devices')">🛠️ Quản Lý Thiết Bị</button>
     </div>
     
     <div class="container">
+        <!-- (Giữ nguyên Bảng Thành Viên và Bảng Lịch Sử ở đây) -->
+
+        <!-- Bảng Quản Lý Thiết Bị MỚI -->
+        <div id="tab-devices" class="box tab-content">
+            <h2>Quản Lý Thiết Bị & Module</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Tên Thiết Bị</th>
+                        <th>Trạng Thái</th>
+                        <th>Đầu đọc thẻ (RC522)</th>
+                        <th>Đèn báo (LED RGB)</th>
+                    </tr>
+                </thead>
+                <tbody id="devicesTable">
+                    <tr><td colspan="5" class="empty-row">Đang tải dữ liệu...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
         <!-- Bảng Thành Viên -->
         <div id="tab-members" class="box tab-content tab-active">
             <h2>Danh Sách Thành Viên</h2>
@@ -171,7 +199,79 @@
                 document.getElementById('btnHistory').classList.add('btn-active');
             }
         };
+window.switchTab = function(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('tab-active'));
+            document.querySelectorAll('.menu-bar .btn').forEach(btn => btn.classList.remove('btn-active'));
 
+            if(tabName === 'members') {
+                document.getElementById('tab-members').classList.add('tab-active');
+                document.getElementById('btnMembers').classList.add('btn-active');
+            } else if (tabName === 'history') {
+                document.getElementById('tab-history').classList.add('tab-active');
+                document.getElementById('btnHistory').classList.add('btn-active');
+            } else if (tabName === 'devices') {
+                document.getElementById('tab-devices').classList.add('tab-active');
+                document.getElementById('btnDevices').classList.add('btn-active');
+            }
+        };
+
+        // Bật/tắt Module trên Firebase
+        window.toggleModule = function(devId, moduleName, isChecked) {
+            set(ref(db, `Devices/${devId}/modules/${moduleName}`), isChecked);
+        };
+
+        // Lắng nghe và Render Thiết Bị
+        let devicesData = {};
+        onValue(ref(db, 'Devices'), (snapshot) => {
+            devicesData = snapshot.val() || {};
+            renderDevices();
+        });
+
+        function renderDevices() {
+            const tbody = document.getElementById('devicesTable');
+            if(!tbody) return;
+            tbody.innerHTML = "";
+            const now = Math.floor(Date.now() / 1000); 
+            let stt = 1;
+
+            if(Object.keys(devicesData).length > 0) {
+                for (const [devId, devInfo] of Object.entries(devicesData)) {
+                    // Nếu thời gian Ping cuối cùng cách đây dưới 10 giây => Online
+                    const isOnline = (now - devInfo.lastPing) < 10; 
+                    const statusHtml = isOnline 
+                        ? `<span style="color:green;font-weight:bold;">🟢 Online</span>` 
+                        : `<span style="color:red;font-weight:bold;">🔴 Offline</span>`;
+                    
+                    const rfidState = devInfo.modules?.rfid ?? true; // Mặc định true
+                    const ledState = devInfo.modules?.led ?? true;   // Mặc định true
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${stt++}</td>
+                            <td><strong>${devInfo.name || devId}</strong></td>
+                            <td>${statusHtml}</td>
+                            <td>
+                                <label class="switch">
+                                    <input type="checkbox" ${rfidState ? "checked" : ""} onchange="toggleModule('${devId}', 'rfid', this.checked)">
+                                    <span class="slider"></span>
+                                </label>
+                            </td>
+                            <td>
+                                <label class="switch">
+                                    <input type="checkbox" ${ledState ? "checked" : ""} onchange="toggleModule('${devId}', 'led', this.checked)">
+                                    <span class="slider"></span>
+                                </label>
+                            </td>
+                        </tr>
+                    `;
+                }
+            } else {
+                tbody.innerHTML = `<tr><td colspan="5" class="empty-row">Chưa có thiết bị nào kết nối</td></tr>`;
+            }
+        }
+
+        // Tự động quét lại trạng thái Online/Offline mỗi 3 giây mà không cần tải lại Firebase
+        setInterval(renderDevices, 3000);
         // === CÁC NÚT ĐIỀU KHIỂN ===
         const btnAdd = document.getElementById('btnAddMember');
         const btnCancelAdd = document.getElementById('btnCancelAdd');
