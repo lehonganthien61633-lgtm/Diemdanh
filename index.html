@@ -100,20 +100,20 @@
 
     <h1>Dashboard Quản Lý Điểm Danh</h1>
     
+    <!-- Menu Điều Hướng Tab -->
     <div class="menu-bar">
         <button id="btnStatus" class="btn btn-active" onclick="switchTab('status')">👤 Trạng Thái Thành Viên</button>
         <button id="btnMembers" class="btn" onclick="switchTab('members')">📋 Quản Lý Danh Sách</button>
         <button id="btnHistory" class="btn" onclick="switchTab('history')">🕒 Lịch Sử Tổng</button>
         <button id="btnDevices" class="btn" onclick="switchTab('devices')">🛠️ Quản Lý Thiết Bị</button>
+        <button id="btnSettings" class="btn" onclick="switchTab('settings')">⚙️ Thiết Lập</button>
     </div>
     
     <div class="container">
-        <!-- Bảng Trạng Thái Thành Viên (MỚI) -->
+        <!-- Bảng Trạng Thái Thành Viên -->
         <div id="tab-status" class="box tab-content tab-active">
             <h2>Trạng Thái Hiện Tại</h2>
-            <div id="statusGrid" class="card-grid">
-                <!-- Thẻ nhân viên sẽ xuất hiện ở đây -->
-            </div>
+            <div id="statusGrid" class="card-grid"></div>
         </div>
 
         <!-- Bảng Thành Viên -->
@@ -178,8 +178,89 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Bảng Thiết Lập Hệ Thống (MỚI) -->
+        <div id="tab-settings" class="box tab-content">
+            <h2>Thiết Lập Hệ Thống</h2>
+            <div style="max-width: 400px;">
+                <label style="font-weight: bold; display: block; margin-bottom: 10px;">Tự động xóa lịch sử điểm danh cũ sau:</label>
+                <select id="autoDeleteSelect" style="width: 100%; padding: 10px; font-size: 15px; margin-bottom: 20px; border-radius: 5px; border: 1px solid #ccc;">
+                    <option value="0">Không bao giờ xóa (Giữ vĩnh viễn)</option>
+                    <option value="30">30 ngày</option>
+                    <option value="60">60 ngày</option>
+                    <option value="90">90 ngày</option>
+                    <option value="365">1 năm (365 ngày)</option>
+                    <option value="730">2 năm (730 ngày)</option>
+                </select>
+                <button type="button" class="btn btn-active" onclick="saveSettings()">💾 Lưu Cài Đặt</button>
+            </div>
+        </div>
+    </div>
+        <!-- Bảng Thành Viên -->
+        <div id="tab-members" class="box tab-content">
+            <h2>Danh Sách Thành Viên</h2>
+            <div style="margin-bottom: 15px;">
+                <button id="btnAddMember" class="btn btn-add">➕ Thêm Thành Viên Mới</button>
+                <button id="btnCancelAdd" class="btn btn-cancel">❌ Hủy thêm</button>
+                <button id="btnToggleDelete" class="btn btn-delete">🗑️ Xóa thành viên</button>
+                <button id="btnConfirmDelete" class="btn btn-confirm">⚠️ Xác nhận xóa</button>
+            </div>
+            <p id="addStatus" style="color: #e67e22; font-weight: bold; display: none;">⏳ Đang chờ quét thẻ trên thiết bị (Đèn RGB đang nháy xanh)...</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th class="delete-col hide-col">Chọn</th>
+                        <th>Họ và Tên</th>
+                        <th>Mã Số</th>
+                        <th>UID Thẻ</th>
+                    </tr>
+                </thead>
+                <tbody id="membersTable">
+                    <tr><td colspan="4" class="empty-row">Đang tải dữ liệu...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Bảng Lịch Sử Tổng -->
+        <div id="tab-history" class="box tab-content">
+            <h2>Lịch Sử Điểm Danh Toàn Hệ Thống</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Thời Gian</th>
+                        <th>Họ và Tên</th>
+                        <th>UID Thẻ</th>
+                        <th>Trạng Thái</th>
+                    </tr>
+                </thead>
+                <tbody id="attendanceTable">
+                    <tr><td colspan="4" class="empty-row">Đang tải dữ liệu...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Bảng Quản Lý Thiết Bị -->
+        <div id="tab-devices" class="box tab-content">
+            <h2>Quản Lý Thiết Bị & Module</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Tên Thiết Bị</th>
+                        <th>Trạng Thái mạng</th>
+                        <th>Đầu đọc thẻ (RC522)</th>
+                        <th>Đèn báo (LED RGB)</th>
+                    </tr>
+                </thead>
+                <tbody id="devicesTable">
+                    <tr><td colspan="5" class="empty-row">Đang tải dữ liệu...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
+    <!-- Modal Chi Tiết Thành Viên -->
     <div id="memberModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
@@ -190,6 +271,7 @@
             <div style="display:flex; gap:10px;">
                 <input type="text" id="editUid" readonly style="flex:1; background-color: #ecf0f1; font-weight: bold;">
                 <button type="button" class="btn btn-delete" style="margin: 5px 0 10px 0; display: none;" onclick="startChangeCard()" id="btnChangeCard">🔄 Đổi thẻ mới</button>
+                <button type="button" class="btn btn-cancel" style="margin: 5px 0 10px 0; display: none;" onclick="cancelChangeCard()" id="btnCancelChange">❌ Hủy đổi thẻ</button>
             </div>
             
             <label>Họ và Tên:</label>
@@ -209,11 +291,10 @@
             <label>Email:</label>
             <input type="email" id="editEmail" placeholder="example@email.com" oninput="checkChanges()">
             
-            <!-- Nút lưu mặc định bị ẩn đi (display: none) -->
             <button type="button" id="btnSaveInfo" class="btn btn-active" style="width:100%; margin-top: 5px; display: none;" onclick="saveMemberInfo()">💾 Lưu Thay Đổi Thông Tin</button>
             
-            <h3 style="margin-top:25px; color: #2c3e50; border-top: 2px solid #ecf0f1; padding-top: 15px;">Lịch sử vào/ra cá nhân</h3>
-            <div style="max-height: 200px; overflow-y: auto;">
+            <h3 id="historyTitle" style="margin-top:25px; color: #2c3e50; border-top: 2px solid #ecf0f1; padding-top: 15px;">Lịch sử vào/ra cá nhân</h3>
+            <div id="historyTableContainer" style="max-height: 200px; overflow-y: auto;">
                 <table>
                     <thead><tr><th>Thời gian quét</th><th>Hoạt động</th></tr></thead>
                     <tbody id="personalHistoryTable"></tbody>
@@ -222,7 +303,7 @@
         </div>
     </div>
 
-    <!-- Tải Firebase SDK (Modular v9+) -->
+   <!-- Tải Firebase SDK (Modular v9+) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, onValue, set, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
@@ -238,8 +319,8 @@
         let membersData = {};
         let isDeleteMode = false;
         let changingUid = null; 
-        let currentModalMode = 'view'; // Biến lưu trạng thái Xem hay Sửa
-        let originalMemberInfo = {};   // Biến lưu dữ liệu gốc để so sánh
+        let currentModalMode = 'view'; // 'view', 'edit', 'add'
+        let originalMemberInfo = {};   
 
         // === GIAO DIỆN CHUYỂN TAB ===
         window.switchTab = function(tabName) {
@@ -247,42 +328,33 @@
             document.querySelectorAll('.menu-bar .btn').forEach(btn => btn.classList.remove('btn-active'));
 
             document.getElementById('tab-' + tabName).classList.add('tab-active');
-            const btnMap = { 'status': 'btnStatus', 'members': 'btnMembers', 'history': 'btnHistory', 'devices': 'btnDevices' };
+            const btnMap = { 'status': 'btnStatus', 'members': 'btnMembers', 'history': 'btnHistory', 'devices': 'btnDevices', 'settings': 'btnSettings' };
             document.getElementById(btnMap[tabName]).classList.add('btn-active');
         };
 
-        // === KIỂM TRA SỰ THAY ĐỔI DỮ LIỆU ĐỂ HIỆN NÚT LƯU ===
+        // === KIỂM TRA SỰ THAY ĐỔI DỮ LIỆU ===
         window.checkChanges = function() {
-            if (currentModalMode === 'view') return; // Đang ở chế độ xem thì không làm gì cả
-            
-            const currentName = document.getElementById('editName').value;
-            const currentId = document.getElementById('editId').value;
-            const currentDob = document.getElementById('editDob').value;
-            const currentEmail = document.getElementById('editEmail').value;
-
-            // Nếu có bất kỳ ô nào khác với dữ liệu ban đầu -> Hiện nút Lưu
+            if (currentModalMode === 'view') return; 
+            if (currentModalMode === 'add') {
+                document.getElementById('btnSaveInfo').style.display = 'block';
+                return;
+            }
             const hasChanged = (
-                currentName !== originalMemberInfo.name ||
-                currentId !== originalMemberInfo.id ||
-                currentDob !== originalMemberInfo.dob ||
-                currentEmail !== originalMemberInfo.email
+                document.getElementById('editName').value !== originalMemberInfo.name ||
+                document.getElementById('editId').value !== originalMemberInfo.id ||
+                document.getElementById('editDob').value !== originalMemberInfo.dob ||
+                document.getElementById('editEmail').value !== originalMemberInfo.email
             );
-
             document.getElementById('btnSaveInfo').style.display = hasChanged ? 'block' : 'none';
         };
 
         // === XỬ LÝ POPUP MODAL THÔNG TIN & ĐỔI THẺ ===
         window.openMemberModal = function(uid, mode) {
-            const info = membersData[uid];
-            if(!info) return;
-            
             currentModalMode = mode;
-            // Lưu lại thông tin gốc để đối chiếu sau này
+            const info = membersData[uid] || {};
+            
             originalMemberInfo = {
-                name: info.name || '',
-                id: info.id || '',
-                dob: info.dob || '',
-                email: info.email || ''
+                name: info.name || '', id: info.id || '', dob: info.dob || '', email: info.email || ''
             };
             
             document.getElementById('editOldUid').value = uid;
@@ -293,43 +365,45 @@
             document.getElementById('editEmail').value = originalMemberInfo.email;
             
             const isView = (mode === 'view');
+            const isAdd = (mode === 'add');
             
-            // Nếu là chế độ XEM: Khóa các ô nhập liệu, đổi tiêu đề
-            document.getElementById('modalTitle').innerText = isView ? "Thông Tin Chi Tiết (Chỉ Xem)" : "Chỉnh Sửa Hồ Sơ";
+            if (isView) document.getElementById('modalTitle').innerText = "Thông Tin Chi Tiết (Chỉ Xem)";
+            else if (isAdd) document.getElementById('modalTitle').innerText = "Thêm Thành Viên Mới";
+            else document.getElementById('modalTitle').innerText = "Chỉnh Sửa Hồ Sơ";
+
             document.getElementById('editName').readOnly = isView;
             document.getElementById('editId').readOnly = isView;
             document.getElementById('editDob').readOnly = isView;
             document.getElementById('editEmail').readOnly = isView;
             
-            // Ẩn/hiện nút Đổi Thẻ và Lưu dựa trên chế độ
-            document.getElementById('btnChangeCard').style.display = isView ? 'none' : 'block';
-            document.getElementById('btnSaveInfo').style.display = 'none'; // Luôn ẩn nút lưu lúc mới mở
+            document.getElementById('btnChangeCard').style.display = (isView || isAdd) ? 'none' : 'block';
+            document.getElementById('btnCancelChange').style.display = 'none';
+            document.getElementById('btnSaveInfo').style.display = isAdd ? 'block' : 'none';
+            document.getElementById('historyTitle').style.display = isAdd ? 'none' : 'block';
+            document.getElementById('historyTableContainer').style.display = isAdd ? 'none' : 'block';
             
-            if (!isView) {
+            if (!isView && !isAdd) {
                 changingUid = null;
                 document.getElementById('btnChangeCard').innerText = "🔄 Đổi thẻ mới";
                 document.getElementById('btnChangeCard').disabled = false;
             }
             
-            // Render lịch sử cá nhân
             const tbody = document.getElementById('personalHistoryTable');
             tbody.innerHTML = '';
-            if(info.Attendance) {
+            if(!isAdd && info.Attendance) {
                 const arr = Object.entries(info.Attendance).sort((a,b) => b[0] - a[0]);
                 arr.forEach(([ts, att]) => {
                     const color = att.status === "Vào" ? "green" : "red";
                     tbody.innerHTML += `<tr><td>${att.time}</td><td style="color:${color};font-weight:bold">${att.status}</td></tr>`;
                 });
-            } else {
-                tbody.innerHTML = '<tr><td colspan="2" class="empty-row">Chưa có lịch sử quét</td></tr>';
-            }
+            } else { tbody.innerHTML = '<tr><td colspan="2" class="empty-row">Chưa có lịch sử quét</td></tr>'; }
             
             document.getElementById('memberModal').style.display = 'block';
         };
 
         window.closeModal = function() {
             document.getElementById('memberModal').style.display = 'none';
-            if (changingUid) {
+            if (changingUid || currentModalMode === 'add') {
                 set(ref(db, 'Command/mode'), 0);
                 set(ref(db, 'Command/new_uid'), ""); 
                 changingUid = null;
@@ -344,34 +418,41 @@
             updates['Members/' + uid + '/dob'] = document.getElementById('editDob').value;
             updates['Members/' + uid + '/email'] = document.getElementById('editEmail').value;
             
+            if(currentModalMode === 'add') {
+                updates['Members/' + uid + '/lastStatus'] = "Ra"; 
+            }
+
             update(ref(db), updates).then(() => {
-                alert('Đã lưu thông tin hồ sơ!');
-                // Cập nhật lại dữ liệu gốc để nút Lưu tự động biến mất sau khi lưu thành công
-                originalMemberInfo = {
-                    name: updates['Members/' + uid + '/name'],
-                    id: updates['Members/' + uid + '/id'],
-                    dob: updates['Members/' + uid + '/dob'],
-                    email: updates['Members/' + uid + '/email']
-                };
-                window.checkChanges(); 
+                alert(currentModalMode === 'add' ? 'Đã thêm thành viên mới!' : 'Đã lưu thông tin hồ sơ!');
+                if (currentModalMode === 'add') closeModal();
+                else {
+                    originalMemberInfo = { name: updates['Members/' + uid + '/name'], id: updates['Members/' + uid + '/id'], dob: updates['Members/' + uid + '/dob'], email: updates['Members/' + uid + '/email'] };
+                    window.checkChanges(); 
+                }
             });
         };
 
+        // Bắt đầu đổi thẻ
         window.startChangeCard = function() {
             changingUid = document.getElementById('editOldUid').value;
             set(ref(db, 'Command/mode'), 1);
             set(ref(db, 'Command/new_uid'), "");
-            
-            const btn = document.getElementById('btnChangeCard');
-            btn.innerText = "⏳ Đang đợi quét thẻ mới...";
-            btn.disabled = true;
+            document.getElementById('btnChangeCard').style.display = 'none';
+            document.getElementById('btnCancelChange').style.display = 'inline-block';
+        };
+
+        // Hủy đổi thẻ
+        window.cancelChangeCard = function() {
+            set(ref(db, 'Command/mode'), 0);
+            set(ref(db, 'Command/new_uid'), "");
+            changingUid = null;
+            document.getElementById('btnChangeCard').style.display = 'inline-block';
+            document.getElementById('btnCancelChange').style.display = 'none';
         };
 
         // === CÁC NÚT ĐIỀU KHIỂN DANH SÁCH ===
         const btnAdd = document.getElementById('btnAddMember');
         const btnCancelAdd = document.getElementById('btnCancelAdd');
-        const btnToggleDelete = document.getElementById('btnToggleDelete');
-        const btnConfirmDelete = document.getElementById('btnConfirmDelete');
         const addStatus = document.getElementById('addStatus');
 
         btnAdd.addEventListener('click', () => {
@@ -391,24 +472,23 @@
             btnCancelAdd.style.display = "none";
         });
 
-        btnToggleDelete.addEventListener('click', () => {
+        document.getElementById('btnToggleDelete').addEventListener('click', function() {
             isDeleteMode = !isDeleteMode;
-            btnConfirmDelete.style.display = isDeleteMode ? "inline-block" : "none";
-            btnToggleDelete.innerText = isDeleteMode ? "🔙 Thoát chế độ xóa" : "🗑️ Xóa thành viên";
+            document.getElementById('btnConfirmDelete').style.display = isDeleteMode ? "inline-block" : "none";
+            this.innerText = isDeleteMode ? "🔙 Thoát chế độ xóa" : "🗑️ Xóa thành viên";
             document.querySelectorAll('.delete-col').forEach(col => isDeleteMode ? col.classList.remove('hide-col') : col.classList.add('hide-col'));
         });
 
-        btnConfirmDelete.addEventListener('click', () => {
+        document.getElementById('btnConfirmDelete').addEventListener('click', () => {
             const checkboxes = document.querySelectorAll('.checkbox-del:checked');
             if(checkboxes.length === 0) return alert("Vui lòng chọn ít nhất 1 thành viên!");
-            
             if(confirm(`Xóa ${checkboxes.length} thành viên bao gồm cả dữ liệu điểm danh?`)) {
                 checkboxes.forEach(cb => remove(ref(db, 'Members/' + cb.value)));
-                btnToggleDelete.click(); 
+                document.getElementById('btnToggleDelete').click(); 
             }
         });
 
-        // === LẮNG NGHE THẺ MỚI TỪ ESP32 ===
+        // === LẮNG NGHE THẺ MỚI ===
         onValue(ref(db, 'Command/new_uid'), (snapshot) => {
             const newUid = snapshot.val();
             if (newUid && newUid !== "") {
@@ -416,11 +496,8 @@
                     alert(`Thẻ (UID: ${newUid}) đã tồn tại trong hệ thống! Kết thúc phiên.`);
                     set(ref(db, 'Command/new_uid'), "");
                     set(ref(db, 'Command/mode'), 0);
-                    if (changingUid) {
-                        document.getElementById('btnChangeCard').innerText = "🔄 Đổi thẻ mới";
-                        document.getElementById('btnChangeCard').disabled = false;
-                        changingUid = null;
-                    } else { btnCancelAdd.click(); }
+                    if (changingUid) cancelChangeCard();
+                    else btnCancelAdd.click(); 
                     return;
                 }
 
@@ -428,12 +505,10 @@
                     const oldData = membersData[changingUid];
                     set(ref(db, 'Members/' + newUid), oldData).then(() => {
                         remove(ref(db, 'Members/' + changingUid));
-                        alert(`Đã đổi thẻ thành công!\nUID cũ: ${changingUid}\nUID mới: ${newUid}`);
+                        alert(`Đã đổi thẻ thành công!\nUID mới: ${newUid}`);
                         document.getElementById('editOldUid').value = newUid;
                         document.getElementById('editUid').value = newUid;
-                        document.getElementById('btnChangeCard').innerText = "🔄 Đổi thẻ mới";
-                        document.getElementById('btnChangeCard').disabled = false;
-                        changingUid = null;
+                        cancelChangeCard();
                     });
                     set(ref(db, 'Command/new_uid'), "");
                 } else {
@@ -441,22 +516,44 @@
                     btnAdd.style.display = "inline-block";
                     btnCancelAdd.style.display = "none";
                     
+                    // Mở Form điền thông tin thay vì Prompt
                     setTimeout(() => {
-                        const name = prompt(`Phát hiện thẻ mới (UID: ${newUid})\nNhập Họ và Tên thành viên:`);
-                        if (name) {
-                            const id = prompt("Nhập Mã Số (MSSV/ID):");
-                            set(ref(db, 'Members/' + newUid), {
-                                name: name, id: id || "N/A", lastStatus: "Ra"
-                            });
-                            alert("Đã thêm thành viên!");
-                        }
+                        openMemberModal(newUid, 'add');
                         set(ref(db, 'Command/new_uid'), "");
                     }, 500); 
                 }
             }
         });
 
-        // === KẾT XUẤT (RENDER) DỮ LIỆU TỔNG HỢP ===
+        // === THIẾT LẬP AUTO-DELETE ===
+        let retentionDays = 0;
+        onValue(ref(db, 'Settings/retentionDays'), (snapshot) => {
+            retentionDays = parseInt(snapshot.val()) || 0;
+            document.getElementById('autoDeleteSelect').value = retentionDays;
+            runAutoDelete();
+        });
+
+        window.saveSettings = function() {
+            const val = document.getElementById('autoDeleteSelect').value;
+            set(ref(db, 'Settings/retentionDays'), parseInt(val)).then(() => alert("Đã lưu cài đặt tự động xóa!"));
+        };
+
+        function runAutoDelete() {
+            if(retentionDays <= 0 || !membersData) return;
+            const threshold = Math.floor(Date.now() / 1000) - (retentionDays * 86400);
+            
+            for (const [uid, info] of Object.entries(membersData)) {
+                if(info.Attendance) {
+                    for (const [timestamp, att] of Object.entries(info.Attendance)) {
+                        if (parseInt(timestamp) < threshold) {
+                            remove(ref(db, `Members/${uid}/Attendance/${timestamp}`));
+                        }
+                    }
+                }
+            }
+        }
+
+        // === KẾT XUẤT (RENDER) DỮ LIỆU ===
         onValue(ref(db, 'Members'), (snapshot) => {
             const data = snapshot.val();
             const tbodyMembers = document.getElementById('membersTable');
@@ -468,8 +565,9 @@
             
             if (data) {
                 membersData = data; 
+                runAutoDelete(); // Chạy dọn rác mỗi khi data thay đổi
+
                 for (const [uid, info] of Object.entries(data)) {
-                    // Cột Tên mở Popup theo chế độ EDIT (Sửa)
                     tbodyMembers.innerHTML += `
                         <tr>
                             <td class="delete-col ${isDeleteMode ? '' : 'hide-col'}"><input type="checkbox" class="checkbox-del" value="${uid}"></td>
@@ -479,7 +577,6 @@
                         </tr>
                     `;
 
-                    // Lưới thẻ mở Popup theo chế độ VIEW (Chỉ xem)
                     const isInside = (info.lastStatus === "Vào");
                     const statusClass = isInside ? "status-in" : "status-out";
                     const statusText = isInside ? "🟢 Tình trạng: Vào" : "🔴 Tình trạng: Ra";
@@ -494,9 +591,7 @@
 
                     if(info.Attendance) {
                         for (const [timestamp, att] of Object.entries(info.Attendance)) {
-                            allAttendance.push({
-                                timeKey: parseInt(timestamp), timeString: att.time, name: info.name, uid: uid, status: att.status || 'Vào'
-                            });
+                            allAttendance.push({ timeKey: parseInt(timestamp), timeString: att.time, name: info.name, uid: uid, status: att.status || 'Vào' });
                         }
                     }
                 }
