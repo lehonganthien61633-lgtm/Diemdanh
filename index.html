@@ -99,13 +99,23 @@
 
         /* Popup Modal Chi Tiết */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
-        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 25px; border: 1px solid #888; width: 90%; max-width: 600px; border-radius: 12px; }
+        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 25px; border: 1px solid #888; width: 90%; max-width: 600px; border-radius: 12px; transition: 0.3s; }
         .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
         .close:hover { color: black; }
         .modal-content label { font-weight: bold; margin-top: 10px; display: block; font-size: 14px; color: #34495e; }
         .modal-content input { width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px;}
         .link-name { color: #2980b9; cursor: pointer; text-decoration: underline; font-weight: bold; }
         .link-name:hover { color: #1abc9c; }
+
+        /* Fullscreen Layout (Trạng thái Xem) */
+        .modal-fullscreen { margin: 0 !important; width: 100% !important; max-width: 100% !important; height: 100vh !important; border-radius: 0 !important; display: flex; flex-direction: column; }
+        .split-container { display: flex; flex-direction: row; gap: 30px; flex: 1; overflow: hidden; }
+        .left-panel { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding-right: 15px; }
+        .right-panel { flex: 1.5; display: flex; flex-direction: column; border-left: 2px solid #ecf0f1; padding-left: 30px; overflow: hidden; }
+        .history-container { flex: 1; overflow-y: auto; }
+        
+        /* Khóa cuộn trang chính */
+        .no-scroll { overflow: hidden; }
     </style>
 </head>
 <body>
@@ -218,56 +228,66 @@
         </div>
     </div>
 
-    <!-- Modal Chi Tiết Thành Viên -->
+    <!-- Modal Chi Tiết Thành Viên (Bố cục Động) -->
     <div id="memberModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal()">&times;</span>
-            <h2 id="modalTitle" style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px;">Hồ Sơ Thành Viên</h2>
-            
-            <input type="hidden" id="editOldUid">
-            <label>UID Thẻ Tích Hợp:</label>
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="editUid" readonly style="flex:1; background-color: #ecf0f1; font-weight: bold;">
-                <button type="button" class="btn btn-delete" style="margin: 5px 0 10px 0; display: none;" onclick="startChangeCard()" id="btnChangeCard">🔄 Đổi thẻ mới</button>
-                <button type="button" class="btn btn-cancel" style="margin: 5px 0 10px 0; display: none;" onclick="cancelChangeCard()" id="btnCancelChange">❌ Hủy đổi thẻ</button>
+        <div id="modalContent" class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 20px;">
+                <h2 id="modalTitle" style="margin: 0; color: #2c3e50;">Hồ Sơ Thành Viên</h2>
+                <span class="close" onclick="closeModal()" title="Đóng bảng">&times;</span>
             </div>
             
-            <label>Họ và Tên:</label>
-            <input type="text" id="editName" placeholder="Nhập họ và tên..." oninput="checkChanges()">
-            
-            <div style="display:flex; gap:15px;">
-                <div style="flex:1;">
-                    <label>Mã Số (ID/MSSV):</label>
-                    <input type="text" id="editId" placeholder="VD: 211xxxx" oninput="checkChanges()">
+            <div id="modalBodyLayout">
+                <!-- Bảng thông tin (Cột Trái) -->
+                <div id="infoPanel" class="left-panel">
+                    <input type="hidden" id="editOldUid">
+                    <label>UID Thẻ Tích Hợp:</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="editUid" readonly style="flex:1; background-color: #ecf0f1; font-weight: bold;">
+                        <button type="button" class="btn btn-delete" style="margin: 5px 0 10px 0; display: none;" onclick="startChangeCard()" id="btnChangeCard">🔄 Đổi thẻ mới</button>
+                        <button type="button" class="btn btn-cancel" style="margin: 5px 0 10px 0; display: none;" onclick="cancelChangeCard()" id="btnCancelChange">❌ Hủy đổi thẻ</button>
+                    </div>
+                    
+                    <label>Họ và Tên:</label>
+                    <input type="text" id="editName" placeholder="Nhập họ và tên..." oninput="checkChanges()">
+                    
+                    <div style="display:flex; gap:15px;">
+                        <div style="flex:1;">
+                            <label>Mã Số (ID/MSSV):</label>
+                            <input type="text" id="editId" placeholder="VD: 211xxxx" oninput="checkChanges()">
+                        </div>
+                        <div style="flex:1;">
+                            <label>Ngày Sinh:</label>
+                            <input type="date" id="editDob" oninput="checkChanges()">
+                        </div>
+                    </div>
+                    
+                    <label>Email:</label>
+                    <input type="email" id="editEmail" placeholder="example@email.com" oninput="checkChanges()">
+                    
+                    <button type="button" id="btnSaveInfo" class="btn btn-active" style="width:100%; margin-top: 5px; display: none;" onclick="saveMemberInfo()">💾 Hoàn Tất / Lưu Thông Tin</button>
                 </div>
-                <div style="flex:1;">
-                    <label>Ngày Sinh:</label>
-                    <input type="date" id="editDob" oninput="checkChanges()">
-                </div>
-            </div>
-            
-            <label>Email:</label>
-            <input type="email" id="editEmail" placeholder="example@email.com" oninput="checkChanges()">
-            
-            <button type="button" id="btnSaveInfo" class="btn btn-active" style="width:100%; margin-top: 5px; display: none;" onclick="saveMemberInfo()">💾 Hoàn Tất / Lưu Thông Tin</button>
-            
-            <h3 id="historyTitle" style="margin-top:25px; color: #2c3e50; border-top: 2px solid #ecf0f1; padding-top: 15px;">Lịch sử vào/ra cá nhân</h3>
-            <div id="historyTableContainer">
-                <div class="filter-container" style="padding: 10px; margin-bottom: 10px;">
-                    <div><select id="personalRows" onchange="changePersonalRows()"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
-                    <div style="display:flex; gap: 5px; align-items: center;">
-                        <input type="date" id="personalStartDate"> - <input type="date" id="personalEndDate">
-                        <button class="btn btn-active" style="padding: 6px 10px;" onclick="applyPersonalFilter()">Lọc</button>
-                        <button class="btn btn-cancel" style="display:inline-block; padding: 6px 10px; margin:0;" onclick="clearPersonalFilter()">Xóa</button>
+
+                <!-- Bảng Lịch sử (Cột Phải) -->
+                <div id="historyPanel" class="right-panel">
+                    <h3 style="margin-top:0; color: #2c3e50;">Lịch sử vào/ra cá nhân</h3>
+                    <div style="display: flex; flex-direction: column; height: 100%;">
+                        <div class="filter-container" style="padding: 10px; margin-bottom: 10px;">
+                            <div><select id="personalRows" onchange="changePersonalRows()"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
+                            <div style="display:flex; gap: 5px; align-items: center;">
+                                <input type="date" id="personalStartDate"> - <input type="date" id="personalEndDate">
+                                <button class="btn btn-active" style="padding: 6px 10px;" onclick="applyPersonalFilter()">Lọc</button>
+                                <button class="btn btn-cancel" style="display:inline-block; padding: 6px 10px; margin:0;" onclick="clearPersonalFilter()">Xóa</button>
+                            </div>
+                        </div>
+                        <div class="history-container">
+                            <table>
+                                <thead style="position:sticky; top:0; z-index:1; background-color: #3498db;"><tr><th style="color:white;">Thời gian quét</th><th style="color:white;">Hoạt động</th></tr></thead>
+                                <tbody id="personalHistoryTable"></tbody>
+                            </table>
+                        </div>
+                        <div id="personalPagination" class="pagination"></div>
                     </div>
                 </div>
-                <div style="max-height: 250px; overflow-y: auto;">
-                    <table>
-                        <thead style="position:sticky; top:0; z-index:1;"><tr><th>Thời gian quét</th><th>Hoạt động</th></tr></thead>
-                        <tbody id="personalHistoryTable"></tbody>
-                    </table>
-                </div>
-                <div id="personalPagination" class="pagination"></div>
             </div>
         </div>
     </div>
@@ -395,9 +415,26 @@
             const isView = (mode === 'view');
             const isAdd = (mode === 'add');
             
-            if (isView) document.getElementById('modalTitle').innerText = "Thông Tin Chi Tiết (Chỉ Xem)";
-            else if (isAdd) document.getElementById('modalTitle').innerText = "Thêm Thành Viên Mới";
-            else document.getElementById('modalTitle').innerText = "Chỉnh Sửa Hồ Sơ";
+            // Xử lý Bố cục Động (Fullscreen chia cột vs Form nhỏ)
+            const modalContent = document.getElementById('modalContent');
+            const layoutContainer = document.getElementById('modalBodyLayout');
+            const historyPanel = document.getElementById('historyPanel');
+
+            if (isView) {
+                document.getElementById('modalTitle').innerText = "Thông Tin Chi Tiết & Lịch Sử (Chỉ Xem)";
+                modalContent.classList.add('modal-fullscreen');
+                layoutContainer.className = 'split-container';
+                historyPanel.style.display = 'flex';
+                document.body.classList.add('no-scroll'); // Tắt cuộn trang nền
+            } else {
+                if (isAdd) document.getElementById('modalTitle').innerText = "Thêm Thành Viên Mới";
+                else document.getElementById('modalTitle').innerText = "Chỉnh Sửa Hồ Sơ";
+                
+                modalContent.classList.remove('modal-fullscreen');
+                layoutContainer.className = '';
+                historyPanel.style.display = 'none'; // Ẩn lịch sử khi thêm/sửa
+                document.body.classList.remove('no-scroll');
+            }
 
             document.getElementById('editName').readOnly = isView;
             document.getElementById('editId').readOnly = isView;
@@ -407,8 +444,6 @@
             document.getElementById('btnChangeCard').style.display = (isView || isAdd) ? 'none' : 'block';
             document.getElementById('btnCancelChange').style.display = 'none';
             document.getElementById('btnSaveInfo').style.display = isAdd ? 'block' : 'none';
-            document.getElementById('historyTitle').style.display = isAdd ? 'none' : 'block';
-            document.getElementById('historyTableContainer').style.display = isAdd ? 'none' : 'block';
             
             if (!isView && !isAdd) {
                 changingUid = null;
@@ -416,18 +451,22 @@
                 document.getElementById('btnChangeCard').disabled = false;
             }
             
-            // Xử lý dữ liệu mảng Lịch sử cá nhân
-            personalAttData = [];
-            if(!isAdd && info.Attendance) {
-                const arr = Object.entries(info.Attendance).sort((a,b) => b[0] - a[0]);
-                arr.forEach(([ts, att]) => { personalAttData.push({ time: att.time, status: att.status || 'Vào' }); });
+            // Render dữ liệu nếu ở chế độ xem
+            if (isView) {
+                personalAttData = [];
+                if(info.Attendance) {
+                    const arr = Object.entries(info.Attendance).sort((a,b) => b[0] - a[0]);
+                    arr.forEach(([ts, att]) => { personalAttData.push({ time: att.time, status: att.status || 'Vào' }); });
+                }
+                clearPersonalFilter(); 
             }
-            clearPersonalFilter(); // Gọi render
+            
             document.getElementById('memberModal').style.display = 'block';
         };
 
         window.closeModal = function() {
             document.getElementById('memberModal').style.display = 'none';
+            document.body.classList.remove('no-scroll'); // Bật lại cuộn trang nền
             if (changingUid || currentModalMode === 'add') {
                 set(ref(db, 'Command/mode'), 0);
                 set(ref(db, 'Command/new_uid'), ""); 
