@@ -85,6 +85,18 @@
         .card-id { color: #7f8c8d; margin: 5px 0; font-size: 15px; }
         .card-status { font-weight: bold; font-size: 16px; margin-top: 15px; text-align: right;}
 
+        /* === BỔ SUNG GIAO DIỆN PHÂN TRANG, LỌC VÀ CÀI ĐẶT === */
+        .filter-container { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; margin-bottom: 15px; background: #ecf0f1; padding: 15px; border-radius: 8px; justify-content: space-between; }
+        .filter-container input, .filter-container select { padding: 8px; border: 1px solid #bdc3c7; border-radius: 4px; outline: none; }
+        .pagination { display: flex; justify-content: center; gap: 5px; margin-top: 15px; }
+        .page-btn { padding: 5px 12px; border: 1px solid #3498db; background: white; color: #3498db; border-radius: 4px; cursor: pointer; transition: 0.3s; }
+        .page-btn:hover { background: #3498db; color: white; }
+        .page-btn.active { background: #3498db; color: white; font-weight: bold; }
+        .page-btn:disabled { border-color: #bdc3c7; color: #bdc3c7; cursor: not-allowed; background: #f9f9f9; }
+        
+        .settings-card { background: white; border: 1px solid #e0e6ed; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; }
+        .settings-card select { width: 100%; padding: 12px; font-size: 15px; margin-bottom: 25px; border-radius: 6px; border: 1px solid #ccc; background-color: #f8f9fa; cursor: pointer; }
+
         /* Popup Modal Chi Tiết */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
         .modal-content { background-color: #fefefe; margin: 5% auto; padding: 25px; border: 1px solid #888; width: 90%; max-width: 600px; border-radius: 12px; }
@@ -145,19 +157,32 @@
         <!-- Bảng Lịch Sử Tổng -->
         <div id="tab-history" class="box tab-content">
             <h2>Lịch Sử Điểm Danh Toàn Hệ Thống</h2>
+            <div class="filter-container">
+                <div>
+                    <label>Hiển thị: </label>
+                    <select id="globalRows" onchange="changeGlobalRows()">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+                <div style="display:flex; gap: 10px; align-items: center;">
+                    Từ: <input type="date" id="globalStartDate"> 
+                    Đến: <input type="date" id="globalEndDate">
+                    <button class="btn btn-active" style="padding: 8px 15px;" onclick="applyGlobalFilter()">🔍 Lọc</button>
+                    <button class="btn btn-cancel" style="display:inline-block; padding: 8px 15px; margin:0;" onclick="clearGlobalFilter()">❌ Xóa lọc</button>
+                </div>
+            </div>
             <table>
                 <thead>
-                    <tr>
-                        <th>Thời Gian</th>
-                        <th>Họ và Tên</th>
-                        <th>UID Thẻ</th>
-                        <th>Trạng Thái</th>
-                    </tr>
+                    <tr><th>Thời Gian</th><th>Họ và Tên</th><th>UID Thẻ</th><th>Trạng Thái</th></tr>
                 </thead>
                 <tbody id="attendanceTable">
                     <tr><td colspan="4" class="empty-row">Đang tải dữ liệu...</td></tr>
                 </tbody>
             </table>
+            <div id="globalPagination" class="pagination"></div>
         </div>
 
         <!-- Bảng Quản Lý Thiết Bị -->
@@ -166,11 +191,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>STT</th>
-                        <th>Tên Thiết Bị</th>
-                        <th>Trạng Thái mạng</th>
-                        <th>Đầu đọc thẻ (RC522)</th>
-                        <th>Đèn báo (LED RGB)</th>
+                        <th>STT</th><th>Tên Thiết Bị</th><th>Trạng Thái mạng</th><th>Đầu đọc thẻ (RC522)</th><th>Đèn báo (LED RGB)</th>
                     </tr>
                 </thead>
                 <tbody id="devicesTable">
@@ -179,12 +200,12 @@
             </table>
         </div>
 
-        <!-- Bảng Thiết Lập Hệ Thống (MỚI) -->
+        <!-- Bảng Thiết Lập Hệ Thống (LÀM ĐẸP GIAO DIỆN) -->
         <div id="tab-settings" class="box tab-content">
-            <h2>Thiết Lập Hệ Thống</h2>
-            <div style="max-width: 400px;">
-                <label style="font-weight: bold; display: block; margin-bottom: 10px;">Tự động xóa lịch sử điểm danh cũ sau:</label>
-                <select id="autoDeleteSelect" style="width: 100%; padding: 10px; font-size: 15px; margin-bottom: 20px; border-radius: 5px; border: 1px solid #ccc;">
+            <h2>⚙️ Thiết Lập Hệ Thống</h2>
+            <div class="settings-card" style="max-width: 500px; margin: 0 auto;">
+                <label style="font-weight: bold; display: block; margin-bottom: 10px; color: #2c3e50;">🗑️ Tự động xóa lịch sử điểm danh cũ sau:</label>
+                <select id="autoDeleteSelect">
                     <option value="0">Không bao giờ xóa (Giữ vĩnh viễn)</option>
                     <option value="30">30 ngày</option>
                     <option value="60">60 ngày</option>
@@ -192,71 +213,8 @@
                     <option value="365">1 năm (365 ngày)</option>
                     <option value="730">2 năm (730 ngày)</option>
                 </select>
-                <button type="button" class="btn btn-active" onclick="saveSettings()">💾 Lưu Cài Đặt</button>
+                <button type="button" class="btn btn-active" style="width: 100%; font-size: 16px; padding: 12px;" onclick="saveSettings()">💾 Lưu Cài Đặt</button>
             </div>
-        </div>
-    </div>
-        <!-- Bảng Thành Viên -->
-        <div id="tab-members" class="box tab-content">
-            <h2>Danh Sách Thành Viên</h2>
-            <div style="margin-bottom: 15px;">
-                <button id="btnAddMember" class="btn btn-add">➕ Thêm Thành Viên Mới</button>
-                <button id="btnCancelAdd" class="btn btn-cancel">❌ Hủy thêm</button>
-                <button id="btnToggleDelete" class="btn btn-delete">🗑️ Xóa thành viên</button>
-                <button id="btnConfirmDelete" class="btn btn-confirm">⚠️ Xác nhận xóa</button>
-            </div>
-            <p id="addStatus" style="color: #e67e22; font-weight: bold; display: none;">⏳ Đang chờ quét thẻ trên thiết bị (Đèn RGB đang nháy xanh)...</p>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th class="delete-col hide-col">Chọn</th>
-                        <th>Họ và Tên</th>
-                        <th>Mã Số</th>
-                        <th>UID Thẻ</th>
-                    </tr>
-                </thead>
-                <tbody id="membersTable">
-                    <tr><td colspan="4" class="empty-row">Đang tải dữ liệu...</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Bảng Lịch Sử Tổng -->
-        <div id="tab-history" class="box tab-content">
-            <h2>Lịch Sử Điểm Danh Toàn Hệ Thống</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Thời Gian</th>
-                        <th>Họ và Tên</th>
-                        <th>UID Thẻ</th>
-                        <th>Trạng Thái</th>
-                    </tr>
-                </thead>
-                <tbody id="attendanceTable">
-                    <tr><td colspan="4" class="empty-row">Đang tải dữ liệu...</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Bảng Quản Lý Thiết Bị -->
-        <div id="tab-devices" class="box tab-content">
-            <h2>Quản Lý Thiết Bị & Module</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>STT</th>
-                        <th>Tên Thiết Bị</th>
-                        <th>Trạng Thái mạng</th>
-                        <th>Đầu đọc thẻ (RC522)</th>
-                        <th>Đèn báo (LED RGB)</th>
-                    </tr>
-                </thead>
-                <tbody id="devicesTable">
-                    <tr><td colspan="5" class="empty-row">Đang tải dữ liệu...</td></tr>
-                </tbody>
-            </table>
         </div>
     </div>
 
@@ -291,14 +249,25 @@
             <label>Email:</label>
             <input type="email" id="editEmail" placeholder="example@email.com" oninput="checkChanges()">
             
-            <button type="button" id="btnSaveInfo" class="btn btn-active" style="width:100%; margin-top: 5px; display: none;" onclick="saveMemberInfo()">💾 Lưu Thay Đổi Thông Tin</button>
+            <button type="button" id="btnSaveInfo" class="btn btn-active" style="width:100%; margin-top: 5px; display: none;" onclick="saveMemberInfo()">💾 Hoàn Tất / Lưu Thông Tin</button>
             
             <h3 id="historyTitle" style="margin-top:25px; color: #2c3e50; border-top: 2px solid #ecf0f1; padding-top: 15px;">Lịch sử vào/ra cá nhân</h3>
-            <div id="historyTableContainer" style="max-height: 200px; overflow-y: auto;">
-                <table>
-                    <thead><tr><th>Thời gian quét</th><th>Hoạt động</th></tr></thead>
-                    <tbody id="personalHistoryTable"></tbody>
-                </table>
+            <div id="historyTableContainer">
+                <div class="filter-container" style="padding: 10px; margin-bottom: 10px;">
+                    <div><select id="personalRows" onchange="changePersonalRows()"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
+                    <div style="display:flex; gap: 5px; align-items: center;">
+                        <input type="date" id="personalStartDate"> - <input type="date" id="personalEndDate">
+                        <button class="btn btn-active" style="padding: 6px 10px;" onclick="applyPersonalFilter()">Lọc</button>
+                        <button class="btn btn-cancel" style="display:inline-block; padding: 6px 10px; margin:0;" onclick="clearPersonalFilter()">Xóa</button>
+                    </div>
+                </div>
+                <div style="max-height: 250px; overflow-y: auto;">
+                    <table>
+                        <thead style="position:sticky; top:0; z-index:1;"><tr><th>Thời gian quét</th><th>Hoạt động</th></tr></thead>
+                        <tbody id="personalHistoryTable"></tbody>
+                    </table>
+                </div>
+                <div id="personalPagination" class="pagination"></div>
             </div>
         </div>
     </div>
@@ -319,14 +288,47 @@
         let membersData = {};
         let isDeleteMode = false;
         let changingUid = null; 
-        let currentModalMode = 'view'; // 'view', 'edit', 'add'
+        let currentModalMode = 'view'; 
         let originalMemberInfo = {};   
+
+        // Biến phân trang và lọc cho Global
+        let globalAttData = [], filteredGlobalAtt = [];
+        let globalPage = 1, globalRows = 10;
+        
+        // Biến phân trang và lọc cho Personal
+        let personalAttData = [], filteredPersonalAtt = [];
+        let personalPage = 1, personalRows = 10;
+
+        // === HÀM HỖ TRỢ LỌC VÀ PHÂN TRANG CHUNG ===
+        function filterByDate(data, startDate, endDate) {
+            if (!startDate && !endDate) return data;
+            return data.filter(item => {
+                const justDate = (item.timeString || item.time).substring(0, 10);
+                if (startDate && justDate < startDate) return false;
+                if (endDate && justDate > endDate) return false;
+                return true;
+            });
+        }
+
+        function renderPaginationControls(totalItems, rowsPerPage, currentPage, elementId, callbackName) {
+            const totalPages = Math.ceil(totalItems / rowsPerPage);
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+            if (totalPages <= 1) return;
+
+            container.innerHTML += `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="${callbackName}(${currentPage - 1})">«</button>`;
+            let startP = Math.max(1, currentPage - 2);
+            let endP = Math.min(totalPages, currentPage + 2);
+            for (let i = startP; i <= endP; i++) {
+                container.innerHTML += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="${callbackName}(${i})">${i}</button>`;
+            }
+            container.innerHTML += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="${callbackName}(${currentPage + 1})">»</button>`;
+        }
 
         // === GIAO DIỆN CHUYỂN TAB ===
         window.switchTab = function(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('tab-active'));
             document.querySelectorAll('.menu-bar .btn').forEach(btn => btn.classList.remove('btn-active'));
-
             document.getElementById('tab-' + tabName).classList.add('tab-active');
             const btnMap = { 'status': 'btnStatus', 'members': 'btnMembers', 'history': 'btnHistory', 'devices': 'btnDevices', 'settings': 'btnSettings' };
             document.getElementById(btnMap[tabName]).classList.add('btn-active');
@@ -348,14 +350,40 @@
             document.getElementById('btnSaveInfo').style.display = hasChanged ? 'block' : 'none';
         };
 
+        // === XỬ LÝ LỊCH SỬ CÁ NHÂN (TRONG MODAL) ===
+        window.changePersonalRows = function() { personalRows = parseInt(document.getElementById('personalRows').value); personalPage = 1; updatePersonalTable(); };
+        window.applyPersonalFilter = function() {
+            filteredPersonalAtt = filterByDate(personalAttData, document.getElementById('personalStartDate').value, document.getElementById('personalEndDate').value);
+            personalPage = 1; updatePersonalTable();
+        };
+        window.clearPersonalFilter = function() {
+            document.getElementById('personalStartDate').value = ''; document.getElementById('personalEndDate').value = '';
+            filteredPersonalAtt = [...personalAttData]; personalPage = 1; updatePersonalTable();
+        };
+        window.goToPersonalPage = function(p) { personalPage = p; updatePersonalTable(); };
+
+        function updatePersonalTable() {
+            const tbody = document.getElementById('personalHistoryTable');
+            tbody.innerHTML = '';
+            if (filteredPersonalAtt.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="2" class="empty-row">Không có dữ liệu phù hợp</td></tr>';
+                document.getElementById('personalPagination').innerHTML = '';
+                return;
+            }
+            const start = (personalPage - 1) * personalRows;
+            const paginated = filteredPersonalAtt.slice(start, start + personalRows);
+            paginated.forEach(att => {
+                const color = att.status === "Vào" ? "green" : "red";
+                tbody.innerHTML += `<tr><td>${att.time}</td><td style="color:${color};font-weight:bold">${att.status}</td></tr>`;
+            });
+            renderPaginationControls(filteredPersonalAtt.length, personalRows, personalPage, 'personalPagination', 'goToPersonalPage');
+        }
+
         // === XỬ LÝ POPUP MODAL THÔNG TIN & ĐỔI THẺ ===
         window.openMemberModal = function(uid, mode) {
             currentModalMode = mode;
             const info = membersData[uid] || {};
-            
-            originalMemberInfo = {
-                name: info.name || '', id: info.id || '', dob: info.dob || '', email: info.email || ''
-            };
+            originalMemberInfo = { name: info.name || '', id: info.id || '', dob: info.dob || '', email: info.email || '' };
             
             document.getElementById('editOldUid').value = uid;
             document.getElementById('editUid').value = uid;
@@ -388,16 +416,13 @@
                 document.getElementById('btnChangeCard').disabled = false;
             }
             
-            const tbody = document.getElementById('personalHistoryTable');
-            tbody.innerHTML = '';
+            // Xử lý dữ liệu mảng Lịch sử cá nhân
+            personalAttData = [];
             if(!isAdd && info.Attendance) {
                 const arr = Object.entries(info.Attendance).sort((a,b) => b[0] - a[0]);
-                arr.forEach(([ts, att]) => {
-                    const color = att.status === "Vào" ? "green" : "red";
-                    tbody.innerHTML += `<tr><td>${att.time}</td><td style="color:${color};font-weight:bold">${att.status}</td></tr>`;
-                });
-            } else { tbody.innerHTML = '<tr><td colspan="2" class="empty-row">Chưa có lịch sử quét</td></tr>'; }
-            
+                arr.forEach(([ts, att]) => { personalAttData.push({ time: att.time, status: att.status || 'Vào' }); });
+            }
+            clearPersonalFilter(); // Gọi render
             document.getElementById('memberModal').style.display = 'block';
         };
 
@@ -410,29 +435,38 @@
             }
         };
 
+        // YÊU CẦU BẮT BUỘC ĐIỀN ĐỦ THÔNG TIN KHI THÊM
         window.saveMemberInfo = function() {
             const uid = document.getElementById('editOldUid').value;
-            const updates = {};
-            updates['Members/' + uid + '/name'] = document.getElementById('editName').value;
-            updates['Members/' + uid + '/id'] = document.getElementById('editId').value;
-            updates['Members/' + uid + '/dob'] = document.getElementById('editDob').value;
-            updates['Members/' + uid + '/email'] = document.getElementById('editEmail').value;
-            
+            const nameVal = document.getElementById('editName').value.trim();
+            const idVal = document.getElementById('editId').value.trim();
+            const dobVal = document.getElementById('editDob').value;
+            const emailVal = document.getElementById('editEmail').value.trim();
+
             if(currentModalMode === 'add') {
-                updates['Members/' + uid + '/lastStatus'] = "Ra"; 
+                if(!nameVal || !idVal || !dobVal || !emailVal) {
+                    alert("⚠️ Vui lòng điền ĐẦY ĐỦ tất cả thông tin để hoàn thành việc thêm mới!");
+                    return;
+                }
             }
+
+            const updates = {};
+            updates['Members/' + uid + '/name'] = nameVal;
+            updates['Members/' + uid + '/id'] = idVal;
+            updates['Members/' + uid + '/dob'] = dobVal;
+            updates['Members/' + uid + '/email'] = emailVal;
+            if(currentModalMode === 'add') updates['Members/' + uid + '/lastStatus'] = "Ra"; 
 
             update(ref(db), updates).then(() => {
                 alert(currentModalMode === 'add' ? 'Đã thêm thành viên mới!' : 'Đã lưu thông tin hồ sơ!');
                 if (currentModalMode === 'add') closeModal();
                 else {
-                    originalMemberInfo = { name: updates['Members/' + uid + '/name'], id: updates['Members/' + uid + '/id'], dob: updates['Members/' + uid + '/dob'], email: updates['Members/' + uid + '/email'] };
+                    originalMemberInfo = { name: nameVal, id: idVal, dob: dobVal, email: emailVal };
                     window.checkChanges(); 
                 }
             });
         };
 
-        // Bắt đầu đổi thẻ
         window.startChangeCard = function() {
             changingUid = document.getElementById('editOldUid').value;
             set(ref(db, 'Command/mode'), 1);
@@ -441,7 +475,6 @@
             document.getElementById('btnCancelChange').style.display = 'inline-block';
         };
 
-        // Hủy đổi thẻ
         window.cancelChangeCard = function() {
             set(ref(db, 'Command/mode'), 0);
             set(ref(db, 'Command/new_uid'), "");
@@ -516,7 +549,6 @@
                     btnAdd.style.display = "inline-block";
                     btnCancelAdd.style.display = "none";
                     
-                    // Mở Form điền thông tin thay vì Prompt
                     setTimeout(() => {
                         openMemberModal(newUid, 'add');
                         set(ref(db, 'Command/new_uid'), "");
@@ -553,19 +585,47 @@
             }
         }
 
-        // === KẾT XUẤT (RENDER) DỮ LIỆU ===
+        // === XỬ LÝ LỊCH SỬ TỔNG (GLOBAL) ===
+        window.changeGlobalRows = function() { globalRows = parseInt(document.getElementById('globalRows').value); globalPage = 1; updateGlobalTable(); };
+        window.applyGlobalFilter = function() {
+            filteredGlobalAtt = filterByDate(globalAttData, document.getElementById('globalStartDate').value, document.getElementById('globalEndDate').value);
+            globalPage = 1; updateGlobalTable();
+        };
+        window.clearGlobalFilter = function() {
+            document.getElementById('globalStartDate').value = ''; document.getElementById('globalEndDate').value = '';
+            filteredGlobalAtt = [...globalAttData]; globalPage = 1; updateGlobalTable();
+        };
+        window.goToGlobalPage = function(p) { globalPage = p; updateGlobalTable(); };
+
+        function updateGlobalTable() {
+            const tbodyAtt = document.getElementById('attendanceTable');
+            tbodyAtt.innerHTML = '';
+            if (filteredGlobalAtt.length === 0) {
+                tbodyAtt.innerHTML = '<tr><td colspan="4" class="empty-row">Không có dữ liệu phù hợp</td></tr>';
+                document.getElementById('globalPagination').innerHTML = '';
+                return;
+            }
+            const start = (globalPage - 1) * globalRows;
+            const paginated = filteredGlobalAtt.slice(start, start + globalRows);
+            paginated.forEach(att => {
+                const color = att.status === "Vào" ? "green" : "red";
+                tbodyAtt.innerHTML += `<tr><td>${att.timeString}</td><td>${att.name}</td><td>${att.uid}</td><td style="color:${color}; font-weight:bold;">${att.status}</td></tr>`;
+            });
+            renderPaginationControls(filteredGlobalAtt.length, globalRows, globalPage, 'globalPagination', 'goToGlobalPage');
+        }
+
+        // === KẾT XUẤT (RENDER) DỮ LIỆU TỔNG QUÁT ===
         onValue(ref(db, 'Members'), (snapshot) => {
             const data = snapshot.val();
             const tbodyMembers = document.getElementById('membersTable');
-            const tbodyAtt = document.getElementById('attendanceTable');
             const statusGrid = document.getElementById('statusGrid');
             
-            tbodyMembers.innerHTML = ""; tbodyAtt.innerHTML = ""; statusGrid.innerHTML = "";
-            let allAttendance = []; 
+            tbodyMembers.innerHTML = ""; statusGrid.innerHTML = "";
+            globalAttData = []; 
             
             if (data) {
                 membersData = data; 
-                runAutoDelete(); // Chạy dọn rác mỗi khi data thay đổi
+                runAutoDelete(); 
 
                 for (const [uid, info] of Object.entries(data)) {
                     tbodyMembers.innerHTML += `
@@ -591,26 +651,26 @@
 
                     if(info.Attendance) {
                         for (const [timestamp, att] of Object.entries(info.Attendance)) {
-                            allAttendance.push({ timeKey: parseInt(timestamp), timeString: att.time, name: info.name, uid: uid, status: att.status || 'Vào' });
+                            globalAttData.push({ timeKey: parseInt(timestamp), timeString: att.time, name: info.name, uid: uid, status: att.status || 'Vào' });
                         }
                     }
                 }
 
-                if(allAttendance.length > 0) {
-                    allAttendance.sort((a, b) => b.timeKey - a.timeKey);
-                    allAttendance.forEach(att => {
-                        const color = att.status === "Vào" ? "green" : "red";
-                        tbodyAtt.innerHTML += `<tr><td>${att.timeString}</td><td>${att.name}</td><td>${att.uid}</td><td style="color:${color}; font-weight:bold;">${att.status}</td></tr>`;
-                    });
-                } else { tbodyAtt.innerHTML = `<tr><td colspan="4" class="empty-row">Chưa có dữ liệu điểm danh</td></tr>`; }
+                globalAttData.sort((a, b) => b.timeKey - a.timeKey);
+                // Giữ nguyên lọc hiện tại hoặc load toàn bộ
+                const sDate = document.getElementById('globalStartDate').value;
+                const eDate = document.getElementById('globalEndDate').value;
+                filteredGlobalAtt = filterByDate(globalAttData, sDate, eDate);
+                updateGlobalTable();
+
             } else {
                 membersData = {};
                 statusGrid.innerHTML = `<p style="width:100%; text-align:center; color:#7f8c8d;">Chưa có thành viên nào.</p>`;
                 tbodyMembers.innerHTML = `<tr><td colspan="4" class="empty-row">Chưa có dữ liệu</td></tr>`;
-                tbodyAtt.innerHTML = `<tr><td colspan="4" class="empty-row">Chưa có dữ liệu</td></tr>`;
+                filteredGlobalAtt = [];
+                updateGlobalTable();
             }
         });
-
         // === QUẢN LÝ THIẾT BỊ ===
         window.toggleModule = function(devId, moduleName, isChecked) {
             set(ref(db, `Devices/${devId}/modules/${moduleName}`), isChecked);
