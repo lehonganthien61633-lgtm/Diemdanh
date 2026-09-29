@@ -97,22 +97,25 @@
         .settings-card { background: white; border: 1px solid #e0e6ed; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; }
         .settings-card select { width: 100%; padding: 12px; font-size: 15px; margin-bottom: 25px; border-radius: 6px; border: 1px solid #ccc; background-color: #f8f9fa; cursor: pointer; }
 
-        /* Popup Modal Chi Tiết */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
-        .modal-content { background-color: #fefefe; margin: 5% auto; padding: 25px; border: 1px solid #888; width: 90%; max-width: 600px; border-radius: 12px; transition: 0.3s; }
-        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        /* Popup Modal Chi Tiết & Bố Cục Chống Cuộn Toàn Trang */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: #fefefe; margin: 5vh auto; padding: 20px 25px; border: 1px solid #888; width: 90%; max-width: 600px; max-height: 90vh; border-radius: 12px; transition: 0.3s; box-sizing: border-box; display: flex; flex-direction: column; }
+        .close { color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 1; margin-top: -5px; }
         .close:hover { color: black; }
         .modal-content label { font-weight: bold; margin-top: 10px; display: block; font-size: 14px; color: #34495e; }
         .modal-content input { width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px;}
         .link-name { color: #2980b9; cursor: pointer; text-decoration: underline; font-weight: bold; }
         .link-name:hover { color: #1abc9c; }
 
+        /* Vùng chứa cuộn nội dung Form khi ở chế độ Form nhỏ */
+        #modalBodyLayout { flex: 1; overflow-y: auto; overflow-x: hidden; padding-right: 5px; }
+
         /* Fullscreen Layout (Trạng thái Xem) */
-        .modal-fullscreen { margin: 0 !important; width: 100% !important; max-width: 100% !important; height: 100vh !important; border-radius: 0 !important; display: flex; flex-direction: column; }
-        .split-container { display: flex; flex-direction: row; gap: 30px; flex: 1; overflow: hidden; }
+        .modal-fullscreen { margin: 0 !important; width: 100vw !important; max-width: 100vw !important; height: 100vh !important; max-height: 100vh !important; border-radius: 0 !important; }
+        .split-container { display: flex; flex-direction: row; gap: 20px; flex: 1; overflow: hidden !important; }
         .left-panel { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding-right: 15px; }
-        .right-panel { flex: 1.5; display: flex; flex-direction: column; border-left: 2px solid #ecf0f1; padding-left: 30px; overflow: hidden; }
-        .history-container { flex: 1; overflow-y: auto; }
+        .right-panel { flex: 1.5; display: flex; flex-direction: column; border-left: 2px solid #ecf0f1; padding-left: 20px; overflow: hidden; }
+        .history-container { flex: 1; overflow-y: auto; border: 1px solid #bdc3c7; border-top: none; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; }
         
         /* Khóa cuộn trang chính */
         .no-scroll { overflow: hidden; }
@@ -231,7 +234,7 @@
     <!-- Modal Chi Tiết Thành Viên (Bố cục Động) -->
     <div id="memberModal" class="modal">
         <div id="modalContent" class="modal-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px; flex-shrink: 0;">
                 <h2 id="modalTitle" style="margin: 0; color: #2c3e50;">Hồ Sơ Thành Viên</h2>
                 <span class="close" onclick="closeModal()" title="Đóng bảng">&times;</span>
             </div>
@@ -264,15 +267,19 @@
                     <label>Email:</label>
                     <input type="email" id="editEmail" placeholder="example@email.com" oninput="checkChanges()">
                     
-                    <button type="button" id="btnSaveInfo" class="btn btn-active" style="width:100%; margin-top: 5px; display: none;" onclick="saveMemberInfo()">💾 Hoàn Tất / Lưu Thông Tin</button>
+                    <button type="button" id="btnSaveInfo" class="btn btn-active" style="width:100%; margin-top: 15px; margin-bottom: 10px; display: none; flex-shrink: 0;" onclick="saveMemberInfo()">💾 Hoàn Tất / Lưu Thông Tin</button>
                 </div>
 
                 <!-- Bảng Lịch sử (Cột Phải) -->
                 <div id="historyPanel" class="right-panel">
-                    <h3 style="margin-top:0; color: #2c3e50;">Lịch sử vào/ra cá nhân</h3>
-                    <div style="display: flex; flex-direction: column; height: 100%;">
-                        <div class="filter-container" style="padding: 10px; margin-bottom: 10px;">
-                            <div><select id="personalRows" onchange="changePersonalRows()"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
+                    <h3 style="margin-top:0; margin-bottom: 15px; color: #2c3e50; flex-shrink: 0;">Lịch sử vào/ra cá nhân</h3>
+                    <div style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+                        <div class="filter-container" style="padding: 10px; margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; flex-shrink: 0;">
+                            <div>
+                                <select id="personalRows" onchange="changePersonalRows()">
+                                    <option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option>
+                                </select>
+                            </div>
                             <div style="display:flex; gap: 5px; align-items: center;">
                                 <input type="date" id="personalStartDate"> - <input type="date" id="personalEndDate">
                                 <button class="btn btn-active" style="padding: 6px 10px;" onclick="applyPersonalFilter()">Lọc</button>
@@ -280,12 +287,14 @@
                             </div>
                         </div>
                         <div class="history-container">
-                            <table>
-                                <thead style="position:sticky; top:0; z-index:1; background-color: #3498db;"><tr><th style="color:white;">Thời gian quét</th><th style="color:white;">Hoạt động</th></tr></thead>
+                            <table style="margin-top: 0; border-top: none;">
+                                <thead style="position:sticky; top:0; z-index:1; background-color: #3498db;">
+                                    <tr><th style="color:white; border-top:none;">Thời gian quét</th><th style="color:white; border-top:none;">Hoạt động</th></tr>
+                                </thead>
                                 <tbody id="personalHistoryTable"></tbody>
                             </table>
                         </div>
-                        <div id="personalPagination" class="pagination"></div>
+                        <div id="personalPagination" class="pagination" style="flex-shrink: 0; margin-top: 10px; margin-bottom: 10px;"></div>
                     </div>
                 </div>
             </div>
