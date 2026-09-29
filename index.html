@@ -180,37 +180,37 @@
         </div>
     </div>
 
-    <!-- Modal Chi Tiết Thành Viên (MỚI) -->
     <div id="memberModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
-            <h2 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px;">Hồ Sơ Thành Viên</h2>
+            <h2 id="modalTitle" style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px;">Hồ Sơ Thành Viên</h2>
             
             <input type="hidden" id="editOldUid">
             <label>UID Thẻ Tích Hợp:</label>
             <div style="display:flex; gap:10px;">
                 <input type="text" id="editUid" readonly style="flex:1; background-color: #ecf0f1; font-weight: bold;">
-                <button type="button" class="btn btn-delete" style="margin: 5px 0 10px 0;" onclick="startChangeCard()" id="btnChangeCard">🔄 Đổi thẻ mới</button>
+                <button type="button" class="btn btn-delete" style="margin: 5px 0 10px 0; display: none;" onclick="startChangeCard()" id="btnChangeCard">🔄 Đổi thẻ mới</button>
             </div>
             
             <label>Họ và Tên:</label>
-            <input type="text" id="editName" placeholder="Nhập họ và tên...">
+            <input type="text" id="editName" placeholder="Nhập họ và tên..." oninput="checkChanges()">
             
             <div style="display:flex; gap:15px;">
                 <div style="flex:1;">
                     <label>Mã Số (ID/MSSV):</label>
-                    <input type="text" id="editId" placeholder="VD: 211xxxx">
+                    <input type="text" id="editId" placeholder="VD: 211xxxx" oninput="checkChanges()">
                 </div>
                 <div style="flex:1;">
                     <label>Ngày Sinh:</label>
-                    <input type="date" id="editDob">
+                    <input type="date" id="editDob" oninput="checkChanges()">
                 </div>
             </div>
             
             <label>Email:</label>
-            <input type="email" id="editEmail" placeholder="example@email.com">
+            <input type="email" id="editEmail" placeholder="example@email.com" oninput="checkChanges()">
             
-            <button type="button" class="btn btn-active" style="width:100%; margin-top: 5px;" onclick="saveMemberInfo()">💾 Lưu Thay Đổi Thông Tin</button>
+            <!-- Nút lưu mặc định bị ẩn đi (display: none) -->
+            <button type="button" id="btnSaveInfo" class="btn btn-active" style="width:100%; margin-top: 5px; display: none;" onclick="saveMemberInfo()">💾 Lưu Thay Đổi Thông Tin</button>
             
             <h3 style="margin-top:25px; color: #2c3e50; border-top: 2px solid #ecf0f1; padding-top: 15px;">Lịch sử vào/ra cá nhân</h3>
             <div style="max-height: 200px; overflow-y: auto;">
@@ -219,50 +219,6 @@
                     <tbody id="personalHistoryTable"></tbody>
                 </table>
             </div>
-        </div>
-    </div>
-        <!-- Bảng Thành Viên -->
-        <div id="tab-members" class="box tab-content tab-active">
-            <h2>Danh Sách Thành Viên</h2>
-            <div style="margin-bottom: 15px;">
-                <button id="btnAddMember" class="btn btn-add">➕ Thêm Thành Viên Mới</button>
-                <button id="btnCancelAdd" class="btn btn-cancel">❌ Hủy thêm</button>
-                <button id="btnToggleDelete" class="btn btn-delete">🗑️ Xóa thành viên</button>
-                <button id="btnConfirmDelete" class="btn btn-confirm">⚠️ Xác nhận xóa</button>
-            </div>
-            <p id="addStatus" style="color: #e67e22; font-weight: bold; display: none;">⏳ Đang chờ quét thẻ trên thiết bị (Đèn RGB đang nháy xanh)...</p>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th class="delete-col hide-col">Chọn</th>
-                        <th>UID Thẻ</th>
-                        <th>Họ và Tên</th>
-                        <th>Mã Số</th>
-                    </tr>
-                </thead>
-                <tbody id="membersTable">
-                    <tr><td colspan="4" class="empty-row">Đang tải dữ liệu...</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Bảng Lịch Sử -->
-        <div id="tab-history" class="box tab-content">
-            <h2>Lịch Sử Điểm Danh (Real-time)</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Thời Gian</th>
-                        <th>Họ và Tên</th>
-                        <th>UID Thẻ</th>
-                        <th>Trạng Thái</th>
-                    </tr>
-                </thead>
-                <tbody id="attendanceTable">
-                    <tr><td colspan="4" class="empty-row">Đang tải dữ liệu...</td></tr>
-                </tbody>
-            </table>
         </div>
     </div>
 
@@ -281,7 +237,9 @@
         const db = getDatabase(app);
         let membersData = {};
         let isDeleteMode = false;
-        let changingUid = null; // Cờ theo dõi nếu đang trong trạng thái đổi thẻ
+        let changingUid = null; 
+        let currentModalMode = 'view'; // Biến lưu trạng thái Xem hay Sửa
+        let originalMemberInfo = {};   // Biến lưu dữ liệu gốc để so sánh
 
         // === GIAO DIỆN CHUYỂN TAB ===
         window.switchTab = function(tabName) {
@@ -289,28 +247,69 @@
             document.querySelectorAll('.menu-bar .btn').forEach(btn => btn.classList.remove('btn-active'));
 
             document.getElementById('tab-' + tabName).classList.add('tab-active');
-            
-            // Xử lý Active Menu Button
             const btnMap = { 'status': 'btnStatus', 'members': 'btnMembers', 'history': 'btnHistory', 'devices': 'btnDevices' };
             document.getElementById(btnMap[tabName]).classList.add('btn-active');
         };
 
+        // === KIỂM TRA SỰ THAY ĐỔI DỮ LIỆU ĐỂ HIỆN NÚT LƯU ===
+        window.checkChanges = function() {
+            if (currentModalMode === 'view') return; // Đang ở chế độ xem thì không làm gì cả
+            
+            const currentName = document.getElementById('editName').value;
+            const currentId = document.getElementById('editId').value;
+            const currentDob = document.getElementById('editDob').value;
+            const currentEmail = document.getElementById('editEmail').value;
+
+            // Nếu có bất kỳ ô nào khác với dữ liệu ban đầu -> Hiện nút Lưu
+            const hasChanged = (
+                currentName !== originalMemberInfo.name ||
+                currentId !== originalMemberInfo.id ||
+                currentDob !== originalMemberInfo.dob ||
+                currentEmail !== originalMemberInfo.email
+            );
+
+            document.getElementById('btnSaveInfo').style.display = hasChanged ? 'block' : 'none';
+        };
+
         // === XỬ LÝ POPUP MODAL THÔNG TIN & ĐỔI THẺ ===
-        window.openMemberModal = function(uid) {
+        window.openMemberModal = function(uid, mode) {
             const info = membersData[uid];
             if(!info) return;
             
+            currentModalMode = mode;
+            // Lưu lại thông tin gốc để đối chiếu sau này
+            originalMemberInfo = {
+                name: info.name || '',
+                id: info.id || '',
+                dob: info.dob || '',
+                email: info.email || ''
+            };
+            
             document.getElementById('editOldUid').value = uid;
             document.getElementById('editUid').value = uid;
-            document.getElementById('editName').value = info.name || '';
-            document.getElementById('editId').value = info.id || '';
-            document.getElementById('editDob').value = info.dob || '';
-            document.getElementById('editEmail').value = info.email || '';
+            document.getElementById('editName').value = originalMemberInfo.name;
+            document.getElementById('editId').value = originalMemberInfo.id;
+            document.getElementById('editDob').value = originalMemberInfo.dob;
+            document.getElementById('editEmail').value = originalMemberInfo.email;
             
-            // Khôi phục nút đổi thẻ
-            changingUid = null;
-            document.getElementById('btnChangeCard').innerText = "🔄 Đổi thẻ mới";
-            document.getElementById('btnChangeCard').disabled = false;
+            const isView = (mode === 'view');
+            
+            // Nếu là chế độ XEM: Khóa các ô nhập liệu, đổi tiêu đề
+            document.getElementById('modalTitle').innerText = isView ? "Thông Tin Chi Tiết (Chỉ Xem)" : "Chỉnh Sửa Hồ Sơ";
+            document.getElementById('editName').readOnly = isView;
+            document.getElementById('editId').readOnly = isView;
+            document.getElementById('editDob').readOnly = isView;
+            document.getElementById('editEmail').readOnly = isView;
+            
+            // Ẩn/hiện nút Đổi Thẻ và Lưu dựa trên chế độ
+            document.getElementById('btnChangeCard').style.display = isView ? 'none' : 'block';
+            document.getElementById('btnSaveInfo').style.display = 'none'; // Luôn ẩn nút lưu lúc mới mở
+            
+            if (!isView) {
+                changingUid = null;
+                document.getElementById('btnChangeCard').innerText = "🔄 Đổi thẻ mới";
+                document.getElementById('btnChangeCard').disabled = false;
+            }
             
             // Render lịch sử cá nhân
             const tbody = document.getElementById('personalHistoryTable');
@@ -331,7 +330,6 @@
         window.closeModal = function() {
             document.getElementById('memberModal').style.display = 'none';
             if (changingUid) {
-                // Nếu đang đổi thẻ mà tắt form, hủy lệnh trên thiết bị
                 set(ref(db, 'Command/mode'), 0);
                 set(ref(db, 'Command/new_uid'), ""); 
                 changingUid = null;
@@ -348,6 +346,14 @@
             
             update(ref(db), updates).then(() => {
                 alert('Đã lưu thông tin hồ sơ!');
+                // Cập nhật lại dữ liệu gốc để nút Lưu tự động biến mất sau khi lưu thành công
+                originalMemberInfo = {
+                    name: updates['Members/' + uid + '/name'],
+                    id: updates['Members/' + uid + '/id'],
+                    dob: updates['Members/' + uid + '/dob'],
+                    email: updates['Members/' + uid + '/email']
+                };
+                window.checkChanges(); 
             });
         };
 
@@ -369,7 +375,7 @@
         const addStatus = document.getElementById('addStatus');
 
         btnAdd.addEventListener('click', () => {
-            changingUid = null; // Đảm bảo không bị kẹt ở chế độ đổi thẻ
+            changingUid = null; 
             set(ref(db, 'Command/mode'), 1);
             set(ref(db, 'Command/new_uid'), ""); 
             addStatus.style.display = "block";
@@ -402,7 +408,7 @@
             }
         });
 
-        // === LẮNG NGHE THẺ MỚI TỪ ESP32 (THÊM / ĐỔI THẺ) ===
+        // === LẮNG NGHE THẺ MỚI TỪ ESP32 ===
         onValue(ref(db, 'Command/new_uid'), (snapshot) => {
             const newUid = snapshot.val();
             if (newUid && newUid !== "") {
@@ -419,7 +425,6 @@
                 }
 
                 if (changingUid) {
-                    // QUY TRÌNH ĐỔI THẺ
                     const oldData = membersData[changingUid];
                     set(ref(db, 'Members/' + newUid), oldData).then(() => {
                         remove(ref(db, 'Members/' + changingUid));
@@ -432,7 +437,6 @@
                     });
                     set(ref(db, 'Command/new_uid'), "");
                 } else {
-                    // QUY TRÌNH THÊM MỚI
                     addStatus.style.display = "none";
                     btnAdd.style.display = "inline-block";
                     btnCancelAdd.style.display = "none";
@@ -465,30 +469,29 @@
             if (data) {
                 membersData = data; 
                 for (const [uid, info] of Object.entries(data)) {
-                    // 1. Cập nhật Bảng Thành Viên (Cột Tên có thể bấm)
+                    // Cột Tên mở Popup theo chế độ EDIT (Sửa)
                     tbodyMembers.innerHTML += `
                         <tr>
                             <td class="delete-col ${isDeleteMode ? '' : 'hide-col'}"><input type="checkbox" class="checkbox-del" value="${uid}"></td>
-                            <td class="link-name" onclick="openMemberModal('${uid}')">${info.name || 'N/A'}</td>
+                            <td class="link-name" onclick="openMemberModal('${uid}', 'edit')">${info.name || 'N/A'}</td>
                             <td>${info.id || 'N/A'}</td>
                             <td>${uid}</td>
                         </tr>
                     `;
 
-                    // 2. Cập nhật Lưới Thẻ Trạng Thái
+                    // Lưới thẻ mở Popup theo chế độ VIEW (Chỉ xem)
                     const isInside = (info.lastStatus === "Vào");
                     const statusClass = isInside ? "status-in" : "status-out";
                     const statusText = isInside ? "🟢 Tình trạng: Vào" : "🔴 Tình trạng: Ra";
                     
                     statusGrid.innerHTML += `
-                        <div class="member-card ${statusClass}" onclick="openMemberModal('${uid}')">
+                        <div class="member-card ${statusClass}" onclick="openMemberModal('${uid}', 'view')">
                             <div class="card-title">${info.name || 'Chưa có tên'}</div>
                             <div class="card-id">ID: ${info.id || 'N/A'}</div>
                             <div class="card-status" style="color: ${isInside ? '#27ae60' : '#e74c3c'}">${statusText}</div>
                         </div>
                     `;
 
-                    // Lấy dữ liệu điểm danh
                     if(info.Attendance) {
                         for (const [timestamp, att] of Object.entries(info.Attendance)) {
                             allAttendance.push({
@@ -498,7 +501,6 @@
                     }
                 }
 
-                // 3. Cập nhật Bảng Lịch Sử Tổng
                 if(allAttendance.length > 0) {
                     allAttendance.sort((a, b) => b.timeKey - a.timeKey);
                     allAttendance.forEach(att => {
