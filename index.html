@@ -302,49 +302,65 @@
     </div>
 <!-- Modal Chi Tiết Thiết Bị (MỚI) -->
     <div id="deviceModal" class="modal">
-        <div class="modal-content" style="max-width: 500px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
-                <h2 style="margin: 0; color: #2c3e50;">Cấu Hình Thiết Bị</h2>
-                <span class="close" onclick="closeDeviceModal()">&times;</span>
+        <div class="modal-content" style="max-width: 550px; padding: 0; overflow: hidden; background-color: #f8f9fa;">
+            <!-- Header -->
+            <div style="background: #3498db; color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0; font-size: 20px;">⚙️ Cấu Hình Thiết Bị</h2>
+                <span class="close" onclick="closeDeviceModal()" style="color: white; opacity: 0.8; margin-top: 0;">&times;</span>
             </div>
             
-            <input type="hidden" id="devOldId">
-            <label>Mã Thiết Bị (ID):</label>
-            <input type="text" id="devEditId" placeholder="VD: ESP32_CuaChinh">
-            
-            <label>Tên Hiển Thị:</label>
-            <input type="text" id="devEditName" placeholder="Tên gợi nhớ...">
-            
-            <div style="display:flex; gap:15px; background: #ecf0f1; padding: 10px; border-radius: 6px; margin: 10px 0;">
-                <div style="flex:1;">
-                    <label style="margin-top:0;">IPv4 Address:</label>
-                    <span id="devEditIp" style="font-weight: bold; color: #2980b9;">-</span>
-                </div>
-                <div style="flex:1;">
-                    <label style="margin-top:0;">MAC Address:</label>
-                    <span id="devEditMac" style="font-weight: bold; color: #2980b9;">-</span>
-                </div>
-            </div>
+            <div style="padding: 25px; overflow-y: auto; max-height: 75vh;">
+                <!-- Thông tin cơ bản -->
+                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #e0e6ed;">
+                    <h3 style="margin-top: 0; color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 10px; font-size: 16px;">THÔNG TIN CƠ BẢN</h3>
+                    <input type="hidden" id="devOldId">
+                    
+                    <label style="color: #7f8c8d; font-size: 13px;">Mã Thiết Bị (ID):</label>
+                    <input type="text" id="devEditId" placeholder="VD: ESP32_CuaChinh" style="border: 1px solid #ddd; background: #fdfdfd;">
+                    
+                    <label style="color: #7f8c8d; font-size: 13px;">Tên Hiển Thị:</label>
+                    <input type="text" id="devEditName" placeholder="Tên gợi nhớ..." style="border: 1px solid #ddd; background: #fdfdfd;">
+                    
+                    <div style="display:flex; gap:15px; background: #f1f5f8; padding: 12px; border-radius: 6px; margin-top: 10px;">
+                        <div style="flex:1;">
+                            <span style="font-size: 12px; color: #95a5a6; display: block; margin-bottom: 3px;">IPv4 Address</span>
+                            <span id="devEditIp" style="font-weight: bold; color: #2980b9; font-family: monospace;">-</span>
+                        </div>
+                        <div style="flex:1;">
+                            <span style="font-size: 12px; color: #95a5a6; display: block; margin-bottom: 3px;">MAC Address</span>
+                            <span id="devEditMac" style="font-weight: bold; color: #2980b9; font-family: monospace;">-</span>
+                        </div>
+                    </div>
 
-            <button type="button" class="btn btn-active" style="width:100%; margin-bottom: 20px;" onclick="saveDeviceConfig()">💾 Cập Nhật Tên & ID Mạch</button>
-
-            <h3 style="border-top: 2px solid #ecf0f1; padding-top: 15px;">Kết nối Wi-Fi thiết bị</h3>
-            <label>Wi-Fi hiện tại thiết bị đang dùng:</label>
-            <input type="text" id="devEditSsid" readonly style="background-color: #e8f8f5; color: #16a085; font-weight: bold; text-align: center;">
-            
-            <div style="background: #fdf2e9; padding: 15px; border-radius: 6px; border: 1px solid #eb984e;">
-                <label style="margin-top:0; color:#d35400;">🌐 Đổi Wi-Fi Từ Xa (Remote):</label>
-                <div style="display:flex; gap:10px; margin-top: 5px;">
-                    <input type="text" id="devNewSsid" placeholder="Nhập tên Wi-Fi (SSID)..." style="flex:1; margin-bottom:0;">
-                    <input type="password" id="devNewPass" placeholder="Mật khẩu..." style="flex:1; margin-bottom:0;">
+                    <button type="button" class="btn btn-active" style="width:100%; margin-top: 15px; margin-bottom: 0;" onclick="saveDeviceConfig()">💾 Cập Nhật Tên & ID Mạch</button>
                 </div>
-                <button type="button" class="btn btn-delete" style="width:100%; margin: 10px 0 0 0;" onclick="connectDeviceWifi()">🚀 Gửi lệnh đổi Wi-Fi</button>
-                <p style="font-size: 13px; color: #7f8c8d; margin-top: 10px;">*Mẹo: Nhập SSID/Pass và bấm Gửi. Thiết bị sẽ tự khởi động lại để kết nối mạng mới.</p>
-                
-                <label style="margin-top:15px; border-top: 1px dashed #ccc; padding-top:10px;">Hoặc chọn từ Wi-Fi đã lưu nhanh:</label>
-                <div style="display:flex; gap:10px;">
-                    <select id="savedWifiSelect" style="flex:1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; outline: none;"></select>
-                    <button type="button" class="btn btn-active" style="margin:0; background-color: #27ae60;" onclick="quickConnectWifi()">⚡ Kết nối ngay</button>
+
+                <!-- Cấu hình mạng -->
+                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #e0e6ed;">
+                    <h3 style="margin-top: 0; color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 10px; font-size: 16px;">KẾT NỐI MẠNG (WI-FI)</h3>
+                    
+                    <label style="color: #7f8c8d; font-size: 13px;">Mạng hiện tại đang dùng:</label>
+                    <input type="text" id="devEditSsid" readonly style="background-color: #eafaf1; color: #27ae60; font-weight: bold; text-align: center; border: 1px dashed #2ecc71;">
+                    
+                    <div style="background: #fff8e1; padding: 15px; border-radius: 6px; border: 1px solid #ffe082; margin-top: 15px;">
+                        <label style="margin-top:0; color:#d35400; font-size: 14px; display: flex; align-items: center; gap: 5px; margin-bottom: 10px;">
+                            🌐 Đổi mạng Wi-Fi từ xa:
+                        </label>
+                        <div style="display:flex; gap:10px;">
+                            <input type="text" id="devNewSsid" placeholder="Tên Wi-Fi (SSID)..." style="flex:1; margin-bottom:0; border: 1px solid #f5b041;">
+                            <input type="password" id="devNewPass" placeholder="Mật khẩu..." style="flex:1; margin-bottom:0; border: 1px solid #f5b041;">
+                        </div>
+                        <button type="button" class="btn" style="width:100%; margin: 10px 0 0 0; background-color: #e67e22;" onclick="connectDeviceWifi()">🚀 Gửi Lệnh Đổi Wi-Fi</button>
+                        <p style="font-size: 12px; color: #d35400; margin-top: 8px; line-height: 1.4;">*Ghi chú: Nhập thông tin và bấm Gửi. Thiết bị sẽ tự khởi động lại để kết nối mạng mới.</p>
+                        
+                        <div style="margin-top: 15px; border-top: 1px dashed #fad7a1; padding-top: 15px;">
+                            <label style="font-size: 13px; color: #d35400;">Hoặc chọn từ danh sách đã lưu:</label>
+                            <div style="display:flex; gap:10px; margin-top: 5px;">
+                                <select id="savedWifiSelect" style="flex:1; padding: 10px; border: 1px solid #f5b041; border-radius: 4px; outline: none; background: white;"></select>
+                                <button type="button" class="btn" style="margin:0; background-color: #27ae60;" onclick="quickConnectWifi()">⚡ Kết nối ngay</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
