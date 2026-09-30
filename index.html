@@ -63,8 +63,9 @@
         .link-name { color: #2980b9; cursor: pointer; text-decoration: underline; font-weight: bold; }
 
         #modalBodyLayout { flex: 1; overflow-y: auto; overflow-x: hidden; padding-right: 5px; }
-        .modal-fullscreen { margin: 0 !important; width: 100vw !important; max-width: 100vw !important; height: 100vh !important; max-height: 100vh !important; border-radius: 0 !important; }
-        .split-container { display: flex; flex-direction: row; gap: 20px; flex: 1; overflow: hidden !important; }
+        #modalBodyLayout.split-container { overflow: hidden !important; padding-right: 0; }
+        .modal-fullscreen { margin: 0 !important; width: 100% !important; max-width: 100% !important; height: 100% !important; max-height: 100% !important; border-radius: 0 !important; }
+        .split-container { display: flex; flex-direction: row; gap: 20px; flex: 1; }
         .left-panel { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding-right: 15px; }
         .right-panel { flex: 1.5; display: flex; flex-direction: column; border-left: 2px solid #ecf0f1; padding-left: 20px; overflow: hidden; }
         .history-container { flex: 1; overflow-y: auto; border: 1px solid #bdc3c7; border-top: none; }
@@ -498,6 +499,12 @@
                         }
                     }
                     globalAttData.sort((a, b) => b.timeKey - a.timeKey);
+                    
+                    // Nạp dữ liệu vào mảng lọc và giữ lại bộ lọc ngày tháng hiện tại
+                    const sDate = document.getElementById('globalStartDate').value;
+                    const eDate = document.getElementById('globalEndDate').value;
+                    filteredGlobalAtt = filterByDate(globalAttData, sDate, eDate);
+                    
                     updateGlobalTable();
                 } else {
                     membersData = {};
