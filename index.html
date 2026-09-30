@@ -119,6 +119,14 @@
         
         /* Khóa cuộn trang chính */
         .no-scroll { overflow: hidden; }
+
+        /* CSS cho Tab bên trong Modal Thiết Bị */
+        .dev-tabs { display: flex; border-bottom: 2px solid #ecf0f1; background: white; padding: 0 20px; }
+        .dev-tab-btn { background: none; border: none; padding: 12px 15px; cursor: pointer; font-size: 14px; font-weight: bold; color: #7f8c8d; border-bottom: 3px solid transparent; transition: 0.3s; flex: 1; text-align: center;}
+        .dev-tab-btn:hover { color: #3498db; }
+        .dev-tab-btn.active { color: #3498db; border-bottom-color: #3498db; }
+        .dev-tab-content { display: none; padding: 25px; }
+        .dev-tab-content.active { display: block; }
     </style>
 </head>
 <body>
@@ -204,16 +212,19 @@
             <table>
                 <thead>
                     <tr>
-                        <th>STT</th><th>Tên Thiết Bị</th><th>Trạng Thái mạng</th><th>Đầu đọc thẻ (RC522)</th><th>Đèn báo (LED RGB)</th>
+                        <th>STT</th>
+                        <th>Tên Thiết Bị</th>
+                        <th>Trạng Thái Mạng</th>
+                        <th>Cài Đặt</th>
                     </tr>
                 </thead>
                 <tbody id="devicesTable">
-                    <tr><td colspan="5" class="empty-row">Đang tải dữ liệu...</td></tr>
+                    <tr><td colspan="4" class="empty-row">Đang tải dữ liệu...</td></tr>
                 </tbody>
             </table>
         </div>
 
-        <!-- Bảng Thiết Lập Hệ Thống (LÀM ĐẸP GIAO DIỆN) -->
+        <!-- Bảng Thiết Lập Hệ Thống -->
         <div id="tab-settings" class="box tab-content">
             <h2>⚙️ Thiết Lập Hệ Thống</h2>
             <div class="settings-card" style="max-width: 500px; margin: 0 auto;">
@@ -231,7 +242,7 @@
         </div>
     </div>
 
-    <!-- Modal Chi Tiết Thành Viên (Bố cục Động) -->
+    <!-- Modal Chi Tiết Thành Viên (Giữ nguyên) -->
     <div id="memberModal" class="modal">
         <div id="modalContent" class="modal-content">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px; flex-shrink: 0;">
@@ -240,7 +251,6 @@
             </div>
             
             <div id="modalBodyLayout">
-                <!-- Bảng thông tin (Cột Trái) -->
                 <div id="infoPanel" class="left-panel">
                     <input type="hidden" id="editOldUid">
                     <label>UID Thẻ Tích Hợp:</label>
@@ -270,7 +280,6 @@
                     <button type="button" id="btnSaveInfo" class="btn btn-active" style="width:100%; margin-top: 15px; margin-bottom: 10px; display: none; flex-shrink: 0;" onclick="saveMemberInfo()">💾 Hoàn Tất / Lưu Thông Tin</button>
                 </div>
 
-                <!-- Bảng Lịch sử (Cột Phải) -->
                 <div id="historyPanel" class="right-panel">
                     <h3 style="margin-top:0; margin-bottom: 15px; color: #2c3e50; flex-shrink: 0;">Lịch sử vào/ra </h3>
                     <div style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
@@ -300,65 +309,86 @@
             </div>
         </div>
     </div>
-<!-- Modal Chi Tiết Thiết Bị (MỚI) -->
+
+    <!-- Modal Chi Tiết Thiết Bị (CẤU TRÚC TAB MỚI) -->
     <div id="deviceModal" class="modal">
-        <div class="modal-content" style="max-width: 550px; padding: 0; overflow: hidden; background-color: #f8f9fa;">
+        <div class="modal-content" style="max-width: 500px; padding: 0; overflow: hidden; background-color: #f8f9fa;">
             <!-- Header -->
             <div style="background: #3498db; color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center;">
                 <h2 style="margin: 0; font-size: 20px;">⚙️ Cấu Hình Thiết Bị</h2>
                 <span class="close" onclick="closeDeviceModal()" style="color: white; opacity: 0.8; margin-top: 0;">&times;</span>
             </div>
+
+            <!-- Tab Menu -->
+            <div class="dev-tabs">
+                <button class="dev-tab-btn active" onclick="switchDevTab('dev-basic')">Cơ Bản</button>
+                <button class="dev-tab-btn" onclick="switchDevTab('dev-network')">Mạng</button>
+                <button class="dev-tab-btn" onclick="switchDevTab('dev-module')">Module</button>
+            </div>
             
-            <div style="padding: 25px; overflow-y: auto; max-height: 75vh;">
-                <!-- Thông tin cơ bản -->
-                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #e0e6ed;">
-                    <h3 style="margin-top: 0; color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 10px; font-size: 16px;">THÔNG TIN CƠ BẢN</h3>
+            <div style="overflow-y: auto; max-height: 70vh;">
+                <!-- Tab 1: Thông tin cơ bản -->
+                <div id="dev-basic" class="dev-tab-content active">
                     <input type="hidden" id="devOldId">
-                    
                     <label style="color: #7f8c8d; font-size: 13px;">Mã Thiết Bị (ID):</label>
-                    <input type="text" id="devEditId" placeholder="VD: ESP32_CuaChinh" style="border: 1px solid #ddd; background: #fdfdfd;">
+                    <input type="text" id="devEditId" placeholder="VD: ESP32_CuaChinh" style="border: 1px solid #ddd; background: white;">
                     
-                    <label style="color: #7f8c8d; font-size: 13px;">Tên Hiển Thị:</label>
-                    <input type="text" id="devEditName" placeholder="Tên gợi nhớ..." style="border: 1px solid #ddd; background: #fdfdfd;">
+                    <label style="color: #7f8c8d; font-size: 13px; margin-top: 10px;">Tên Hiển Thị:</label>
+                    <input type="text" id="devEditName" placeholder="Tên gợi nhớ..." style="border: 1px solid #ddd; background: white;">
                     
-                    <div style="display:flex; gap:15px; background: #f1f5f8; padding: 12px; border-radius: 6px; margin-top: 10px;">
+                    <div style="display:flex; gap:15px; background: #eef2f5; padding: 12px; border-radius: 6px; margin-top: 15px; border: 1px solid #dcdde1;">
                         <div style="flex:1;">
-                            <span style="font-size: 12px; color: #95a5a6; display: block; margin-bottom: 3px;">IPv4 Address</span>
-                            <span id="devEditIp" style="font-weight: bold; color: #2980b9; font-family: monospace;">-</span>
+                            <span style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 3px;">IPv4 Address</span>
+                            <span id="devEditIp" style="font-weight: bold; color: #2c3e50; font-family: monospace;">-</span>
                         </div>
                         <div style="flex:1;">
-                            <span style="font-size: 12px; color: #95a5a6; display: block; margin-bottom: 3px;">MAC Address</span>
-                            <span id="devEditMac" style="font-weight: bold; color: #2980b9; font-family: monospace;">-</span>
+                            <span style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 3px;">MAC Address</span>
+                            <span id="devEditMac" style="font-weight: bold; color: #2c3e50; font-family: monospace;">-</span>
                         </div>
                     </div>
-
-                    <button type="button" class="btn btn-active" style="width:100%; margin-top: 15px; margin-bottom: 0;" onclick="saveDeviceConfig()">💾 Cập Nhật Tên & ID Mạch</button>
+                    <button type="button" class="btn btn-active" style="width:100%; margin-top: 20px;" onclick="saveDeviceConfig()">💾 Cập Nhật Tên & ID</button>
                 </div>
 
-                <!-- Cấu hình mạng -->
-                <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid #e0e6ed;">
-                    <h3 style="margin-top: 0; color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 10px; font-size: 16px;">KẾT NỐI MẠNG (WI-FI)</h3>
-                    
+                <!-- Tab 2: Kết nối mạng -->
+                <div id="dev-network" class="dev-tab-content">
                     <label style="color: #7f8c8d; font-size: 13px;">Mạng hiện tại đang dùng:</label>
                     <input type="text" id="devEditSsid" readonly style="background-color: #eafaf1; color: #27ae60; font-weight: bold; text-align: center; border: 1px dashed #2ecc71;">
                     
-                    <div style="background: #fff8e1; padding: 15px; border-radius: 6px; border: 1px solid #ffe082; margin-top: 15px;">
-                        <label style="margin-top:0; color:#d35400; font-size: 14px; display: flex; align-items: center; gap: 5px; margin-bottom: 10px;">
-                            🌐 Đổi mạng Wi-Fi từ xa:
-                        </label>
+                    <div style="background: white; padding: 15px; border-radius: 6px; border: 1px solid #f5b041; margin-top: 15px;">
+                        <label style="margin-top:0; color:#d35400; font-size: 14px; margin-bottom: 10px;">🌐 Đổi mạng Wi-Fi từ xa:</label>
                         <div style="display:flex; gap:10px;">
-                            <input type="text" id="devNewSsid" placeholder="Tên Wi-Fi (SSID)..." style="flex:1; margin-bottom:0; border: 1px solid #f5b041;">
-                            <input type="password" id="devNewPass" placeholder="Mật khẩu..." style="flex:1; margin-bottom:0; border: 1px solid #f5b041;">
+                            <input type="text" id="devNewSsid" placeholder="SSID..." style="flex:1; margin-bottom:0; border: 1px solid #ddd;">
+                            <input type="password" id="devNewPass" placeholder="Mật khẩu..." style="flex:1; margin-bottom:0; border: 1px solid #ddd;">
                         </div>
                         <button type="button" class="btn" style="width:100%; margin: 10px 0 0 0; background-color: #e67e22;" onclick="connectDeviceWifi()">🚀 Gửi Lệnh Đổi Wi-Fi</button>
-                        <p style="font-size: 12px; color: #d35400; margin-top: 8px; line-height: 1.4;">*Ghi chú: Nhập thông tin và bấm Gửi. Thiết bị sẽ tự khởi động lại để kết nối mạng mới.</p>
+                        <p style="font-size: 12px; color: #7f8c8d; margin-top: 8px;">Thiết bị sẽ tự khởi động lại để kết nối mạng mới.</p>
                         
                         <div style="margin-top: 15px; border-top: 1px dashed #fad7a1; padding-top: 15px;">
                             <label style="font-size: 13px; color: #d35400;">Hoặc chọn từ danh sách đã lưu:</label>
                             <div style="display:flex; gap:10px; margin-top: 5px;">
-                                <select id="savedWifiSelect" style="flex:1; padding: 10px; border: 1px solid #f5b041; border-radius: 4px; outline: none; background: white;"></select>
+                                <select id="savedWifiSelect" style="flex:1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; outline: none; background: #fdfdfd;"></select>
                                 <button type="button" class="btn" style="margin:0; background-color: #27ae60;" onclick="quickConnectWifi()">⚡ Kết nối ngay</button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Thiết lập Module -->
+                <div id="dev-module" class="dev-tab-content">
+                    <div style="background: white; padding: 15px 20px; border-radius: 8px; border: 1px solid #e0e6ed;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #eee;">
+                            <div>
+                                <strong style="color: #2c3e50; display: block;">Đầu đọc thẻ RFID (RC522)</strong>
+                                <span style="font-size: 12px; color: #7f8c8d;">Bật/tắt khả năng quét thẻ</span>
+                            </div>
+                            <label class="switch"><input type="checkbox" id="modalRfidToggle" onchange="toggleModuleFromModal('rfid', this.checked)"><span class="slider"></span></label>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
+                            <div>
+                                <strong style="color: #2c3e50; display: block;">Đèn báo hiệu (LED RGB)</strong>
+                                <span style="font-size: 12px; color: #7f8c8d;">Bật/tắt đèn trên ESP32</span>
+                            </div>
+                            <label class="switch"><input type="checkbox" id="modalLedToggle" onchange="toggleModuleFromModal('led', this.checked)"><span class="slider"></span></label>
                         </div>
                     </div>
                 </div>
@@ -785,9 +815,8 @@
         });
         // === QUẢN LÝ THIẾT BỊ & ĐỔI WIFI ===
         let devicesData = {};
-        let savedWifiList = {}; // Danh sách WiFi đã lưu
+        let savedWifiList = {}; 
 
-        // Lắng nghe cấu hình WiFi lưu trữ
         onValue(ref(db, 'SavedWiFi'), (snapshot) => {
             savedWifiList = snapshot.val() || {};
             const select = document.getElementById('savedWifiSelect');
@@ -797,7 +826,18 @@
             }
         });
 
-        window.toggleModule = function(devId, moduleName, isChecked) {
+        // Chuyển Tab bên trong Modal Thiết bị
+        window.switchDevTab = function(tabId) {
+            document.querySelectorAll('.dev-tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.dev-tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        };
+
+        // Ghi nhận thay đổi công tắc từ Modal
+        window.toggleModuleFromModal = function(moduleName, isChecked) {
+            const devId = document.getElementById('devOldId').value;
             set(ref(db, `Devices/${devId}/modules/${moduleName}`), isChecked);
         };
 
@@ -805,6 +845,8 @@
         window.openDeviceModal = function(devId) {
             const dev = devicesData[devId];
             if(!dev) return;
+            
+            // Nạp dữ liệu cơ bản
             document.getElementById('devOldId').value = devId;
             document.getElementById('devEditId').value = devId;
             document.getElementById('devEditName').value = dev.name || '';
@@ -813,6 +855,17 @@
             document.getElementById('devEditSsid').value = dev.ssid || 'Đang mất kết nối';
             document.getElementById('devNewSsid').value = '';
             document.getElementById('devNewPass').value = '';
+
+            // Nạp trạng thái công tắc
+            const rfidState = dev.modules?.rfid ?? true; 
+            const ledState = dev.modules?.led ?? true;
+            document.getElementById('modalRfidToggle').checked = rfidState;
+            document.getElementById('modalLedToggle').checked = ledState;
+
+            // Reset tab về 'Thông tin cơ bản'
+            switchDevTab('dev-basic');
+            document.querySelectorAll('.dev-tab-btn')[0].classList.add('active');
+
             document.getElementById('deviceModal').style.display = 'block';
         };
 
@@ -820,14 +873,12 @@
             document.getElementById('deviceModal').style.display = 'none';
         };
 
-        // Gửi lệnh đổi Name/ID
         window.saveDeviceConfig = function() {
             const oldId = document.getElementById('devOldId').value;
             const newId = document.getElementById('devEditId').value.trim();
             const newName = document.getElementById('devEditName').value.trim();
             if(newId === "" || newName === "") return alert("ID và Tên không được để trống!");
             
-            // Gửi lệnh xuống cho ESP32 tự đổi cấu hình NVS và tự Reset
             update(ref(db, `Devices/${oldId}/Command`), { action: "update_info", new_id: newId, new_name: newName })
             .then(() => {
                 alert("Đã gửi lệnh cập nhật! Thiết bị sẽ khởi động lại trong vài giây.");
@@ -835,7 +886,6 @@
             });
         };
 
-        // Gửi lệnh kết nối WiFi mới
         window.connectDeviceWifi = function() {
             const devId = document.getElementById('devOldId').value;
             const ssid = document.getElementById('devNewSsid').value.trim();
@@ -843,10 +893,7 @@
             if(ssid === "") return alert("Vui lòng nhập tên Wi-Fi!");
             
             if(confirm(`Yêu cầu mạch đổi sang Wi-Fi: ${ssid}?`)) {
-                // Lưu vào danh sách nhanh trên Web
                 set(ref(db, `SavedWiFi/${ssid}`), pass);
-                
-                // Gửi lệnh xuống ESP32
                 update(ref(db, `Devices/${devId}/Command`), { action: "connect_wifi", ssid: ssid, pass: pass })
                 .then(() => {
                     alert("Đã gửi thông tin mạng! Thiết bị đang khởi động lại để kết nối...");
@@ -855,7 +902,6 @@
             }
         };
 
-        // Kết nối từ danh sách nhanh
         window.quickConnectWifi = function() {
             const select = document.getElementById('savedWifiSelect');
             const ssid = select.value;
@@ -883,21 +929,20 @@
                 for (const [devId, devInfo] of Object.entries(devicesData)) {
                     const isOnline = (now - devInfo.lastPing) < 10; 
                     const statusHtml = isOnline ? `<span style="color:green;font-weight:bold;">🟢 Online</span>` : `<span style="color:red;font-weight:bold;">🔴 Offline</span>`;
-                    const rfidState = devInfo.modules?.rfid ?? true; 
-                    const ledState = devInfo.modules?.led ?? true; 
                     
-                    // Click vào Tên để mở Modal
+                    // Render gọn bảng chính (Xóa cột công tắc, thay bằng nút Cấu hình)
                     tbody.innerHTML += `
                         <tr>
                             <td>${stt++}</td>
-                            <td class="link-name" onclick="openDeviceModal('${devId}')">${devInfo.name || devId}</td>
+                            <td><strong style="color: #2c3e50;">${devInfo.name || devId}</strong></td>
                             <td>${statusHtml}</td>
-                            <td><label class="switch"><input type="checkbox" ${rfidState ? "checked" : ""} onchange="toggleModule('${devId}', 'rfid', this.checked)"><span class="slider"></span></label></td>
-                            <td><label class="switch"><input type="checkbox" ${ledState ? "checked" : ""} onchange="toggleModule('${devId}', 'led', this.checked)"><span class="slider"></span></label></td>
+                            <td>
+                                <button class="btn btn-active" style="padding: 6px 12px; font-size: 13px;" onclick="openDeviceModal('${devId}')">⚙️ Cấu Hình</button>
+                            </td>
                         </tr>
                     `;
                 }
-            } else { tbody.innerHTML = `<tr><td colspan="5" class="empty-row">Chưa có thiết bị nào</td></tr>`; }
+            } else { tbody.innerHTML = `<tr><td colspan="4" class="empty-row">Chưa thiết bị nào kết nối</td></tr>`; }
         }
         setInterval(renderDevices, 3000);
     </script>
