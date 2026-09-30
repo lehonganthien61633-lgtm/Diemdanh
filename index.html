@@ -5,65 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hệ Thống Điểm Danh RFID</title>
     <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            margin: 20px; 
-            background-color: #f4f7f6; 
-            color: #333; 
-        }
-        h1 { text-align: center; color: #2c3e50; }
-        .container { 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 20px; 
-            justify-content: center; 
-        }
-        .box { 
-            flex: 1; 
-            min-width: 300px; 
-            background: white; 
-            padding: 20px; 
-            border-radius: 10px; 
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
-        }
-        h2 { 
-            color: #2980b9; 
-            border-bottom: 2px solid #3498db; 
-            padding-bottom: 5px; 
-        }
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin-top: 15px; 
-        }
-        th, td { 
-            border: 1px solid #ddd; 
-            padding: 12px; 
-            text-align: left; 
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #f4f7f6; color: #333; }
+        h1 { text-align: center; color: #2c3e50; padding-top: 20px; }
+        .container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; padding: 20px; }
+        .box { flex: 1; min-width: 300px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h2 { color: #2980b9; border-bottom: 2px solid #3498db; padding-bottom: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
         th { background-color: #3498db; color: white; }
         tr:nth-child(even) { background-color: #f9f9f9; }
-        .unknown { color: #e74c3c; font-weight: bold; }
         .empty-row { text-align: center; color: #7f8c8d; font-style: italic; }
-    .menu-bar { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+        
+        .menu-bar { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; padding: 0 20px;}
         .btn { padding: 10px 20px; background-color: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; transition: 0.3s; }
         .btn:hover { background-color: #2980b9; }
         .btn-active { background-color: #2c3e50; font-weight: bold; }
-        
         .btn-add { background-color: #27ae60; margin-bottom: 15px; }
-        .btn-add:hover { background-color: #2ecc71; }
-        .btn-add:disabled { background-color: #95a5a6; cursor: not-allowed; }
-        
-        .btn-cancel { background-color: #e74c3c; display: none; margin-left: 10px; }
-        .btn-cancel:hover { background-color: #c0392b; }
+        .btn-cancel, .btn-confirm { background-color: #e74c3c; display: none; margin-left: 10px; }
         .btn-delete { background-color: #f39c12; margin-bottom: 15px; margin-left: 10px; }
-        .btn-delete:hover { background-color: #d35400; }
-        .btn-confirm { background-color: #c0392b; display: none; margin-left: 10px; }
-        .btn-confirm:hover { background-color: #922b21; }
         .checkbox-del { transform: scale(1.5); cursor: pointer; }
         .hide-col { display: none; }
         
-        /* Nút Toggle Switch */
         .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
@@ -71,358 +33,539 @@
         input:checked + .slider { background-color: #27ae60; }
         input:checked + .slider:before { transform: translateX(20px); }
 
-        /* Ẩn/Hiện Tab */
         .tab-content { display: none; }
         .tab-active { display: block; }
 
-        /* Lưới Thẻ Trạng Thái */
         .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; margin-top: 15px; }
-        .member-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.2s; border: 4px solid #ccc; }
-        .member-card:hover { transform: translateY(-5px); }
+        .member-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); cursor: pointer; border: 4px solid #ccc; }
         .status-in { border-color: #27ae60; }
         .status-out { border-color: #e74c3c; }
         .card-title { font-size: 20px; font-weight: bold; color: #2c3e50; margin-bottom: 8px; }
         .card-id { color: #7f8c8d; margin: 5px 0; font-size: 15px; }
         .card-status { font-weight: bold; font-size: 16px; margin-top: 15px; text-align: right;}
 
-        /* === BỔ SUNG GIAO DIỆN PHÂN TRANG, LỌC VÀ CÀI ĐẶT === */
         .filter-container { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; margin-bottom: 15px; background: #ecf0f1; padding: 15px; border-radius: 8px; justify-content: space-between; }
         .filter-container input, .filter-container select { padding: 8px; border: 1px solid #bdc3c7; border-radius: 4px; outline: none; }
         .pagination { display: flex; justify-content: center; gap: 5px; margin-top: 15px; }
-        .page-btn { padding: 5px 12px; border: 1px solid #3498db; background: white; color: #3498db; border-radius: 4px; cursor: pointer; transition: 0.3s; }
-        .page-btn:hover { background: #3498db; color: white; }
+        .page-btn { padding: 5px 12px; border: 1px solid #3498db; background: white; color: #3498db; border-radius: 4px; cursor: pointer; }
         .page-btn.active { background: #3498db; color: white; font-weight: bold; }
-        .page-btn:disabled { border-color: #bdc3c7; color: #bdc3c7; cursor: not-allowed; background: #f9f9f9; }
+        .page-btn:disabled { border-color: #bdc3c7; color: #bdc3c7; cursor: not-allowed; }
         
         .settings-card { background: white; border: 1px solid #e0e6ed; padding: 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; }
-        .settings-card select { width: 100%; padding: 12px; font-size: 15px; margin-bottom: 25px; border-radius: 6px; border: 1px solid #ccc; background-color: #f8f9fa; cursor: pointer; }
+        .settings-card select { width: 100%; padding: 12px; font-size: 15px; margin-bottom: 25px; border-radius: 6px; border: 1px solid #ccc; }
 
-        /* Popup Modal Chi Tiết & Bố Cục Chống Cuộn Toàn Trang */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; background-color: rgba(0,0,0,0.5); }
-        .modal-content { background-color: #fefefe; margin: 5vh auto; padding: 20px 25px; border: 1px solid #888; width: 90%; max-width: 600px; max-height: 90vh; border-radius: 12px; transition: 0.3s; box-sizing: border-box; display: flex; flex-direction: column; }
-        .close { color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 1; margin-top: -5px; }
+        .modal-content { background-color: #fefefe; margin: 5vh auto; padding: 20px 25px; border: 1px solid #888; width: 90%; max-width: 600px; max-height: 90vh; border-radius: 12px; display: flex; flex-direction: column; }
+        .close { color: #aaa; font-size: 28px; font-weight: bold; cursor: pointer; line-height: 1; }
         .close:hover { color: black; }
         .modal-content label { font-weight: bold; margin-top: 10px; display: block; font-size: 14px; color: #34495e; }
         .modal-content input { width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px;}
         .link-name { color: #2980b9; cursor: pointer; text-decoration: underline; font-weight: bold; }
-        .link-name:hover { color: #1abc9c; }
 
-        /* Vùng chứa cuộn nội dung Form khi ở chế độ Form nhỏ */
         #modalBodyLayout { flex: 1; overflow-y: auto; overflow-x: hidden; padding-right: 5px; }
-
-        /* Fullscreen Layout (Trạng thái Xem) */
         .modal-fullscreen { margin: 0 !important; width: 100vw !important; max-width: 100vw !important; height: 100vh !important; max-height: 100vh !important; border-radius: 0 !important; }
         .split-container { display: flex; flex-direction: row; gap: 20px; flex: 1; overflow: hidden !important; }
         .left-panel { flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding-right: 15px; }
         .right-panel { flex: 1.5; display: flex; flex-direction: column; border-left: 2px solid #ecf0f1; padding-left: 20px; overflow: hidden; }
-        .history-container { flex: 1; overflow-y: auto; border: 1px solid #bdc3c7; border-top: none; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; }
+        .history-container { flex: 1; overflow-y: auto; border: 1px solid #bdc3c7; border-top: none; }
         
-        /* Khóa cuộn trang chính */
         .no-scroll { overflow: hidden; }
-
-        /* CSS cho Tab bên trong Modal Thiết Bị */
+        
         .dev-tabs { display: flex; border-bottom: 2px solid #ecf0f1; background: white; padding: 0 20px; }
-        .dev-tab-btn { background: none; border: none; padding: 12px 15px; cursor: pointer; font-size: 14px; font-weight: bold; color: #7f8c8d; border-bottom: 3px solid transparent; transition: 0.3s; flex: 1; text-align: center;}
-        .dev-tab-btn:hover { color: #3498db; }
+        .dev-tab-btn { background: none; border: none; padding: 12px 15px; cursor: pointer; font-weight: bold; color: #7f8c8d; border-bottom: 3px solid transparent; flex: 1; text-align: center;}
         .dev-tab-btn.active { color: #3498db; border-bottom-color: #3498db; }
         .dev-tab-content { display: none; padding: 25px; }
         .dev-tab-content.active { display: block; }
+
+        /* Giao diện Đăng Nhập */
+        #loginScreen { position: fixed; top:0; left:0; width: 100vw; height: 100vh; background: #2c3e50; display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .login-box { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 350px; text-align: center; }
+        .login-box h2 { color: #2c3e50; border: none; margin-top: 0; }
+        .login-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        .login-box button { width: 100%; padding: 12px; background: #27ae60; color: white; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+        
+        /* Logout Header */
+        .header-top { position: absolute; top: 15px; right: 20px; }
     </style>
 </head>
 <body>
 
-    <h1>Quản Lý Điểm Danh</h1>
-    
-    <!-- Menu Điều Hướng Tab -->
-    <div class="menu-bar">
-        <button id="btnStatus" class="btn btn-active" onclick="switchTab('status')">👤 Trạng Thái Thành Viên</button>
-        <button id="btnMembers" class="btn" onclick="switchTab('members')">📋 Quản Lý Danh Sách</button>
-        <button id="btnHistory" class="btn" onclick="switchTab('history')">🕒 Lịch Sử Tổng</button>
-        <button id="btnDevices" class="btn" onclick="switchTab('devices')">🛠️ Quản Lý Thiết Bị</button>
-        <button id="btnSettings" class="btn" onclick="switchTab('settings')">⚙️ Thiết Lập</button>
-    </div>
-    
-    <div class="container">
-        <!-- Bảng Trạng Thái Thành Viên -->
-        <div id="tab-status" class="box tab-content tab-active">
-            <h2>Trạng Thái Hiện Tại</h2>
-            <div id="statusGrid" class="card-grid"></div>
-        </div>
-
-        <!-- Bảng Thành Viên -->
-        <div id="tab-members" class="box tab-content">
-            <h2>Danh Sách Thành Viên</h2>
-            <div style="margin-bottom: 15px;">
-                <button id="btnAddMember" class="btn btn-add">➕ Thêm Thành Viên Mới</button>
-                <button id="btnCancelAdd" class="btn btn-cancel">❌ Hủy thêm</button>
-                <button id="btnToggleDelete" class="btn btn-delete">🗑️ Xóa thành viên</button>
-                <button id="btnConfirmDelete" class="btn btn-confirm">⚠️ Xác nhận xóa</button>
-            </div>
-            <p id="addStatus" style="color: #e67e22; font-weight: bold; display: none;">⏳ Đang chờ quét thẻ trên thiết bị (Đèn RGB đang nháy xanh)...</p>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th class="delete-col hide-col">Chọn</th>
-                        <th>Họ và Tên</th>
-                        <th>Mã Số</th>
-                        <th>UID Thẻ</th>
-                    </tr>
-                </thead>
-                <tbody id="membersTable">
-                    <tr><td colspan="4" class="empty-row">Đang tải dữ liệu...</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Bảng Lịch Sử Tổng -->
-        <div id="tab-history" class="box tab-content">
-            <h2>Lịch Sử Điểm Danh Toàn Hệ Thống</h2>
-            <div class="filter-container">
-                <div>
-                    <label>Hiển thị: </label>
-                    <select id="globalRows" onchange="changeGlobalRows()">
-                        <option value="10">10</option>
-                        <option value="25">25</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                    </select>
-                </div>
-                <div style="display:flex; gap: 10px; align-items: center;">
-                    Từ: <input type="date" id="globalStartDate"> 
-                    Đến: <input type="date" id="globalEndDate">
-                    <button class="btn btn-active" style="padding: 8px 15px;" onclick="applyGlobalFilter()">🔍 Lọc</button>
-                    <button class="btn btn-cancel" style="display:inline-block; padding: 8px 15px; margin:0;" onclick="clearGlobalFilter()">❌ Xóa lọc</button>
-                </div>
-            </div>
-            <table>
-                <thead>
-                    <tr><th>Thời Gian</th><th>Họ và Tên</th><th>UID Thẻ</th><th>Trạng Thái</th></tr>
-                </thead>
-                <tbody id="attendanceTable">
-                    <tr><td colspan="4" class="empty-row">Đang tải dữ liệu...</td></tr>
-                </tbody>
-            </table>
-            <div id="globalPagination" class="pagination"></div>
-        </div>
-
-        <!-- Bảng Quản Lý Thiết Bị -->
-        <div id="tab-devices" class="box tab-content">
-            <h2>Quản Lý Thiết Bị & Module</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>STT</th>
-                        <th>Tên Thiết Bị</th>
-                        <th>Trạng Thái Mạng</th>
-                        <th>Cài Đặt</th>
-                    </tr>
-                </thead>
-                <tbody id="devicesTable">
-                    <tr><td colspan="4" class="empty-row">Đang tải dữ liệu...</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Bảng Thiết Lập Hệ Thống -->
-        <div id="tab-settings" class="box tab-content">
-            <h2>⚙️ Thiết Lập Hệ Thống</h2>
-            <div class="settings-card" style="max-width: 500px; margin: 0 auto;">
-                <label style="font-weight: bold; display: block; margin-bottom: 10px; color: #2c3e50;">🗑️ Tự động xóa lịch sử điểm danh cũ sau:</label>
-                <select id="autoDeleteSelect">
-                    <option value="0">Không bao giờ xóa (Giữ vĩnh viễn)</option>
-                    <option value="30">30 ngày</option>
-                    <option value="60">60 ngày</option>
-                    <option value="90">90 ngày</option>
-                    <option value="365">1 năm (365 ngày)</option>
-                    <option value="730">2 năm (730 ngày)</option>
-                </select>
-                <button type="button" class="btn btn-active" style="width: 100%; font-size: 16px; padding: 12px;" onclick="saveSettings()">💾 Lưu Cài Đặt</button>
-            </div>
+    <!-- MÀN HÌNH ĐĂNG NHẬP -->
+    <div id="loginScreen">
+        <div class="login-box">
+            <h2>Hệ Thống RFID</h2>
+            <p style="color: #7f8c8d; font-size: 14px; margin-bottom: 20px;">Đăng nhập để tiếp tục</p>
+            <input type="email" id="loginEmail" placeholder="Email...">
+            <input type="password" id="loginPass" placeholder="Mật khẩu (Mã số)...">
+            <button onclick="performLogin()">ĐĂNG NHẬP</button>
+            <p id="loginError" style="color: #e74c3c; font-size: 13px; margin-top: 15px; display: none;">Sai email hoặc mật khẩu!</p>
         </div>
     </div>
 
-    <!-- Modal Chi Tiết Thành Viên (Giữ nguyên) -->
-    <div id="memberModal" class="modal">
-        <div id="modalContent" class="modal-content">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px; flex-shrink: 0;">
-                <h2 id="modalTitle" style="margin: 0; color: #2c3e50;">Hồ Sơ Thành Viên</h2>
-                <span class="close" onclick="closeModal()" title="Đóng bảng">&times;</span>
+    <!-- MAIN APP (Ẩn cho đến khi đăng nhập) -->
+    <div id="mainApp" style="display: none;">
+        <div class="header-top">
+            <span id="currentUserDisp" style="font-weight: bold; margin-right: 15px; color: #2c3e50;"></span>
+            <button class="btn btn-cancel" style="display: inline-block; padding: 5px 10px;" onclick="performLogout()">Đăng xuất</button>
+        </div>
+        <h1>Quản Lý Điểm Danh</h1>
+        
+        <!-- ADMIN VIEW (Toàn quyền) -->
+        <div id="adminControls">
+            <div class="menu-bar">
+                <button id="btnStatus" class="btn btn-active" onclick="switchTab('status')">👤 Trạng Thái Thành Viên</button>
+                <button id="btnMembers" class="btn" onclick="switchTab('members')">📋 Quản Lý Danh Sách</button>
+                <button id="btnHistory" class="btn" onclick="switchTab('history')">🕒 Lịch Sử Tổng</button>
+                <button id="btnDevices" class="btn" onclick="switchTab('devices')">🛠️ Quản Lý Thiết Bị</button>
+                <button id="btnSettings" class="btn" onclick="switchTab('settings')">⚙️ Thiết Lập</button>
             </div>
             
-            <div id="modalBodyLayout">
-                <div id="infoPanel" class="left-panel">
-                    <input type="hidden" id="editOldUid">
-                    <label>UID Thẻ Tích Hợp:</label>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="editUid" readonly style="flex:1; background-color: #ecf0f1; font-weight: bold;">
-                        <button type="button" class="btn btn-delete" style="margin: 5px 0 10px 0; display: none;" onclick="startChangeCard()" id="btnChangeCard">🔄 Đổi thẻ mới</button>
-                        <button type="button" class="btn btn-cancel" style="margin: 5px 0 10px 0; display: none;" onclick="cancelChangeCard()" id="btnCancelChange">❌ Hủy đổi thẻ</button>
-                    </div>
-                    
-                    <label>Họ và Tên:</label>
-                    <input type="text" id="editName" placeholder="Nhập họ và tên..." oninput="checkChanges()">
-                    
-                    <div style="display:flex; gap:15px;">
-                        <div style="flex:1;">
-                            <label>Mã Số (ID/MSSV):</label>
-                            <input type="text" id="editId" placeholder="VD: 211xxxx" oninput="checkChanges()">
-                        </div>
-                        <div style="flex:1;">
-                            <label>Ngày Sinh:</label>
-                            <input type="date" id="editDob" oninput="checkChanges()">
-                        </div>
-                    </div>
-                    
-                    <label>Email:</label>
-                    <input type="email" id="editEmail" placeholder="example@email.com" oninput="checkChanges()">
-                    
-                    <button type="button" id="btnSaveInfo" class="btn btn-active" style="width:100%; margin-top: 15px; margin-bottom: 10px; display: none; flex-shrink: 0;" onclick="saveMemberInfo()">💾 Hoàn Tất / Lưu Thông Tin</button>
+            <div class="container">
+                <!-- Bảng Trạng Thái Thành Viên -->
+                <div id="tab-status" class="box tab-content tab-active">
+                    <h2>Trạng Thái Hiện Tại</h2>
+                    <div id="statusGrid" class="card-grid"></div>
                 </div>
 
-                <div id="historyPanel" class="right-panel">
-                    <h3 style="margin-top:0; margin-bottom: 15px; color: #2c3e50; flex-shrink: 0;">Lịch sử vào/ra </h3>
-                    <div style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
-                        <div class="filter-container" style="padding: 10px; margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; flex-shrink: 0;">
-                            <div>
-                                <select id="personalRows" onchange="changePersonalRows()">
-                                    <option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option>
-                                </select>
-                            </div>
-                            <div style="display:flex; gap: 5px; align-items: center;">
-                                <input type="date" id="personalStartDate"> - <input type="date" id="personalEndDate">
-                                <button class="btn btn-active" style="padding: 6px 10px;" onclick="applyPersonalFilter()">Lọc</button>
-                                <button class="btn btn-cancel" style="display:inline-block; padding: 6px 10px; margin:0;" onclick="clearPersonalFilter()">Xóa</button>
-                            </div>
+                <!-- Bảng Thành Viên -->
+                <div id="tab-members" class="box tab-content">
+                    <h2>Danh Sách Thành Viên</h2>
+                    <div style="margin-bottom: 15px;">
+                        <button id="btnAddMember" class="btn btn-add">➕ Thêm Thành Viên Mới</button>
+                        <button id="btnCancelAdd" class="btn btn-cancel">❌ Hủy thêm</button>
+                        <button id="btnToggleDelete" class="btn btn-delete">🗑️ Xóa thành viên</button>
+                        <button id="btnConfirmDelete" class="btn btn-confirm">⚠️ Xác nhận xóa</button>
+                    </div>
+                    <p id="addStatus" style="color: #e67e22; font-weight: bold; display: none;">⏳ Đang chờ quét thẻ trên thiết bị (Đèn RGB đang nháy xanh)...</p>
+                    
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="delete-col hide-col">Chọn</th>
+                                <th>Họ và Tên</th>
+                                <th>Mã Số</th>
+                                <th>UID Thẻ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="membersTable">
+                            <tr><td colspan="4" class="empty-row">Đang tải dữ liệu...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Bảng Lịch Sử Tổng -->
+                <div id="tab-history" class="box tab-content">
+                    <h2>Lịch Sử Điểm Danh Toàn Hệ Thống</h2>
+                    <div class="filter-container">
+                        <div>
+                            <label>Hiển thị: </label>
+                            <select id="globalRows" onchange="changeGlobalRows()">
+                                <option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option>
+                            </select>
                         </div>
-                        <div class="history-container">
-                            <table style="margin-top: 0; border-top: none;">
-                                <thead style="position:sticky; top:0; z-index:1; background-color: #3498db;">
-                                    <tr><th style="color:white; border-top:none;">Thời gian quét</th><th style="color:white; border-top:none;">Hoạt động</th></tr>
-                                </thead>
-                                <tbody id="personalHistoryTable"></tbody>
-                            </table>
+                        <div style="display:flex; gap: 10px; align-items: center;">
+                            Từ: <input type="date" id="globalStartDate"> Đến: <input type="date" id="globalEndDate">
+                            <button class="btn btn-active" style="padding: 8px 15px;" onclick="applyGlobalFilter()">🔍 Lọc</button>
+                            <button class="btn btn-cancel" style="display:inline-block; padding: 8px 15px; margin:0;" onclick="clearGlobalFilter()">❌ Xóa lọc</button>
                         </div>
-                        <div id="personalPagination" class="pagination" style="flex-shrink: 0; margin-top: 10px; margin-bottom: 10px;"></div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr><th>Thời Gian</th><th>Họ và Tên</th><th>UID Thẻ</th><th>Trạng Thái</th></tr>
+                        </thead>
+                        <tbody id="attendanceTable">
+                            <tr><td colspan="4" class="empty-row">Đang tải dữ liệu...</td></tr>
+                        </tbody>
+                    </table>
+                    <div id="globalPagination" class="pagination"></div>
+                </div>
+
+                <!-- Bảng Quản Lý Thiết Bị -->
+                <div id="tab-devices" class="box tab-content">
+                    <h2>Quản Lý Thiết Bị & Module</h2>
+                    <table>
+                        <thead>
+                            <tr><th>STT</th><th>Tên Thiết Bị</th><th>Trạng Thái Mạng</th><th>Cài Đặt</th></tr>
+                        </thead>
+                        <tbody id="devicesTable">
+                            <tr><td colspan="4" class="empty-row">Đang tải dữ liệu...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Bảng Thiết Lập Hệ Thống -->
+                <div id="tab-settings" class="box tab-content">
+                    <h2>⚙️ Thiết Lập Hệ Thống</h2>
+                    <div class="settings-card" style="max-width: 500px; margin: 0 auto;">
+                        <label style="font-weight: bold; display: block; margin-bottom: 10px; color: #2c3e50;">🗑️ Tự động xóa lịch sử điểm danh cũ sau:</label>
+                        <select id="autoDeleteSelect">
+                            <option value="0">Không bao giờ xóa (Giữ vĩnh viễn)</option>
+                            <option value="30">30 ngày</option><option value="60">60 ngày</option><option value="90">90 ngày</option>
+                            <option value="365">1 năm (365 ngày)</option><option value="730">2 năm (730 ngày)</option>
+                        </select>
+                        <button type="button" class="btn btn-active" style="width: 100%; font-size: 16px; padding: 12px;" onclick="saveSettings()">💾 Lưu Cài Đặt</button>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Modal Chi Tiết Thiết Bị (CẤU TRÚC TAB MỚI) -->
-    <div id="deviceModal" class="modal">
-        <div class="modal-content" style="max-width: 500px; padding: 0; overflow: hidden; background-color: #f8f9fa;">
-            <!-- Header -->
-            <div style="background: #3498db; color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center;">
-                <h2 style="margin: 0; font-size: 20px;">⚙️ Cấu Hình Thiết Bị</h2>
-                <span class="close" onclick="closeDeviceModal()" style="color: white; opacity: 0.8; margin-top: 0;">&times;</span>
-            </div>
-
-            <!-- Tab Menu -->
-            <div class="dev-tabs">
-                <button class="dev-tab-btn active" onclick="switchDevTab('dev-basic')">Cơ Bản</button>
-                <button class="dev-tab-btn" onclick="switchDevTab('dev-network')">Mạng</button>
-                <button class="dev-tab-btn" onclick="switchDevTab('dev-module')">Module</button>
-            </div>
-            
-            <div style="overflow-y: auto; max-height: 70vh;">
-                <!-- Tab 1: Thông tin cơ bản -->
-                <div id="dev-basic" class="dev-tab-content active">
-                    <input type="hidden" id="devOldId">
-                    <label style="color: #7f8c8d; font-size: 13px;">Mã Thiết Bị (ID):</label>
-                    <input type="text" id="devEditId" placeholder="VD: ESP32_CuaChinh" style="border: 1px solid #ddd; background: white;">
-                    
-                    <label style="color: #7f8c8d; font-size: 13px; margin-top: 10px;">Tên Hiển Thị:</label>
-                    <input type="text" id="devEditName" placeholder="Tên gợi nhớ..." style="border: 1px solid #ddd; background: white;">
-                    
-                    <div style="display:flex; gap:15px; background: #eef2f5; padding: 12px; border-radius: 6px; margin-top: 15px; border: 1px solid #dcdde1;">
-                        <div style="flex:1;">
-                            <span style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 3px;">IPv4 Address</span>
-                            <span id="devEditIp" style="font-weight: bold; color: #2c3e50; font-family: monospace;">-</span>
-                        </div>
-                        <div style="flex:1;">
-                            <span style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 3px;">MAC Address</span>
-                            <span id="devEditMac" style="font-weight: bold; color: #2c3e50; font-family: monospace;">-</span>
-                        </div>
-                    </div>
-                    <button type="button" class="btn btn-active" style="width:100%; margin-top: 20px;" onclick="saveDeviceConfig()">💾 Cập Nhật Tên & ID</button>
+        <!-- USER VIEW (Chỉ xem lịch sử cá nhân) -->
+        <div id="userControls" style="display: none; padding: 20px;">
+            <div class="box" style="max-width: 800px; margin: 0 auto;">
+                <h2 style="color: #27ae60;">Hồ Sơ Cá Nhân</h2>
+                <div style="display: flex; gap: 20px; background: #eafaf1; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="flex: 1;"><strong>Họ và Tên:</strong> <span id="userDispName">-</span></div>
+                    <div style="flex: 1;"><strong>Mã Số:</strong> <span id="userDispId">-</span></div>
+                    <div style="flex: 1;"><strong>Trạng Thái:</strong> <span id="userDispStatus">-</span></div>
                 </div>
+                <h3>Lịch Sử Điểm Danh Của Bạn</h3>
+                <table>
+                    <thead><tr><th>Thời Gian</th><th>Hoạt Động</th></tr></thead>
+                    <tbody id="userPersonalHistory">
+                        <tr><td colspan="2" class="empty-row">Đang tải...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-                <!-- Tab 2: Kết nối mạng -->
-                <div id="dev-network" class="dev-tab-content">
-                    <label style="color: #7f8c8d; font-size: 13px;">Mạng hiện tại đang dùng:</label>
-                    <input type="text" id="devEditSsid" readonly style="background-color: #eafaf1; color: #27ae60; font-weight: bold; text-align: center; border: 1px dashed #2ecc71;">
-                    
-                    <div style="background: white; padding: 15px; border-radius: 6px; border: 1px solid #f5b041; margin-top: 15px;">
-                        <label style="margin-top:0; color:#d35400; font-size: 14px; margin-bottom: 10px;">🌐 Đổi mạng Wi-Fi từ xa:</label>
+        <!-- Modal Admin Form -->
+        <div id="memberModal" class="modal">
+            <div id="modalContent" class="modal-content">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px; flex-shrink: 0;">
+                    <h2 id="modalTitle" style="margin: 0; color: #2c3e50;">Hồ Sơ Thành Viên</h2>
+                    <span class="close" onclick="closeModal()" title="Đóng bảng">&times;</span>
+                </div>
+                
+                <div id="modalBodyLayout">
+                    <div id="infoPanel" class="left-panel">
+                        <input type="hidden" id="editOldUid">
+                        <label>UID Thẻ Tích Hợp:</label>
                         <div style="display:flex; gap:10px;">
-                            <input type="text" id="devNewSsid" placeholder="SSID..." style="flex:1; margin-bottom:0; border: 1px solid #ddd;">
-                            <input type="password" id="devNewPass" placeholder="Mật khẩu..." style="flex:1; margin-bottom:0; border: 1px solid #ddd;">
+                            <input type="text" id="editUid" readonly style="flex:1; background-color: #ecf0f1; font-weight: bold;">
+                            <button type="button" class="btn btn-delete" style="margin: 5px 0 10px 0; display: none;" onclick="startChangeCard()" id="btnChangeCard">🔄 Đổi thẻ</button>
+                            <button type="button" class="btn btn-cancel" style="margin: 5px 0 10px 0; display: none;" onclick="cancelChangeCard()" id="btnCancelChange">❌ Hủy</button>
                         </div>
-                        <button type="button" class="btn" style="width:100%; margin: 10px 0 0 0; background-color: #e67e22;" onclick="connectDeviceWifi()">🚀 Gửi Lệnh Đổi Wi-Fi</button>
-                        <p style="font-size: 12px; color: #7f8c8d; margin-top: 8px;">Thiết bị sẽ tự khởi động lại để kết nối mạng mới.</p>
                         
-                        <div style="margin-top: 15px; border-top: 1px dashed #fad7a1; padding-top: 15px;">
-                            <label style="font-size: 13px; color: #d35400;">Hoặc chọn từ danh sách đã lưu:</label>
-                            <div style="display:flex; gap:10px; margin-top: 5px;">
-                                <select id="savedWifiSelect" style="flex:1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; outline: none; background: #fdfdfd;"></select>
-                                <button type="button" class="btn" style="margin:0; background-color: #27ae60;" onclick="quickConnectWifi()">⚡ Kết nối ngay</button>
+                        <label>Họ và Tên:</label>
+                        <input type="text" id="editName" placeholder="Nhập họ và tên..." oninput="checkChanges()">
+                        
+                        <div style="display:flex; gap:15px;">
+                            <div style="flex:1;">
+                                <label>Mã Số (ID/MSSV):</label>
+                                <input type="text" id="editId" placeholder="Mã này cũng là Mật Khẩu" oninput="checkChanges()">
                             </div>
+                            <div style="flex:1;">
+                                <label>Ngày Sinh:</label>
+                                <input type="date" id="editDob" oninput="checkChanges()">
+                            </div>
+                        </div>
+                        
+                        <label>Email (Tài khoản Đăng nhập):</label>
+                        <input type="email" id="editEmail" placeholder="example@email.com" oninput="checkChanges()">
+                        
+                        <button type="button" id="btnSaveInfo" class="btn btn-active" style="width:100%; margin-top: 15px; margin-bottom: 10px; display: none; flex-shrink: 0;" onclick="saveMemberInfo()">💾 Lưu Thông Tin</button>
+                    </div>
+
+                    <div id="historyPanel" class="right-panel">
+                        <h3 style="margin-top:0; margin-bottom: 15px; color: #2c3e50; flex-shrink: 0;">Lịch sử cá nhân</h3>
+                        <div style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+                            <div class="filter-container" style="padding: 10px; margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; flex-shrink: 0;">
+                                <div><select id="personalRows" onchange="changePersonalRows()"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
+                                <div style="display:flex; gap: 5px; align-items: center;">
+                                    <input type="date" id="personalStartDate"> - <input type="date" id="personalEndDate">
+                                    <button class="btn btn-active" style="padding: 6px 10px;" onclick="applyPersonalFilter()">Lọc</button>
+                                    <button class="btn btn-cancel" style="display:inline-block; padding: 6px 10px; margin:0;" onclick="clearPersonalFilter()">Xóa</button>
+                                </div>
+                            </div>
+                            <div class="history-container">
+                                <table style="margin-top: 0; border-top: none;">
+                                    <thead style="position:sticky; top:0; z-index:1; background-color: #3498db;">
+                                        <tr><th style="color:white; border-top:none;">Thời gian</th><th style="color:white; border-top:none;">Hoạt động</th></tr>
+                                    </thead>
+                                    <tbody id="personalHistoryTable"></tbody>
+                                </table>
+                            </div>
+                            <div id="personalPagination" class="pagination" style="flex-shrink: 0; margin-top: 10px; margin-bottom: 10px;"></div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- Tab 3: Thiết lập Module -->
-                <div id="dev-module" class="dev-tab-content">
-                    <div style="background: white; padding: 15px 20px; border-radius: 8px; border: 1px solid #e0e6ed;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #eee;">
-                            <div>
-                                <strong style="color: #2c3e50; display: block;">Đầu đọc thẻ RFID (RC522)</strong>
-                                <span style="font-size: 12px; color: #7f8c8d;">Bật/tắt khả năng quét thẻ</span>
-                            </div>
-                            <label class="switch"><input type="checkbox" id="modalRfidToggle" onchange="toggleModuleFromModal('rfid', this.checked)"><span class="slider"></span></label>
+        <!-- Modal Chi Tiết Thiết Bị -->
+        <div id="deviceModal" class="modal">
+            <div class="modal-content" style="max-width: 500px; padding: 0; overflow: hidden; background-color: #f8f9fa;">
+                <div style="background: #3498db; color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center;">
+                    <h2 style="margin: 0; font-size: 20px;">⚙️ Cấu Hình Thiết Bị</h2>
+                    <span class="close" onclick="closeDeviceModal()" style="color: white; opacity: 0.8; margin-top: 0;">&times;</span>
+                </div>
+
+                <div class="dev-tabs">
+                    <button class="dev-tab-btn active" onclick="switchDevTab('dev-basic')">Cơ Bản</button>
+                    <button class="dev-tab-btn" onclick="switchDevTab('dev-network')">Mạng</button>
+                    <button class="dev-tab-btn" onclick="switchDevTab('dev-module')">Module</button>
+                </div>
+                
+                <div style="overflow-y: auto; max-height: 70vh;">
+                    <div id="dev-basic" class="dev-tab-content active">
+                        <input type="hidden" id="devOldId">
+                        <label style="color: #7f8c8d; font-size: 13px;">Mã Thiết Bị (ID):</label>
+                        <input type="text" id="devEditId" placeholder="VD: ESP32_CuaChinh" style="border: 1px solid #ddd; background: white;">
+                        <label style="color: #7f8c8d; font-size: 13px; margin-top: 10px;">Tên Hiển Thị:</label>
+                        <input type="text" id="devEditName" placeholder="Tên gợi nhớ..." style="border: 1px solid #ddd; background: white;">
+                        <div style="display:flex; gap:15px; background: #eef2f5; padding: 12px; border-radius: 6px; margin-top: 15px; border: 1px solid #dcdde1;">
+                            <div style="flex:1;"><span style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 3px;">IPv4 Address</span><span id="devEditIp" style="font-weight: bold; color: #2c3e50; font-family: monospace;">-</span></div>
+                            <div style="flex:1;"><span style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 3px;">MAC Address</span><span id="devEditMac" style="font-weight: bold; color: #2c3e50; font-family: monospace;">-</span></div>
                         </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
-                            <div>
-                                <strong style="color: #2c3e50; display: block;">Đèn báo hiệu (LED RGB)</strong>
-                                <span style="font-size: 12px; color: #7f8c8d;">Bật/tắt đèn trên ESP32</span>
+                        <button type="button" class="btn btn-active" style="width:100%; margin-top: 20px;" onclick="saveDeviceConfig()">💾 Cập Nhật Tên & ID</button>
+                    </div>
+
+                    <div id="dev-network" class="dev-tab-content">
+                        <label style="color: #7f8c8d; font-size: 13px;">Mạng hiện tại đang dùng:</label>
+                        <input type="text" id="devEditSsid" readonly style="background-color: #eafaf1; color: #27ae60; font-weight: bold; text-align: center; border: 1px dashed #2ecc71;">
+                        <div style="background: white; padding: 15px; border-radius: 6px; border: 1px solid #f5b041; margin-top: 15px;">
+                            <label style="margin-top:0; color:#d35400; font-size: 14px; margin-bottom: 10px;">🌐 Đổi mạng Wi-Fi từ xa:</label>
+                            <div style="display:flex; gap:10px;">
+                                <input type="text" id="devNewSsid" placeholder="SSID..." style="flex:1; margin-bottom:0; border: 1px solid #ddd;">
+                                <input type="password" id="devNewPass" placeholder="Mật khẩu..." style="flex:1; margin-bottom:0; border: 1px solid #ddd;">
                             </div>
-                            <label class="switch"><input type="checkbox" id="modalLedToggle" onchange="toggleModuleFromModal('led', this.checked)"><span class="slider"></span></label>
+                            <button type="button" class="btn" style="width:100%; margin: 10px 0 0 0; background-color: #e67e22;" onclick="connectDeviceWifi()">🚀 Gửi Lệnh Đổi Wi-Fi</button>
+                            <div style="margin-top: 15px; border-top: 1px dashed #fad7a1; padding-top: 15px;">
+                                <label style="font-size: 13px; color: #d35400;">Hoặc chọn từ danh sách đã lưu:</label>
+                                <div style="display:flex; gap:10px; margin-top: 5px;">
+                                    <select id="savedWifiSelect" style="flex:1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; outline: none; background: #fdfdfd;"></select>
+                                    <button type="button" class="btn" style="margin:0; background-color: #27ae60;" onclick="quickConnectWifi()">⚡ Kết nối</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="dev-module" class="dev-tab-content">
+                        <div style="background: white; padding: 15px 20px; border-radius: 8px; border: 1px solid #e0e6ed;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #eee;">
+                                <div><strong style="color: #2c3e50; display: block;">Đầu đọc RFID</strong><span style="font-size: 12px; color: #7f8c8d;">Bật/tắt quét thẻ</span></div>
+                                <label class="switch"><input type="checkbox" id="modalRfidToggle" onchange="toggleModuleFromModal('rfid', this.checked)"><span class="slider"></span></label>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
+                                <div><strong style="color: #2c3e50; display: block;">Đèn LED RGB</strong><span style="font-size: 12px; color: #7f8c8d;">Bật/tắt đèn ESP32</span></div>
+                                <label class="switch"><input type="checkbox" id="modalLedToggle" onchange="toggleModuleFromModal('led', this.checked)"><span class="slider"></span></label>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-   <!-- Tải Firebase SDK (Modular v9+) -->
+
+    <!-- Tải Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, onValue, set, remove, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, onValue, set, remove, update, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyD8UhkdBIf2WF9EWXGaXRAgjLORrT3E450",
             databaseURL: "https://rfid-project-c315c-default-rtdb.asia-southeast1.firebasedatabase.app/",
             projectId: "rfid-project-c315c"
         };
-
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+
+        // Biến toàn cục
+        let currentUser = null; 
         let membersData = {};
+        let devicesData = {};
         let isDeleteMode = false;
         let changingUid = null; 
         let currentModalMode = 'view'; 
         let originalMemberInfo = {};   
 
-        // Biến phân trang và lọc cho Global
-        let globalAttData = [], filteredGlobalAtt = [];
-        let globalPage = 1, globalRows = 10;
-        
-        // Biến phân trang và lọc cho Personal
-        let personalAttData = [], filteredPersonalAtt = [];
-        let personalPage = 1, personalRows = 10;
+        // === HỆ THỐNG ĐĂNG NHẬP ===
+        window.performLogin = function() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const pass = document.getElementById('loginPass').value.trim();
+            
+            if (email === "admin@test.com" && pass === "12345678") {
+                // Đăng nhập quyền Admin
+                currentUser = { role: 'admin', name: 'Quản trị viên' };
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                document.getElementById('adminControls').style.display = 'block';
+                document.getElementById('userControls').style.display = 'none';
+                document.getElementById('currentUserDisp').innerText = "Chào Admin";
+                startAdminListeners();
+            } else {
+                // Kiểm tra tài khoản thành viên trong Database
+                get(ref(db, 'Members')).then((snapshot) => {
+                    let foundUser = null;
+                    snapshot.forEach((child) => {
+                        let info = child.val();
+                        if (info.email === email && info.id === pass) {
+                            foundUser = { uid: child.key, ...info };
+                        }
+                    });
 
-        // === HÀM HỖ TRỢ LỌC VÀ PHÂN TRANG CHUNG ===
+                    if (foundUser) {
+                        // Đăng nhập quyền User
+                        currentUser = { role: 'user', ...foundUser };
+                        document.getElementById('loginScreen').style.display = 'none';
+                        document.getElementById('mainApp').style.display = 'block';
+                        document.getElementById('adminControls').style.display = 'none';
+                        document.getElementById('userControls').style.display = 'block';
+                        document.getElementById('currentUserDisp').innerText = "Chào " + foundUser.name;
+                        startUserListeners(foundUser.uid);
+                    } else {
+                        document.getElementById('loginError').style.display = 'block';
+                    }
+                });
+            }
+        };
+
+        window.performLogout = function() {
+            currentUser = null;
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPass').value = '';
+            document.getElementById('loginError').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex';
+            // Reload trang để xóa các Listener của Firebase tránh tràn RAM
+            setTimeout(() => { location.reload(); }, 500);
+        };
+
+        // ================= CÁC CHỨC NĂNG DÀNH CHO USER =================
+        function startUserListeners(uid) {
+            onValue(ref(db, 'Members/' + uid), (snapshot) => {
+                const info = snapshot.val();
+                if(!info) return;
+                
+                document.getElementById('userDispName').innerText = info.name || 'N/A';
+                document.getElementById('userDispId').innerText = info.id || 'N/A';
+                
+                const isInside = (info.lastStatus === "Vào");
+                document.getElementById('userDispStatus').innerHTML = isInside ? '<span style="color:green">🟢 Đang ở trong</span>' : '<span style="color:red">🔴 Đã ra ngoài</span>';
+
+                const tbody = document.getElementById('userPersonalHistory');
+                tbody.innerHTML = '';
+                if(info.Attendance) {
+                    const arr = Object.entries(info.Attendance).sort((a,b) => b[0] - a[0]);
+                    arr.forEach(([ts, att]) => {
+                        const c = att.status === "Vào" ? "green" : "red";
+                        tbody.innerHTML += `<tr><td>${att.time}</td><td style="color:${c};font-weight:bold">${att.status}</td></tr>`;
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="2" class="empty-row">Chưa có lịch sử điểm danh</td></tr>';
+                }
+            });
+        }
+
+        // ================= CÁC CHỨC NĂNG DÀNH CHO ADMIN =================
+        function startAdminListeners() {
+            // Lắng nghe dữ liệu Members
+            onValue(ref(db, 'Members'), (snapshot) => {
+                const data = snapshot.val();
+                const tbodyMembers = document.getElementById('membersTable');
+                const statusGrid = document.getElementById('statusGrid');
+                tbodyMembers.innerHTML = ""; statusGrid.innerHTML = "";
+                globalAttData = []; 
+                
+                if (data) {
+                    membersData = data; 
+                    runAutoDelete(); 
+
+                    for (const [uid, info] of Object.entries(data)) {
+                        tbodyMembers.innerHTML += `
+                            <tr>
+                                <td class="delete-col ${isDeleteMode ? '' : 'hide-col'}"><input type="checkbox" class="checkbox-del" value="${uid}"></td>
+                                <td class="link-name" onclick="openMemberModal('${uid}', 'edit')">${info.name || 'N/A'}</td>
+                                <td>${info.id || 'N/A'}</td>
+                                <td>${uid}</td>
+                            </tr>
+                        `;
+
+                        const isInside = (info.lastStatus === "Vào");
+                        const statusClass = isInside ? "status-in" : "status-out";
+                        statusGrid.innerHTML += `
+                            <div class="member-card ${statusClass}" onclick="openMemberModal('${uid}', 'view')">
+                                <div class="card-title">${info.name || 'Chưa có tên'}</div>
+                                <div class="card-id">ID: ${info.id || 'N/A'}</div>
+                                <div class="card-status" style="color: ${isInside ? '#27ae60' : '#e74c3c'}">${isInside ? "🟢 Vào" : "🔴 Ra"}</div>
+                            </div>
+                        `;
+
+                        if(info.Attendance) {
+                            for (const [timestamp, att] of Object.entries(info.Attendance)) {
+                                globalAttData.push({ timeKey: parseInt(timestamp), timeString: att.time, name: info.name, uid: uid, status: att.status || 'Vào' });
+                            }
+                        }
+                    }
+                    globalAttData.sort((a, b) => b.timeKey - a.timeKey);
+                    updateGlobalTable();
+                } else {
+                    membersData = {};
+                    statusGrid.innerHTML = `<p style="width:100%; text-align:center;">Chưa có thành viên nào.</p>`;
+                    tbodyMembers.innerHTML = `<tr><td colspan="4" class="empty-row">Chưa có dữ liệu</td></tr>`;
+                    filteredGlobalAtt = []; updateGlobalTable();
+                }
+            });
+
+            // Lắng nghe thẻ mới quét
+            onValue(ref(db, 'Command/new_uid'), (snapshot) => {
+                const newUid = snapshot.val();
+                if (newUid && newUid !== "") {
+                    if (membersData[newUid]) {
+                        alert(`Thẻ đã tồn tại!`);
+                        set(ref(db, 'Command/new_uid'), ""); set(ref(db, 'Command/mode'), 0);
+                        if (changingUid) cancelChangeCard(); else btnCancelAdd.click(); 
+                        return;
+                    }
+
+                    if (changingUid) {
+                        const oldData = membersData[changingUid];
+                        set(ref(db, 'Members/' + newUid), oldData).then(() => {
+                            remove(ref(db, 'Members/' + changingUid));
+                            alert(`Đã đổi thẻ thành công!`);
+                            document.getElementById('editOldUid').value = newUid;
+                            document.getElementById('editUid').value = newUid;
+                            cancelChangeCard();
+                        });
+                        set(ref(db, 'Command/new_uid'), "");
+                    } else {
+                        document.getElementById('addStatus').style.display = "none";
+                        document.getElementById('btnAddMember').style.display = "inline-block";
+                        document.getElementById('btnCancelAdd').style.display = "none";
+                        setTimeout(() => { openMemberModal(newUid, 'add'); set(ref(db, 'Command/new_uid'), ""); }, 500); 
+                    }
+                }
+            });
+
+            // Lắng nghe Thiết bị
+            onValue(ref(db, 'Devices'), (snapshot) => {
+                devicesData = snapshot.val() || {};
+                renderDevices();
+            });
+
+            // Lắng nghe Cài đặt
+            onValue(ref(db, 'Settings/retentionDays'), (snapshot) => {
+                retentionDays = parseInt(snapshot.val()) || 0;
+                document.getElementById('autoDeleteSelect').value = retentionDays;
+                runAutoDelete();
+            });
+
+            // Lắng nghe mạng Wifi lưu trữ
+            onValue(ref(db, 'SavedWiFi'), (snapshot) => {
+                const list = snapshot.val() || {};
+                const select = document.getElementById('savedWifiSelect');
+                select.innerHTML = '<option value="">-- Chọn Wi-Fi --</option>';
+                for (const [ssid, pass] of Object.entries(list)) {
+                    select.innerHTML += `<option value="${ssid}" data-pass="${pass}">${ssid}</option>`;
+                }
+            });
+        }
+
+        // ================= HÀM HỖ TRỢ CHUNG CỦA ADMIN =================
+        let globalAttData = [], filteredGlobalAtt = [], globalPage = 1, globalRows = 10;
+        let personalAttData = [], filteredPersonalAtt = [], personalPage = 1, personalRows = 10;
+        let retentionDays = 0;
+
         function filterByDate(data, startDate, endDate) {
             if (!startDate && !endDate) return data;
             return data.filter(item => {
@@ -448,22 +591,17 @@
             container.innerHTML += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="${callbackName}(${currentPage + 1})">»</button>`;
         }
 
-        // === GIAO DIỆN CHUYỂN TAB ===
         window.switchTab = function(tabName) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('tab-active'));
-            document.querySelectorAll('.menu-bar .btn').forEach(btn => btn.classList.remove('btn-active'));
+            document.querySelectorAll('#adminControls .tab-content').forEach(t => t.classList.remove('tab-active'));
+            document.querySelectorAll('#adminControls .menu-bar .btn').forEach(b => b.classList.remove('btn-active'));
             document.getElementById('tab-' + tabName).classList.add('tab-active');
             const btnMap = { 'status': 'btnStatus', 'members': 'btnMembers', 'history': 'btnHistory', 'devices': 'btnDevices', 'settings': 'btnSettings' };
             document.getElementById(btnMap[tabName]).classList.add('btn-active');
         };
 
-        // === KIỂM TRA SỰ THAY ĐỔI DỮ LIỆU ===
         window.checkChanges = function() {
             if (currentModalMode === 'view') return; 
-            if (currentModalMode === 'add') {
-                document.getElementById('btnSaveInfo').style.display = 'block';
-                return;
-            }
+            if (currentModalMode === 'add') { document.getElementById('btnSaveInfo').style.display = 'block'; return; }
             const hasChanged = (
                 document.getElementById('editName').value !== originalMemberInfo.name ||
                 document.getElementById('editId').value !== originalMemberInfo.id ||
@@ -473,36 +611,7 @@
             document.getElementById('btnSaveInfo').style.display = hasChanged ? 'block' : 'none';
         };
 
-        // === XỬ LÝ LỊCH SỬ CÁ NHÂN (TRONG MODAL) ===
-        window.changePersonalRows = function() { personalRows = parseInt(document.getElementById('personalRows').value); personalPage = 1; updatePersonalTable(); };
-        window.applyPersonalFilter = function() {
-            filteredPersonalAtt = filterByDate(personalAttData, document.getElementById('personalStartDate').value, document.getElementById('personalEndDate').value);
-            personalPage = 1; updatePersonalTable();
-        };
-        window.clearPersonalFilter = function() {
-            document.getElementById('personalStartDate').value = ''; document.getElementById('personalEndDate').value = '';
-            filteredPersonalAtt = [...personalAttData]; personalPage = 1; updatePersonalTable();
-        };
-        window.goToPersonalPage = function(p) { personalPage = p; updatePersonalTable(); };
-
-        function updatePersonalTable() {
-            const tbody = document.getElementById('personalHistoryTable');
-            tbody.innerHTML = '';
-            if (filteredPersonalAtt.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="2" class="empty-row">Không có dữ liệu phù hợp</td></tr>';
-                document.getElementById('personalPagination').innerHTML = '';
-                return;
-            }
-            const start = (personalPage - 1) * personalRows;
-            const paginated = filteredPersonalAtt.slice(start, start + personalRows);
-            paginated.forEach(att => {
-                const color = att.status === "Vào" ? "green" : "red";
-                tbody.innerHTML += `<tr><td>${att.time}</td><td style="color:${color};font-weight:bold">${att.status}</td></tr>`;
-            });
-            renderPaginationControls(filteredPersonalAtt.length, personalRows, personalPage, 'personalPagination', 'goToPersonalPage');
-        }
-
-        // === XỬ LÝ POPUP MODAL THÔNG TIN & ĐỔI THẺ ===
+        // Popup Member
         window.openMemberModal = function(uid, mode) {
             currentModalMode = mode;
             const info = membersData[uid] || {};
@@ -515,46 +624,29 @@
             document.getElementById('editDob').value = originalMemberInfo.dob;
             document.getElementById('editEmail').value = originalMemberInfo.email;
             
-            const isView = (mode === 'view');
-            const isAdd = (mode === 'add');
-            
-            // Xử lý Bố cục Động (Fullscreen chia cột vs Form nhỏ)
+            const isView = (mode === 'view'); const isAdd = (mode === 'add');
             const modalContent = document.getElementById('modalContent');
             const layoutContainer = document.getElementById('modalBodyLayout');
             const historyPanel = document.getElementById('historyPanel');
 
             if (isView) {
-                document.getElementById('modalTitle').innerText = "THÔNG TIN THÀNH VIÊN VÀ LỊCH SỬ QUÉT THẺ";
-                modalContent.classList.add('modal-fullscreen');
-                layoutContainer.className = 'split-container';
-                historyPanel.style.display = 'flex';
-                document.body.classList.add('no-scroll'); // Tắt cuộn trang nền
+                document.getElementById('modalTitle').innerText = "Chi Tiết (Chỉ Xem)";
+                modalContent.classList.add('modal-fullscreen'); layoutContainer.className = 'split-container';
+                historyPanel.style.display = 'flex'; document.body.classList.add('no-scroll');
             } else {
-                if (isAdd) document.getElementById('modalTitle').innerText = "Thêm Thành Viên Mới";
-                else document.getElementById('modalTitle').innerText = "Chỉnh Sửa Hồ Sơ";
-                
-                modalContent.classList.remove('modal-fullscreen');
-                layoutContainer.className = '';
-                historyPanel.style.display = 'none'; // Ẩn lịch sử khi thêm/sửa
-                document.body.classList.remove('no-scroll');
+                document.getElementById('modalTitle').innerText = isAdd ? "Thêm Thành Viên Mới" : "Sửa Hồ Sơ";
+                modalContent.classList.remove('modal-fullscreen'); layoutContainer.className = '';
+                historyPanel.style.display = 'none'; document.body.classList.remove('no-scroll');
             }
 
-            document.getElementById('editName').readOnly = isView;
-            document.getElementById('editId').readOnly = isView;
-            document.getElementById('editDob').readOnly = isView;
-            document.getElementById('editEmail').readOnly = isView;
+            document.getElementById('editName').readOnly = isView; document.getElementById('editId').readOnly = isView;
+            document.getElementById('editDob').readOnly = isView; document.getElementById('editEmail').readOnly = isView;
             
             document.getElementById('btnChangeCard').style.display = (isView || isAdd) ? 'none' : 'block';
             document.getElementById('btnCancelChange').style.display = 'none';
             document.getElementById('btnSaveInfo').style.display = isAdd ? 'block' : 'none';
+            if (!isView && !isAdd) { changingUid = null; document.getElementById('btnChangeCard').disabled = false; }
             
-            if (!isView && !isAdd) {
-                changingUid = null;
-                document.getElementById('btnChangeCard').innerText = "🔄 Đổi thẻ mới";
-                document.getElementById('btnChangeCard').disabled = false;
-            }
-            
-            // Render dữ liệu nếu ở chế độ xem
             if (isView) {
                 personalAttData = [];
                 if(info.Attendance) {
@@ -563,21 +655,14 @@
                 }
                 clearPersonalFilter(); 
             }
-            
             document.getElementById('memberModal').style.display = 'block';
         };
 
         window.closeModal = function() {
-            document.getElementById('memberModal').style.display = 'none';
-            document.body.classList.remove('no-scroll'); // Bật lại cuộn trang nền
-            if (changingUid || currentModalMode === 'add') {
-                set(ref(db, 'Command/mode'), 0);
-                set(ref(db, 'Command/new_uid'), ""); 
-                changingUid = null;
-            }
+            document.getElementById('memberModal').style.display = 'none'; document.body.classList.remove('no-scroll');
+            if (changingUid || currentModalMode === 'add') { set(ref(db, 'Command/mode'), 0); set(ref(db, 'Command/new_uid'), ""); changingUid = null; }
         };
 
-        // YÊU CẦU BẮT BUỘC ĐIỀN ĐỦ THÔNG TIN KHI THÊM
         window.saveMemberInfo = function() {
             const uid = document.getElementById('editOldUid').value;
             const nameVal = document.getElementById('editName').value.trim();
@@ -585,362 +670,144 @@
             const dobVal = document.getElementById('editDob').value;
             const emailVal = document.getElementById('editEmail').value.trim();
 
-            if(currentModalMode === 'add') {
-                if(!nameVal || !idVal || !dobVal || !emailVal) {
-                    alert("⚠️ Vui lòng điền ĐẦY ĐỦ tất cả thông tin để hoàn thành việc thêm mới!");
-                    return;
-                }
+            if(currentModalMode === 'add' && (!nameVal || !idVal || !dobVal || !emailVal)) {
+                alert("Vui lòng điền ĐẦY ĐỦ thông tin (Email sẽ dùng đăng nhập, Mã số là mật khẩu)!"); return;
             }
 
             const updates = {};
-            updates['Members/' + uid + '/name'] = nameVal;
-            updates['Members/' + uid + '/id'] = idVal;
-            updates['Members/' + uid + '/dob'] = dobVal;
-            updates['Members/' + uid + '/email'] = emailVal;
+            updates['Members/' + uid + '/name'] = nameVal; updates['Members/' + uid + '/id'] = idVal;
+            updates['Members/' + uid + '/dob'] = dobVal; updates['Members/' + uid + '/email'] = emailVal;
             if(currentModalMode === 'add') updates['Members/' + uid + '/lastStatus'] = "Ra"; 
 
             update(ref(db), updates).then(() => {
-                alert(currentModalMode === 'add' ? 'Đã thêm thành viên mới!' : 'Đã lưu thông tin hồ sơ!');
+                alert('Đã lưu!');
                 if (currentModalMode === 'add') closeModal();
-                else {
-                    originalMemberInfo = { name: nameVal, id: idVal, dob: dobVal, email: emailVal };
-                    window.checkChanges(); 
-                }
+                else { originalMemberInfo = { name: nameVal, id: idVal, dob: dobVal, email: emailVal }; window.checkChanges(); }
             });
         };
 
         window.startChangeCard = function() {
             changingUid = document.getElementById('editOldUid').value;
-            set(ref(db, 'Command/mode'), 1);
-            set(ref(db, 'Command/new_uid'), "");
-            document.getElementById('btnChangeCard').style.display = 'none';
-            document.getElementById('btnCancelChange').style.display = 'inline-block';
+            set(ref(db, 'Command/mode'), 1); set(ref(db, 'Command/new_uid'), "");
+            document.getElementById('btnChangeCard').style.display = 'none'; document.getElementById('btnCancelChange').style.display = 'inline-block';
         };
-
         window.cancelChangeCard = function() {
-            set(ref(db, 'Command/mode'), 0);
-            set(ref(db, 'Command/new_uid'), "");
-            changingUid = null;
-            document.getElementById('btnChangeCard').style.display = 'inline-block';
-            document.getElementById('btnCancelChange').style.display = 'none';
+            set(ref(db, 'Command/mode'), 0); set(ref(db, 'Command/new_uid'), ""); changingUid = null;
+            document.getElementById('btnChangeCard').style.display = 'inline-block'; document.getElementById('btnCancelChange').style.display = 'none';
         };
 
-        // === CÁC NÚT ĐIỀU KHIỂN DANH SÁCH ===
-        const btnAdd = document.getElementById('btnAddMember');
-        const btnCancelAdd = document.getElementById('btnCancelAdd');
-        const addStatus = document.getElementById('addStatus');
-
-        btnAdd.addEventListener('click', () => {
-            changingUid = null; 
-            set(ref(db, 'Command/mode'), 1);
-            set(ref(db, 'Command/new_uid'), ""); 
-            addStatus.style.display = "block";
-            btnAdd.style.display = "none";
-            btnCancelAdd.style.display = "inline-block";
+        // Nút thêm/xóa danh sách
+        document.getElementById('btnAddMember').addEventListener('click', () => {
+            changingUid = null; set(ref(db, 'Command/mode'), 1); set(ref(db, 'Command/new_uid'), ""); 
+            document.getElementById('addStatus').style.display = "block"; document.getElementById('btnAddMember').style.display = "none"; document.getElementById('btnCancelAdd').style.display = "inline-block";
         });
-
-        btnCancelAdd.addEventListener('click', () => {
-            set(ref(db, 'Command/mode'), 0);
-            set(ref(db, 'Command/new_uid'), ""); 
-            addStatus.style.display = "none";
-            btnAdd.style.display = "inline-block";
-            btnCancelAdd.style.display = "none";
+        document.getElementById('btnCancelAdd').addEventListener('click', () => {
+            set(ref(db, 'Command/mode'), 0); set(ref(db, 'Command/new_uid'), ""); 
+            document.getElementById('addStatus').style.display = "none"; document.getElementById('btnAddMember').style.display = "inline-block"; document.getElementById('btnCancelAdd').style.display = "none";
         });
-
         document.getElementById('btnToggleDelete').addEventListener('click', function() {
-            isDeleteMode = !isDeleteMode;
-            document.getElementById('btnConfirmDelete').style.display = isDeleteMode ? "inline-block" : "none";
-            this.innerText = isDeleteMode ? "🔙 Thoát chế độ xóa" : "🗑️ Xóa thành viên";
+            isDeleteMode = !isDeleteMode; document.getElementById('btnConfirmDelete').style.display = isDeleteMode ? "inline-block" : "none";
+            this.innerText = isDeleteMode ? "🔙 Thoát xóa" : "🗑️ Xóa thành viên";
             document.querySelectorAll('.delete-col').forEach(col => isDeleteMode ? col.classList.remove('hide-col') : col.classList.add('hide-col'));
         });
-
         document.getElementById('btnConfirmDelete').addEventListener('click', () => {
-            const checkboxes = document.querySelectorAll('.checkbox-del:checked');
-            if(checkboxes.length === 0) return alert("Vui lòng chọn ít nhất 1 thành viên!");
-            if(confirm(`Xóa ${checkboxes.length} thành viên bao gồm cả dữ liệu điểm danh?`)) {
-                checkboxes.forEach(cb => remove(ref(db, 'Members/' + cb.value)));
-                document.getElementById('btnToggleDelete').click(); 
-            }
+            const cbx = document.querySelectorAll('.checkbox-del:checked');
+            if(cbx.length === 0) return alert("Chưa chọn thành viên!");
+            if(confirm(`Xóa ${cbx.length} thành viên?`)) { cbx.forEach(cb => remove(ref(db, 'Members/' + cb.value))); document.getElementById('btnToggleDelete').click(); }
         });
 
-        // === LẮNG NGHE THẺ MỚI ===
-        onValue(ref(db, 'Command/new_uid'), (snapshot) => {
-            const newUid = snapshot.val();
-            if (newUid && newUid !== "") {
-                if (membersData[newUid]) {
-                    alert(`Thẻ (UID: ${newUid}) đã tồn tại trong hệ thống! Kết thúc phiên.`);
-                    set(ref(db, 'Command/new_uid'), "");
-                    set(ref(db, 'Command/mode'), 0);
-                    if (changingUid) cancelChangeCard();
-                    else btnCancelAdd.click(); 
-                    return;
-                }
-
-                if (changingUid) {
-                    const oldData = membersData[changingUid];
-                    set(ref(db, 'Members/' + newUid), oldData).then(() => {
-                        remove(ref(db, 'Members/' + changingUid));
-                        alert(`Đã đổi thẻ thành công!\nUID mới: ${newUid}`);
-                        document.getElementById('editOldUid').value = newUid;
-                        document.getElementById('editUid').value = newUid;
-                        cancelChangeCard();
-                    });
-                    set(ref(db, 'Command/new_uid'), "");
-                } else {
-                    addStatus.style.display = "none";
-                    btnAdd.style.display = "inline-block";
-                    btnCancelAdd.style.display = "none";
-                    
-                    setTimeout(() => {
-                        openMemberModal(newUid, 'add');
-                        set(ref(db, 'Command/new_uid'), "");
-                    }, 500); 
-                }
-            }
-        });
-
-        // === THIẾT LẬP AUTO-DELETE ===
-        let retentionDays = 0;
-        onValue(ref(db, 'Settings/retentionDays'), (snapshot) => {
-            retentionDays = parseInt(snapshot.val()) || 0;
-            document.getElementById('autoDeleteSelect').value = retentionDays;
-            runAutoDelete();
-        });
-
+        // Auto Delete
         window.saveSettings = function() {
-            const val = document.getElementById('autoDeleteSelect').value;
-            set(ref(db, 'Settings/retentionDays'), parseInt(val)).then(() => alert("Đã lưu cài đặt tự động xóa!"));
+            set(ref(db, 'Settings/retentionDays'), parseInt(document.getElementById('autoDeleteSelect').value)).then(() => alert("Đã lưu!"));
         };
-
         function runAutoDelete() {
             if(retentionDays <= 0 || !membersData) return;
             const threshold = Math.floor(Date.now() / 1000) - (retentionDays * 86400);
-            
             for (const [uid, info] of Object.entries(membersData)) {
                 if(info.Attendance) {
                     for (const [timestamp, att] of Object.entries(info.Attendance)) {
-                        if (parseInt(timestamp) < threshold) {
-                            remove(ref(db, `Members/${uid}/Attendance/${timestamp}`));
-                        }
+                        if (parseInt(timestamp) < threshold) remove(ref(db, `Members/${uid}/Attendance/${timestamp}`));
                     }
                 }
             }
         }
 
-        // === XỬ LÝ LỊCH SỬ TỔNG (GLOBAL) ===
+        // Bảng & Lọc Lịch sử
         window.changeGlobalRows = function() { globalRows = parseInt(document.getElementById('globalRows').value); globalPage = 1; updateGlobalTable(); };
-        window.applyGlobalFilter = function() {
-            filteredGlobalAtt = filterByDate(globalAttData, document.getElementById('globalStartDate').value, document.getElementById('globalEndDate').value);
-            globalPage = 1; updateGlobalTable();
-        };
-        window.clearGlobalFilter = function() {
-            document.getElementById('globalStartDate').value = ''; document.getElementById('globalEndDate').value = '';
-            filteredGlobalAtt = [...globalAttData]; globalPage = 1; updateGlobalTable();
-        };
+        window.applyGlobalFilter = function() { filteredGlobalAtt = filterByDate(globalAttData, document.getElementById('globalStartDate').value, document.getElementById('globalEndDate').value); globalPage = 1; updateGlobalTable(); };
+        window.clearGlobalFilter = function() { document.getElementById('globalStartDate').value = ''; document.getElementById('globalEndDate').value = ''; filteredGlobalAtt = [...globalAttData]; globalPage = 1; updateGlobalTable(); };
         window.goToGlobalPage = function(p) { globalPage = p; updateGlobalTable(); };
-
         function updateGlobalTable() {
-            const tbodyAtt = document.getElementById('attendanceTable');
-            tbodyAtt.innerHTML = '';
-            if (filteredGlobalAtt.length === 0) {
-                tbodyAtt.innerHTML = '<tr><td colspan="4" class="empty-row">Không có dữ liệu phù hợp</td></tr>';
-                document.getElementById('globalPagination').innerHTML = '';
-                return;
-            }
+            const tbody = document.getElementById('attendanceTable'); tbody.innerHTML = '';
+            if (filteredGlobalAtt.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="empty-row">Không có dữ liệu</td></tr>'; document.getElementById('globalPagination').innerHTML = ''; return; }
             const start = (globalPage - 1) * globalRows;
-            const paginated = filteredGlobalAtt.slice(start, start + globalRows);
-            paginated.forEach(att => {
+            filteredGlobalAtt.slice(start, start + globalRows).forEach(att => {
                 const color = att.status === "Vào" ? "green" : "red";
-                tbodyAtt.innerHTML += `<tr><td>${att.timeString}</td><td>${att.name}</td><td>${att.uid}</td><td style="color:${color}; font-weight:bold;">${att.status}</td></tr>`;
+                tbody.innerHTML += `<tr><td>${att.timeString}</td><td>${att.name}</td><td>${att.uid}</td><td style="color:${color}; font-weight:bold;">${att.status}</td></tr>`;
             });
             renderPaginationControls(filteredGlobalAtt.length, globalRows, globalPage, 'globalPagination', 'goToGlobalPage');
         }
 
-        // === KẾT XUẤT (RENDER) DỮ LIỆU TỔNG QUÁT ===
-        onValue(ref(db, 'Members'), (snapshot) => {
-            const data = snapshot.val();
-            const tbodyMembers = document.getElementById('membersTable');
-            const statusGrid = document.getElementById('statusGrid');
-            
-            tbodyMembers.innerHTML = ""; statusGrid.innerHTML = "";
-            globalAttData = []; 
-            
-            if (data) {
-                membersData = data; 
-                runAutoDelete(); 
+        window.changePersonalRows = function() { personalRows = parseInt(document.getElementById('personalRows').value); personalPage = 1; updatePersonalTable(); };
+        window.applyPersonalFilter = function() { filteredPersonalAtt = filterByDate(personalAttData, document.getElementById('personalStartDate').value, document.getElementById('personalEndDate').value); personalPage = 1; updatePersonalTable(); };
+        window.clearPersonalFilter = function() { document.getElementById('personalStartDate').value = ''; document.getElementById('personalEndDate').value = ''; filteredPersonalAtt = [...personalAttData]; personalPage = 1; updatePersonalTable(); };
+        window.goToPersonalPage = function(p) { personalPage = p; updatePersonalTable(); };
+        function updatePersonalTable() {
+            const tbody = document.getElementById('personalHistoryTable'); tbody.innerHTML = '';
+            if (filteredPersonalAtt.length === 0) { tbody.innerHTML = '<tr><td colspan="2" class="empty-row">Không có dữ liệu</td></tr>'; document.getElementById('personalPagination').innerHTML = ''; return; }
+            const start = (personalPage - 1) * personalRows;
+            filteredPersonalAtt.slice(start, start + personalRows).forEach(att => {
+                const color = att.status === "Vào" ? "green" : "red";
+                tbody.innerHTML += `<tr><td>${att.time}</td><td style="color:${color};font-weight:bold">${att.status}</td></tr>`;
+            });
+            renderPaginationControls(filteredPersonalAtt.length, personalRows, personalPage, 'personalPagination', 'goToPersonalPage');
+        }
 
-                for (const [uid, info] of Object.entries(data)) {
-                    tbodyMembers.innerHTML += `
-                        <tr>
-                            <td class="delete-col ${isDeleteMode ? '' : 'hide-col'}"><input type="checkbox" class="checkbox-del" value="${uid}"></td>
-                            <td class="link-name" onclick="openMemberModal('${uid}', 'edit')">${info.name || 'N/A'}</td>
-                            <td>${info.id || 'N/A'}</td>
-                            <td>${uid}</td>
-                        </tr>
-                    `;
-
-                    const isInside = (info.lastStatus === "Vào");
-                    const statusClass = isInside ? "status-in" : "status-out";
-                    const statusText = isInside ? "🟢 Tình trạng: Vào" : "🔴 Tình trạng: Ra";
-                    
-                    statusGrid.innerHTML += `
-                        <div class="member-card ${statusClass}" onclick="openMemberModal('${uid}', 'view')">
-                            <div class="card-title">${info.name || 'Chưa có tên'}</div>
-                            <div class="card-id">ID: ${info.id || 'N/A'}</div>
-                            <div class="card-status" style="color: ${isInside ? '#27ae60' : '#e74c3c'}">${statusText}</div>
-                        </div>
-                    `;
-
-                    if(info.Attendance) {
-                        for (const [timestamp, att] of Object.entries(info.Attendance)) {
-                            globalAttData.push({ timeKey: parseInt(timestamp), timeString: att.time, name: info.name, uid: uid, status: att.status || 'Vào' });
-                        }
-                    }
-                }
-
-                globalAttData.sort((a, b) => b.timeKey - a.timeKey);
-                // Giữ nguyên lọc hiện tại hoặc load toàn bộ
-                const sDate = document.getElementById('globalStartDate').value;
-                const eDate = document.getElementById('globalEndDate').value;
-                filteredGlobalAtt = filterByDate(globalAttData, sDate, eDate);
-                updateGlobalTable();
-
-            } else {
-                membersData = {};
-                statusGrid.innerHTML = `<p style="width:100%; text-align:center; color:#7f8c8d;">Chưa có thành viên nào.</p>`;
-                tbodyMembers.innerHTML = `<tr><td colspan="4" class="empty-row">Chưa có dữ liệu</td></tr>`;
-                filteredGlobalAtt = [];
-                updateGlobalTable();
-            }
-        });
-        // === QUẢN LÝ THIẾT BỊ & ĐỔI WIFI ===
-        let devicesData = {};
-        let savedWifiList = {}; 
-
-        onValue(ref(db, 'SavedWiFi'), (snapshot) => {
-            savedWifiList = snapshot.val() || {};
-            const select = document.getElementById('savedWifiSelect');
-            select.innerHTML = '<option value="">-- Chọn Wi-Fi --</option>';
-            for (const [ssid, pass] of Object.entries(savedWifiList)) {
-                select.innerHTML += `<option value="${ssid}" data-pass="${pass}">${ssid}</option>`;
-            }
-        });
-
-        // Chuyển Tab bên trong Modal Thiết bị
+        // Thiết bị
         window.switchDevTab = function(tabId) {
             document.querySelectorAll('.dev-tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.dev-tab-btn').forEach(btn => btn.classList.remove('active'));
-            
-            document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
+            document.getElementById(tabId).classList.add('active'); event.currentTarget.classList.add('active');
         };
-
-        // Ghi nhận thay đổi công tắc từ Modal
-        window.toggleModuleFromModal = function(moduleName, isChecked) {
-            const devId = document.getElementById('devOldId').value;
-            set(ref(db, `Devices/${devId}/modules/${moduleName}`), isChecked);
-        };
-
-        // Mở Modal Thiết bị
+        window.toggleModuleFromModal = function(moduleName, isChecked) { set(ref(db, `Devices/${document.getElementById('devOldId').value}/modules/${moduleName}`), isChecked); };
         window.openDeviceModal = function(devId) {
-            const dev = devicesData[devId];
-            if(!dev) return;
-            
-            // Nạp dữ liệu cơ bản
-            document.getElementById('devOldId').value = devId;
-            document.getElementById('devEditId').value = devId;
-            document.getElementById('devEditName').value = dev.name || '';
-            document.getElementById('devEditIp').innerText = dev.ip || 'Chưa rõ';
-            document.getElementById('devEditMac').innerText = dev.mac || 'Chưa rõ';
-            document.getElementById('devEditSsid').value = dev.ssid || 'Đang mất kết nối';
-            document.getElementById('devNewSsid').value = '';
-            document.getElementById('devNewPass').value = '';
-
-            // Nạp trạng thái công tắc
-            const rfidState = dev.modules?.rfid ?? true; 
-            const ledState = dev.modules?.led ?? true;
-            document.getElementById('modalRfidToggle').checked = rfidState;
-            document.getElementById('modalLedToggle').checked = ledState;
-
-            // Reset tab về 'Thông tin cơ bản'
-            switchDevTab('dev-basic');
-            document.querySelectorAll('.dev-tab-btn')[0].classList.add('active');
-
+            const dev = devicesData[devId]; if(!dev) return;
+            document.getElementById('devOldId').value = devId; document.getElementById('devEditId').value = devId;
+            document.getElementById('devEditName').value = dev.name || ''; document.getElementById('devEditIp').innerText = dev.ip || 'Chưa rõ';
+            document.getElementById('devEditMac').innerText = dev.mac || 'Chưa rõ'; document.getElementById('devEditSsid').value = dev.ssid || 'Mất kết nối';
+            document.getElementById('devNewSsid').value = ''; document.getElementById('devNewPass').value = '';
+            document.getElementById('modalRfidToggle').checked = dev.modules?.rfid ?? true; document.getElementById('modalLedToggle').checked = dev.modules?.led ?? true;
+            switchDevTab('dev-basic'); document.querySelectorAll('.dev-tab-btn')[0].classList.add('active');
             document.getElementById('deviceModal').style.display = 'block';
         };
-
-        window.closeDeviceModal = function() {
-            document.getElementById('deviceModal').style.display = 'none';
-        };
-
+        window.closeDeviceModal = function() { document.getElementById('deviceModal').style.display = 'none'; };
         window.saveDeviceConfig = function() {
-            const oldId = document.getElementById('devOldId').value;
-            const newId = document.getElementById('devEditId').value.trim();
-            const newName = document.getElementById('devEditName').value.trim();
-            if(newId === "" || newName === "") return alert("ID và Tên không được để trống!");
-            
-            update(ref(db, `Devices/${oldId}/Command`), { action: "update_info", new_id: newId, new_name: newName })
-            .then(() => {
-                alert("Đã gửi lệnh cập nhật! Thiết bị sẽ khởi động lại trong vài giây.");
-                closeDeviceModal();
-            });
+            const oldId = document.getElementById('devOldId').value, newId = document.getElementById('devEditId').value.trim(), newName = document.getElementById('devEditName').value.trim();
+            if(newId === "" || newName === "") return alert("ID và Tên không được rỗng!");
+            update(ref(db, `Devices/${oldId}/Command`), { action: "update_info", new_id: newId, new_name: newName }).then(() => { alert("Đã gửi lệnh!"); closeDeviceModal(); });
         };
-
         window.connectDeviceWifi = function() {
-            const devId = document.getElementById('devOldId').value;
-            const ssid = document.getElementById('devNewSsid').value.trim();
-            const pass = document.getElementById('devNewPass').value;
-            if(ssid === "") return alert("Vui lòng nhập tên Wi-Fi!");
-            
-            if(confirm(`Yêu cầu mạch đổi sang Wi-Fi: ${ssid}?`)) {
+            const devId = document.getElementById('devOldId').value, ssid = document.getElementById('devNewSsid').value.trim(), pass = document.getElementById('devNewPass').value;
+            if(ssid === "") return alert("Nhập SSID!");
+            if(confirm(`Đổi mạch sang Wi-Fi: ${ssid}?`)) {
                 set(ref(db, `SavedWiFi/${ssid}`), pass);
-                update(ref(db, `Devices/${devId}/Command`), { action: "connect_wifi", ssid: ssid, pass: pass })
-                .then(() => {
-                    alert("Đã gửi thông tin mạng! Thiết bị đang khởi động lại để kết nối...");
-                    closeDeviceModal();
-                });
+                update(ref(db, `Devices/${devId}/Command`), { action: "connect_wifi", ssid: ssid, pass: pass }).then(() => { alert("Đã gửi lệnh!"); closeDeviceModal(); });
             }
         };
-
         window.quickConnectWifi = function() {
-            const select = document.getElementById('savedWifiSelect');
-            const ssid = select.value;
-            if(ssid === "") return alert("Vui lòng chọn 1 mạng có sẵn!");
-            const pass = select.options[select.selectedIndex].getAttribute('data-pass');
-            
-            document.getElementById('devNewSsid').value = ssid;
-            document.getElementById('devNewPass').value = pass;
+            const sel = document.getElementById('savedWifiSelect'); if(sel.value === "") return alert("Chọn mạng!");
+            document.getElementById('devNewSsid').value = sel.value; document.getElementById('devNewPass').value = sel.options[sel.selectedIndex].getAttribute('data-pass');
             connectDeviceWifi();
         };
 
-        onValue(ref(db, 'Devices'), (snapshot) => {
-            devicesData = snapshot.val() || {};
-            renderDevices();
-        });
-
         function renderDevices() {
-            const tbody = document.getElementById('devicesTable');
-            if(!tbody) return;
-            tbody.innerHTML = "";
-            const now = Math.floor(Date.now() / 1000); 
-            let stt = 1;
-
+            const tbody = document.getElementById('devicesTable'); if(!tbody) return; tbody.innerHTML = "";
+            const now = Math.floor(Date.now() / 1000); let stt = 1;
             if(Object.keys(devicesData).length > 0) {
                 for (const [devId, devInfo] of Object.entries(devicesData)) {
                     const isOnline = (now - devInfo.lastPing) < 10; 
                     const statusHtml = isOnline ? `<span style="color:green;font-weight:bold;">🟢 Online</span>` : `<span style="color:red;font-weight:bold;">🔴 Offline</span>`;
-                    
-                    // Render gọn bảng chính (Xóa cột công tắc, thay bằng nút Cấu hình)
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${stt++}</td>
-                            <td><strong style="color: #2c3e50;">${devInfo.name || devId}</strong></td>
-                            <td>${statusHtml}</td>
-                            <td>
-                                <button class="btn btn-active" style="padding: 6px 12px; font-size: 13px;" onclick="openDeviceModal('${devId}')">⚙️ Cấu Hình</button>
-                            </td>
-                        </tr>
-                    `;
+                    tbody.innerHTML += `<tr><td>${stt++}</td><td><strong style="color: #2c3e50;">${devInfo.name || devId}</strong></td><td>${statusHtml}</td><td><button class="btn btn-active" style="padding: 6px 12px; font-size: 13px;" onclick="openDeviceModal('${devId}')">⚙️ Cấu Hình</button></td></tr>`;
                 }
             } else { tbody.innerHTML = `<tr><td colspan="4" class="empty-row">Chưa thiết bị nào kết nối</td></tr>`; }
         }
