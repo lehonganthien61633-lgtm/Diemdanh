@@ -300,7 +300,55 @@
             </div>
         </div>
     </div>
+<!-- Modal Chi Tiết Thiết Bị (MỚI) -->
+    <div id="deviceModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
+                <h2 style="margin: 0; color: #2c3e50;">Cấu Hình Thiết Bị</h2>
+                <span class="close" onclick="closeDeviceModal()">&times;</span>
+            </div>
+            
+            <input type="hidden" id="devOldId">
+            <label>Mã Thiết Bị (ID):</label>
+            <input type="text" id="devEditId" placeholder="VD: ESP32_CuaChinh">
+            
+            <label>Tên Hiển Thị:</label>
+            <input type="text" id="devEditName" placeholder="Tên gợi nhớ...">
+            
+            <div style="display:flex; gap:15px; background: #ecf0f1; padding: 10px; border-radius: 6px; margin: 10px 0;">
+                <div style="flex:1;">
+                    <label style="margin-top:0;">IPv4 Address:</label>
+                    <span id="devEditIp" style="font-weight: bold; color: #2980b9;">-</span>
+                </div>
+                <div style="flex:1;">
+                    <label style="margin-top:0;">MAC Address:</label>
+                    <span id="devEditMac" style="font-weight: bold; color: #2980b9;">-</span>
+                </div>
+            </div>
 
+            <button type="button" class="btn btn-active" style="width:100%; margin-bottom: 20px;" onclick="saveDeviceConfig()">💾 Cập Nhật Tên & ID Mạch</button>
+
+            <h3 style="border-top: 2px solid #ecf0f1; padding-top: 15px;">Kết nối Wi-Fi thiết bị</h3>
+            <label>Wi-Fi hiện tại thiết bị đang dùng:</label>
+            <input type="text" id="devEditSsid" readonly style="background-color: #e8f8f5; color: #16a085; font-weight: bold; text-align: center;">
+            
+            <div style="background: #fdf2e9; padding: 15px; border-radius: 6px; border: 1px solid #eb984e;">
+                <label style="margin-top:0; color:#d35400;">🌐 Đổi Wi-Fi Từ Xa (Remote):</label>
+                <div style="display:flex; gap:10px; margin-top: 5px;">
+                    <input type="text" id="devNewSsid" placeholder="Nhập tên Wi-Fi (SSID)..." style="flex:1; margin-bottom:0;">
+                    <input type="password" id="devNewPass" placeholder="Mật khẩu..." style="flex:1; margin-bottom:0;">
+                </div>
+                <button type="button" class="btn btn-delete" style="width:100%; margin: 10px 0 0 0;" onclick="connectDeviceWifi()">🚀 Gửi lệnh đổi Wi-Fi</button>
+                <p style="font-size: 13px; color: #7f8c8d; margin-top: 10px;">*Mẹo: Nhập SSID/Pass và bấm Gửi. Thiết bị sẽ tự khởi động lại để kết nối mạng mới.</p>
+                
+                <label style="margin-top:15px; border-top: 1px dashed #ccc; padding-top:10px;">Hoặc chọn từ Wi-Fi đã lưu nhanh:</label>
+                <div style="display:flex; gap:10px;">
+                    <select id="savedWifiSelect" style="flex:1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; outline: none;"></select>
+                    <button type="button" class="btn btn-active" style="margin:0; background-color: #27ae60;" onclick="quickConnectWifi()">⚡ Kết nối ngay</button>
+                </div>
+            </div>
+        </div>
+    </div>
    <!-- Tải Firebase SDK (Modular v9+) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -719,12 +767,90 @@
                 updateGlobalTable();
             }
         });
-        // === QUẢN LÝ THIẾT BỊ ===
+        // === QUẢN LÝ THIẾT BỊ & ĐỔI WIFI ===
+        let devicesData = {};
+        let savedWifiList = {}; // Danh sách WiFi đã lưu
+
+        // Lắng nghe cấu hình WiFi lưu trữ
+        onValue(ref(db, 'SavedWiFi'), (snapshot) => {
+            savedWifiList = snapshot.val() || {};
+            const select = document.getElementById('savedWifiSelect');
+            select.innerHTML = '<option value="">-- Chọn Wi-Fi --</option>';
+            for (const [ssid, pass] of Object.entries(savedWifiList)) {
+                select.innerHTML += `<option value="${ssid}" data-pass="${pass}">${ssid}</option>`;
+            }
+        });
+
         window.toggleModule = function(devId, moduleName, isChecked) {
             set(ref(db, `Devices/${devId}/modules/${moduleName}`), isChecked);
         };
-        
-        let devicesData = {};
+
+        // Mở Modal Thiết bị
+        window.openDeviceModal = function(devId) {
+            const dev = devicesData[devId];
+            if(!dev) return;
+            document.getElementById('devOldId').value = devId;
+            document.getElementById('devEditId').value = devId;
+            document.getElementById('devEditName').value = dev.name || '';
+            document.getElementById('devEditIp').innerText = dev.ip || 'Chưa rõ';
+            document.getElementById('devEditMac').innerText = dev.mac || 'Chưa rõ';
+            document.getElementById('devEditSsid').value = dev.ssid || 'Đang mất kết nối';
+            document.getElementById('devNewSsid').value = '';
+            document.getElementById('devNewPass').value = '';
+            document.getElementById('deviceModal').style.display = 'block';
+        };
+
+        window.closeDeviceModal = function() {
+            document.getElementById('deviceModal').style.display = 'none';
+        };
+
+        // Gửi lệnh đổi Name/ID
+        window.saveDeviceConfig = function() {
+            const oldId = document.getElementById('devOldId').value;
+            const newId = document.getElementById('devEditId').value.trim();
+            const newName = document.getElementById('devEditName').value.trim();
+            if(newId === "" || newName === "") return alert("ID và Tên không được để trống!");
+            
+            // Gửi lệnh xuống cho ESP32 tự đổi cấu hình NVS và tự Reset
+            update(ref(db, `Devices/${oldId}/Command`), { action: "update_info", new_id: newId, new_name: newName })
+            .then(() => {
+                alert("Đã gửi lệnh cập nhật! Thiết bị sẽ khởi động lại trong vài giây.");
+                closeDeviceModal();
+            });
+        };
+
+        // Gửi lệnh kết nối WiFi mới
+        window.connectDeviceWifi = function() {
+            const devId = document.getElementById('devOldId').value;
+            const ssid = document.getElementById('devNewSsid').value.trim();
+            const pass = document.getElementById('devNewPass').value;
+            if(ssid === "") return alert("Vui lòng nhập tên Wi-Fi!");
+            
+            if(confirm(`Yêu cầu mạch đổi sang Wi-Fi: ${ssid}?`)) {
+                // Lưu vào danh sách nhanh trên Web
+                set(ref(db, `SavedWiFi/${ssid}`), pass);
+                
+                // Gửi lệnh xuống ESP32
+                update(ref(db, `Devices/${devId}/Command`), { action: "connect_wifi", ssid: ssid, pass: pass })
+                .then(() => {
+                    alert("Đã gửi thông tin mạng! Thiết bị đang khởi động lại để kết nối...");
+                    closeDeviceModal();
+                });
+            }
+        };
+
+        // Kết nối từ danh sách nhanh
+        window.quickConnectWifi = function() {
+            const select = document.getElementById('savedWifiSelect');
+            const ssid = select.value;
+            if(ssid === "") return alert("Vui lòng chọn 1 mạng có sẵn!");
+            const pass = select.options[select.selectedIndex].getAttribute('data-pass');
+            
+            document.getElementById('devNewSsid').value = ssid;
+            document.getElementById('devNewPass').value = pass;
+            connectDeviceWifi();
+        };
+
         onValue(ref(db, 'Devices'), (snapshot) => {
             devicesData = snapshot.val() || {};
             renderDevices();
@@ -743,11 +869,19 @@
                     const statusHtml = isOnline ? `<span style="color:green;font-weight:bold;">🟢 Online</span>` : `<span style="color:red;font-weight:bold;">🔴 Offline</span>`;
                     const rfidState = devInfo.modules?.rfid ?? true; 
                     const ledState = devInfo.modules?.led ?? true; 
-                    tbody.innerHTML += `<tr><td>${stt++}</td><td><strong>${devInfo.name || devId}</strong></td><td>${statusHtml}</td>
-                        <td><label class="switch"><input type="checkbox" ${rfidState ? "checked" : ""} onchange="toggleModule('${devId}', 'rfid', this.checked)"><span class="slider"></span></label></td>
-                        <td><label class="switch"><input type="checkbox" ${ledState ? "checked" : ""} onchange="toggleModule('${devId}', 'led', this.checked)"><span class="slider"></span></label></td></tr>`;
+                    
+                    // Click vào Tên để mở Modal
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${stt++}</td>
+                            <td class="link-name" onclick="openDeviceModal('${devId}')">${devInfo.name || devId}</td>
+                            <td>${statusHtml}</td>
+                            <td><label class="switch"><input type="checkbox" ${rfidState ? "checked" : ""} onchange="toggleModule('${devId}', 'rfid', this.checked)"><span class="slider"></span></label></td>
+                            <td><label class="switch"><input type="checkbox" ${ledState ? "checked" : ""} onchange="toggleModule('${devId}', 'led', this.checked)"><span class="slider"></span></label></td>
+                        </tr>
+                    `;
                 }
-            } else { tbody.innerHTML = `<tr><td colspan="5" class="empty-row">Chưa thiết bị nào kết nối</td></tr>`; }
+            } else { tbody.innerHTML = `<tr><td colspan="5" class="empty-row">Chưa có thiết bị nào</td></tr>`; }
         }
         setInterval(renderDevices, 3000);
     </script>
