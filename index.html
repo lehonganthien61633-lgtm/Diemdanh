@@ -249,24 +249,80 @@
         </div>
 
         <!-- USER VIEW (Chỉ xem lịch sử cá nhân) -->
-        <div id="userControls" style="display: none; padding: 20px;">
-            <div class="box" style="max-width: 800px; margin: 0 auto;">
-                <h2 style="color: #27ae60;">Hồ Sơ Cá Nhân</h2>
-                <div style="display: flex; gap: 20px; background: #eafaf1; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                    <div style="flex: 1;"><strong>Họ và Tên:</strong> <span id="userDispName">-</span></div>
-                    <div style="flex: 1;"><strong>Mã Số:</strong> <span id="userDispId">-</span></div>
-                    <div style="flex: 1;"><strong>Trạng Thái:</strong> <span id="userDispStatus">-</span></div>
+        <div id="userControls" style="display: none; padding: 20px; height: calc(100vh - 80px); box-sizing: border-box;">
+            <div class="box split-container" style="display: flex; flex-direction: row; gap: 20px; height: 100%; max-width: 1100px; margin: 0 auto; padding: 0;">
+                
+                <!-- Cột trái: Thông tin & Phân ca -->
+                <div class="left-panel" style="flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 20px; padding-right: 15px;">
+                    <h2 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px;">Hồ Sơ (Trạng Thái)</h2>
+                    
+                    <label style="font-weight: bold; margin-top: 10px; display: block; font-size: 14px; color: #34495e;">UID Thẻ Tích Hợp:</label>
+                    <input type="text" id="uViewUid" readonly style="width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; background-color: #ecf0f1; font-weight: bold;">
+                    
+                    <label style="font-weight: bold; margin-top: 10px; display: block; font-size: 14px; color: #34495e;">Họ và Tên:</label>
+                    <input type="text" id="uViewName" readonly style="width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; background-color: #f9f9f9;">
+                    
+                    <div style="display:flex; gap:15px;">
+                        <div style="flex:1;">
+                            <label style="font-weight: bold; margin-top: 10px; display: block; font-size: 14px; color: #34495e;">Mã Số (ID):</label>
+                            <input type="text" id="uViewId" readonly style="width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; background-color: #f9f9f9;">
+                        </div>
+                        <div style="flex:1;">
+                            <label style="font-weight: bold; margin-top: 10px; display: block; font-size: 14px; color: #34495e;">Ngày Sinh:</label>
+                            <input type="date" id="uViewDob" readonly style="width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; background-color: #f9f9f9;">
+                        </div>
+                    </div>
+                    
+                    <label style="font-weight: bold; margin-top: 10px; display: block; font-size: 14px; color: #34495e;">Email:</label>
+                    <input type="email" id="uViewEmail" readonly style="width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; background-color: #f9f9f9;">
+                    
+                    <div style="border-top: 1px dashed #ccc; margin-top: 15px; padding-top: 15px;">
+                        <label style="color:#2980b9; font-weight: bold; font-size: 14px;">▼ Phân Ca Làm Việc</label>
+                        <div style="margin-top:10px; background:#f9f9f9; padding:10px; border-radius:6px; border:1px solid #eee;">
+                            <label style="font-size: 13px; font-weight:bold;">Ca chính (Mặc định):</label>
+                            <input type="text" id="uViewPrimaryShift" readonly style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; font-size: 14px; background-color: #ecf0f1; margin-top:5px; margin-bottom:10px;">
+                            
+                            <div style="margin-top:10px; border-top:1px dashed #ccc; padding-top:10px;">
+                                <label style="font-size: 13px; font-weight:bold; color:#d35400;">Danh sách ca phụ (tạm thời):</label>
+                                <div id="uViewTempShiftsUI" style="margin-top: 10px;"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <h3>Lịch Sử Điểm Danh Của Bạn</h3>
-                <table>
-                    <thead><tr><th>Thời Gian</th><th>Hoạt Động</th><th>Tình Trạng</th></tr></thead>
-                    <tbody id="userPersonalHistory">
-                        <tr><td colspan="3" class="empty-row">Đang tải...</td></tr>
-                    </tbody>
-                </table>
+
+                <!-- Cột phải: Lịch sử -->
+                <div class="right-panel" style="flex: 1.5; display: flex; flex-direction: column; border-left: 2px solid #ecf0f1; padding: 20px; overflow: hidden; min-height: 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0;">
+                        <h3 style="margin:0; color: #2c3e50;">Lịch sử cá nhân</h3>
+                        <div id="uViewStatusTag" style="padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; border: 1px solid #ddd;"></div>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+                        <div class="filter-container" style="padding: 10px; margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; flex-shrink: 0;">
+                            <div>
+                                <select id="uViewRows" onchange="changeUViewRows()">
+                                    <option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option>
+                                </select>
+                            </div>
+                            <div style="display:flex; gap: 5px; align-items: center;">
+                                <input type="date" id="uViewStartDate"> - <input type="date" id="uViewEndDate">
+                                <button class="btn btn-active" style="padding: 6px 10px;" onclick="applyUViewFilter()">Lọc</button>
+                                <button class="btn btn-cancel" style="display:inline-block; padding: 6px 10px; margin:0;" onclick="clearUViewFilter()">Xóa</button>
+                            </div>
+                        </div>
+                        <div class="history-container" style="flex: 1; overflow-y: auto; border: 1px solid #bdc3c7; border-top: none; min-height: 0;">
+                            <table style="margin-top: 0; border-top: none;">
+                                <thead style="position:sticky; top:0; z-index:1; background-color: #3498db;">
+                                    <tr><th style="color:white; border-top:none;">Thời gian</th><th style="color:white; border-top:none;">Hoạt động</th><th style="color:white; border-top:none;">Tình trạng</th></tr>
+                                </thead>
+                                <tbody id="uViewHistoryTable"></tbody>
+                            </table>
+                        </div>
+                        <div id="uViewPagination" class="pagination" style="flex-shrink: 0; margin-top: 10px; margin-bottom: 10px;"></div>
+                    </div>
+                </div>
             </div>
         </div>
-
         <!-- Modal Admin Form -->
         <div id="memberModal" class="modal">
             <div id="modalContent" class="modal-content">
@@ -533,34 +589,90 @@
         };
 
         // ================= CÁC CHỨC NĂNG DÀNH CHO USER =================
-        function startUserListeners(uid) {
-            onValue(ref(db, 'Members/' + uid), (snapshot) => {
-                const info = snapshot.val();
-                if(!info) return;
-                
-                document.getElementById('userDispName').innerText = info.name || 'N/A';
-                document.getElementById('userDispId').innerText = info.id || 'N/A';
-                
-                const isInside = (info.lastStatus === "Vào");
-                document.getElementById('userDispStatus').innerHTML = isInside ? '<span style="color:green">🟢 Đang ở trong</span>' : '<span style="color:red">🔴 Đã ra ngoài</span>';
+        let userAttData = []; let filteredUserAtt = []; let uViewPage = 1; let uViewRows = 10;
 
-                const tbody = document.getElementById('userPersonalHistory');
-                tbody.innerHTML = '';
-                if(info.Attendance) {
-                    const arr = Object.entries(info.Attendance).sort((a,b) => b[0] - a[0]);
-                    arr.forEach(([ts, att]) => {
-                        let action = att.status; let cond = "Đúng giờ";
-                        if(att.status.includes('(')) {
-                            let parts = att.status.split('('); action = parts[0].trim(); cond = parts[1].replace(')', '').trim();
+        function startUserListeners(uid) {
+            // Lấy dữ liệu Ca làm việc trước để hiển thị tên ca thay vì ID
+            get(ref(db, 'Settings/Shifts')).then((shiftSnap) => {
+                const sData = shiftSnap.val() || {};
+                if (!sData['HC']) sData['HC'] = { name: "Giờ hành chính", start: "07:00", end: "17:00" };
+
+                onValue(ref(db, 'Members/' + uid), (snapshot) => {
+                    const info = snapshot.val();
+                    if(!info) return;
+                    
+                    // Điền thông tin cơ bản
+                    document.getElementById('uViewUid').value = uid;
+                    document.getElementById('uViewName').value = info.name || 'N/A';
+                    document.getElementById('uViewId').value = info.id || 'N/A';
+                    document.getElementById('uViewDob').value = info.dob || '';
+                    document.getElementById('uViewEmail').value = info.email || 'N/A';
+                    
+                    // Xử lý Ca chính
+                    const pShift = sData[info.p_id] ? `${sData[info.p_id].name} (${sData[info.p_id].start} - ${sData[info.p_id].end})` : "Giờ hành chính";
+                    document.getElementById('uViewPrimaryShift').value = pShift;
+                    
+                    // Xử lý Danh sách Ca phụ
+                    const tUI = document.getElementById('uViewTempShiftsUI');
+                    tUI.innerHTML = '';
+                    if (!info.tempShifts || Object.keys(info.tempShifts).length === 0) {
+                        tUI.innerHTML = '<div style="font-size:12px; color:#7f8c8d; font-style:italic;">Không có ca phụ nào.</div>';
+                    } else {
+                        const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+                        for (const [key, shift] of Object.entries(info.tempShifts)) {
+                            let statusTxt = "";
+                            if (todayStr < shift.s_from) statusTxt = '<span style="color:#f39c12; font-weight:bold; font-size:11px;">Sắp tới</span>';
+                            else if (todayStr >= shift.s_from && todayStr <= shift.s_to) statusTxt = '<span style="color:#27ae60; font-weight:bold; font-size:11px;">Đang áp dụng</span>';
+                            else statusTxt = '<span style="color:#bdc3c7; font-weight:bold; font-size:11px;">Đã qua</span>';
+                            
+                            tUI.innerHTML += `
+                                <div style="background:#fff; padding:8px 12px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                                    <div>
+                                        <div style="font-size:13px; color:#2c3e50; font-weight:bold;">${shift.s_name}</div>
+                                        <div style="font-size:11px; color:#7f8c8d;">Từ ${shift.s_from} đến ${shift.s_to}</div>
+                                    </div>
+                                    <div>${statusTxt}</div>
+                                </div>`;
                         }
-                        const color = action === "Vào" ? "green" : "red";
-                        const condColor = (cond === "Đi trễ" || cond === "Về sớm") ? "red" : (cond === "Tăng ca" ? "#e67e22" : "green");
-                        tbody.innerHTML += `<tr><td>${att.time}</td><td style="color:${color};font-weight:bold">${action}</td><td style="color:${condColor};font-weight:bold">${cond}</td></tr>`;
-                    });
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="3" class="empty-row">Chưa có lịch sử điểm danh</td></tr>';
-                }
+                    }
+
+                    // Xử lý Trạng thái Trực tiếp
+                    const isInside = (info.lastStatus === "Vào");
+                    const tag = document.getElementById('uViewStatusTag');
+                    if(isInside) { tag.innerText = "🟢 Đang ở trong"; tag.style.backgroundColor = "#eafaf1"; tag.style.color = "#27ae60"; tag.style.borderColor = "#2ecc71"; }
+                    else { tag.innerText = "🔴 Đã ra ngoài"; tag.style.backgroundColor = "#fceceb"; tag.style.color = "#e74c3c"; tag.style.borderColor = "#e74c3c"; }
+
+                    // Cập nhật Lịch sử Điểm danh
+                    userAttData = [];
+                    if(info.Attendance) {
+                        const arr = Object.entries(info.Attendance).sort((a,b) => b[0] - a[0]);
+                        arr.forEach(([ts, att]) => { userAttData.push({ time: att.time, status: att.status || 'Vào' }); });
+                    }
+                    applyUViewFilter();
+                });
             });
+        }
+
+        // --- Các hàm hỗ trợ phân trang cho User View ---
+        window.changeUViewRows = function() { uViewRows = parseInt(document.getElementById('uViewRows').value); uViewPage = 1; renderUViewTable(); };
+        window.applyUViewFilter = function() { filteredUserAtt = filterByDate(userAttData, document.getElementById('uViewStartDate').value, document.getElementById('uViewEndDate').value); uViewPage = 1; renderUViewTable(); };
+        window.clearUViewFilter = function() { document.getElementById('uViewStartDate').value = ''; document.getElementById('uViewEndDate').value = ''; filteredUserAtt = [...userAttData]; uViewPage = 1; renderUViewTable(); };
+        window.goToUViewPage = function(p) { uViewPage = p; renderUViewTable(); };
+        
+        function renderUViewTable() {
+            const tbody = document.getElementById('uViewHistoryTable'); tbody.innerHTML = '';
+            if (filteredUserAtt.length === 0) { tbody.innerHTML = '<tr><td colspan="3" class="empty-row">Không có dữ liệu</td></tr>'; document.getElementById('uViewPagination').innerHTML = ''; return; }
+            const start = (uViewPage - 1) * uViewRows;
+            filteredUserAtt.slice(start, start + uViewRows).forEach(att => {
+                let action = att.status; let cond = "Đúng giờ";
+                if(att.status.includes('(')) {
+                    let parts = att.status.split('('); action = parts[0].trim(); cond = parts[1].replace(')', '').trim();
+                }
+                const color = action === "Vào" ? "green" : "red";
+                const condColor = (cond === "Đi trễ" || cond === "Về sớm") ? "red" : (cond === "Tăng ca" ? "#e67e22" : "green");
+                tbody.innerHTML += `<tr><td>${att.time}</td><td style="color:${color};font-weight:bold">${action}</td><td style="color:${condColor};font-weight:bold">${cond}</td></tr>`;
+            });
+            renderPaginationControls(filteredUserAtt.length, uViewRows, uViewPage, 'uViewPagination', 'goToUViewPage');
         }
 
         // ================= CÁC CHỨC NĂNG DÀNH CHO ADMIN =================
