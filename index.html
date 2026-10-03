@@ -203,16 +203,48 @@
                 <!-- Bảng Thiết Lập Hệ Thống -->
                 <div id="tab-settings" class="box tab-content">
                     <h2>⚙️ Thiết Lập Hệ Thống</h2>
-                    <div class="settings-card" style="max-width: 500px; margin: 0 auto;">
-                        <label style="font-weight: bold; display: block; margin-bottom: 10px; color: #2c3e50;">🗑️ Tự động xóa lịch sử điểm danh cũ sau:</label>
-                        <select id="autoDeleteSelect">
-                            <option value="0">Không bao giờ xóa (Giữ vĩnh viễn)</option>
-                            <option value="30">30 ngày</option><option value="60">60 ngày</option><option value="90">90 ngày</option>
-                            <option value="365">1 năm (365 ngày)</option><option value="730">2 năm (730 ngày)</option>
-                        </select>
-                        <button type="button" class="btn btn-active" style="width: 100%; font-size: 16px; padding: 12px;" onclick="saveSettings()">💾 Lưu Cài Đặt</button>
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start;">
+                        <div class="settings-card" style="flex: 1; min-width: 300px;">
+                            <h3 style="color:#d35400; margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">📦 Thiết Lập Dữ Liệu</h3>
+                            <label style="font-weight: bold; display: block; margin-bottom: 10px; color: #2c3e50;">🗑️ Tự động xóa lịch sử cũ sau:</label>
+                            <select id="autoDeleteSelect">
+                                <option value="0">Không bao giờ xóa (Giữ vĩnh viễn)</option>
+                                <option value="30">30 ngày</option><option value="60">60 ngày</option><option value="90">90 ngày</option>
+                                <option value="365">1 năm</option><option value="730">2 năm</option>
+                            </select>
+                            <button type="button" class="btn btn-active" style="width: 100%; font-size: 16px; padding: 12px;" onclick="saveSettings()">💾 Lưu Cài Đặt Dữ Liệu</button>
+                        </div>
+                        
+                        <div class="settings-card" style="flex: 1; min-width: 300px;">
+                            <h3 style="color:#27ae60; margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">⏱️ Thiết Lập Điểm Danh (Ca Làm Việc)</h3>
+                            <label style="font-weight: bold; display: block; margin-bottom: 10px; color: #2c3e50; text-align:left;">Giờ hành chính (Mặc định):</label>
+                            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                                <input type="time" id="hcStart" style="flex:1;"> <span style="line-height:40px;">-</span> <input type="time" id="hcEnd" style="flex:1;">
+                                <button type="button" class="btn btn-active" style="margin:0; padding:10px;" onclick="saveHC()">Lưu</button>
+                            </div>
+                            <label style="font-weight: bold; display: block; margin-bottom: 10px; color: #2c3e50; border-top:1px dashed #ccc; padding-top:15px; text-align:left;">Danh Sách Ca Làm Việc:</label>
+                            <div id="shiftList" style="text-align:left; background:#f4f7f6; padding:10px; border-radius:6px; max-height: 150px; overflow-y:auto; margin-bottom:15px; border: 1px solid #ddd;"></div>
+                            <button type="button" class="btn btn-add" style="width: 100%; margin:0;" onclick="openShiftModal()">➕ Thêm Ca Mới</button>
+                        </div>
                     </div>
                 </div>
+
+        <!-- Shift Modal (Thêm Ca Mới) -->
+        <div id="shiftModal" class="modal">
+            <div class="modal-content" style="max-width: 400px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
+                    <h2 style="margin: 0; color: #2c3e50;">Thêm Ca Làm Việc</h2>
+                    <span class="close" onclick="closeShiftModal()" title="Đóng bảng">&times;</span>
+                </div>
+                <label>Tên Ca:</label>
+                <input type="text" id="newShiftName" placeholder="VD: Ca Sáng, Ca Đêm...">
+                <div style="display:flex; gap:15px; margin-top:10px;">
+                    <div style="flex:1;"><label>Bắt đầu:</label><input type="time" id="newShiftStart"></div>
+                    <div style="flex:1;"><label>Kết thúc:</label><input type="time" id="newShiftEnd"></div>
+                </div>
+                <button type="button" class="btn btn-primary" style="margin-top:20px;" onclick="saveNewShift()">Lưu Ca Mới</button>
+            </div>
+        </div>
             </div>
         </div>
 
@@ -270,7 +302,20 @@
                         <label>Email (Tài khoản Đăng nhập):</label>
                         <input type="email" id="editEmail" placeholder="example@email.com" oninput="checkChanges()">
                         
-                        <button type="button" id="btnSaveInfo" class="btn btn-active" style="width:100%; margin-top: 15px; margin-bottom: 10px; display: none; flex-shrink: 0;" onclick="saveMemberInfo()">💾 Lưu Thông Tin</button>
+                        <div style="border-top: 1px dashed #ccc; margin-top: 15px; padding-top: 15px;">
+                            <label style="color:#2980b9;">🛠 Phân Ca Làm Việc:</label>
+                            <label style="margin-top:10px; font-size: 13px;">Ca chính (Mặc định):</label>
+                            <select id="editPrimaryShift" style="width:100%; padding:10px; border-radius:4px; border:1px solid #ccc; margin-bottom:10px;" onchange="checkChanges()"></select>
+                            
+                            <label style="margin-top:10px; font-size: 13px;">Ca phụ (Chỉ áp dụng trong thời hạn):</label>
+                            <select id="editSecondaryShift" style="width:100%; padding:10px; border-radius:4px; border:1px solid #ccc;" onchange="checkChanges()"></select>
+                            <div style="display:flex; gap:10px; margin-top:10px;">
+                                <div style="flex:1;"><span style="font-size:12px; color:#7f8c8d;">Từ ngày:</span><input type="date" id="secShiftFrom" oninput="checkChanges()"></div>
+                                <div style="flex:1;"><span style="font-size:12px; color:#7f8c8d;">Đến ngày:</span><input type="date" id="secShiftTo" oninput="checkChanges()"></div>
+                            </div>
+                        </div>
+
+                        <button type="button" id="btnSaveInfo" class="btn btn-active" style="width:100%; margin-top: 25px; margin-bottom: 10px; display: none; flex-shrink: 0;" onclick="saveMemberInfo()">💾 Lưu Thông Tin</button>
                     </div>
 
                     <div id="historyPanel" class="right-panel">
@@ -398,6 +443,7 @@
         let currentModalMode = 'view'; 
         let originalMemberInfo = {};
         let savedWifiList = {};
+        let shiftsData = {};
 
         // === HỆ THỐNG ĐĂNG NHẬP ===
         window.performLogin = function() {
@@ -584,6 +630,34 @@
                     }
                 }
             });
+            // Lắng nghe dữ liệu Ca Làm Việc
+            onValue(ref(db, 'Settings/Shifts'), (snapshot) => {
+                shiftsData = snapshot.val() || {};
+                
+                if (!shiftsData['HC']) { shiftsData['HC'] = { name: "Giờ hành chính", start: "07:00", end: "17:00" }; }
+                
+                document.getElementById('hcStart').value = shiftsData['HC'].start;
+                document.getElementById('hcEnd').value = shiftsData['HC'].end;
+                
+                const sList = document.getElementById('shiftList'); let html = '';
+                for (const [id, shift] of Object.entries(shiftsData)) {
+                    html += `<div style="border-bottom: 1px solid #ccc; padding: 5px 0;"><strong>${shift.name}</strong> <span style="float:right; color:#7f8c8d;">${shift.start} - ${shift.end}</span></div>`;
+                }
+                if (sList) sList.innerHTML = html;
+                
+                let optionsHtml = '';
+                for (const [id, shift] of Object.entries(shiftsData)) {
+                    optionsHtml += `<option value="${id}">${shift.name} (${shift.start} - ${shift.end})</option>`;
+                }
+                const pSel = document.getElementById('editPrimaryShift');
+                const sSel = document.getElementById('editSecondaryShift');
+                if (pSel && sSel) {
+                    const currentP = pSel.value; const currentS = sSel.value;
+                    pSel.innerHTML = optionsHtml;
+                    sSel.innerHTML = '<option value="none">-- Không phân ca phụ --</option>' + optionsHtml;
+                    pSel.value = currentP || 'HC'; sSel.value = currentS || 'none';
+                }
+            });
         }
 
         // ================= HÀM HỖ TRỢ CHUNG CỦA ADMIN =================
@@ -631,7 +705,11 @@
                 document.getElementById('editName').value !== originalMemberInfo.name ||
                 document.getElementById('editId').value !== originalMemberInfo.id ||
                 document.getElementById('editDob').value !== originalMemberInfo.dob ||
-                document.getElementById('editEmail').value !== originalMemberInfo.email
+                document.getElementById('editEmail').value !== originalMemberInfo.email ||
+                document.getElementById('editPrimaryShift').value !== originalMemberInfo.p_id ||
+                document.getElementById('editSecondaryShift').value !== originalMemberInfo.s_id ||
+                document.getElementById('secShiftFrom').value !== originalMemberInfo.s_from ||
+                document.getElementById('secShiftTo').value !== originalMemberInfo.s_to
             );
             document.getElementById('btnSaveInfo').style.display = hasChanged ? 'block' : 'none';
         };
@@ -639,14 +717,17 @@
         window.openMemberModal = function(uid, mode) {
             currentModalMode = mode;
             const info = membersData[uid] || {};
-            originalMemberInfo = { name: info.name || '', id: info.id || '', dob: info.dob || '', email: info.email || '' };
+            originalMemberInfo = { name: info.name || '', id: info.id || '', dob: info.dob || '', email: info.email || '', p_id: info.p_id || 'HC', s_id: info.s_id || 'none', s_from: info.s_from || '', s_to: info.s_to || '' };
             
-            document.getElementById('editOldUid').value = uid;
-            document.getElementById('editUid').value = uid;
-            document.getElementById('editName').value = originalMemberInfo.name;
-            document.getElementById('editId').value = originalMemberInfo.id;
-            document.getElementById('editDob').value = originalMemberInfo.dob;
-            document.getElementById('editEmail').value = originalMemberInfo.email;
+            document.getElementById('editOldUid').value = uid; document.getElementById('editUid').value = uid;
+            document.getElementById('editName').value = originalMemberInfo.name; document.getElementById('editId').value = originalMemberInfo.id;
+            document.getElementById('editDob').value = originalMemberInfo.dob; document.getElementById('editEmail').value = originalMemberInfo.email;
+            
+            // Gán dữ liệu Ca làm việc
+            document.getElementById('editPrimaryShift').value = originalMemberInfo.p_id;
+            document.getElementById('editSecondaryShift').value = originalMemberInfo.s_id;
+            document.getElementById('secShiftFrom').value = originalMemberInfo.s_from;
+            document.getElementById('secShiftTo').value = originalMemberInfo.s_to;
             
             const isView = (mode === 'view'); const isAdd = (mode === 'add');
             const modalContent = document.getElementById('modalContent');
@@ -665,6 +746,8 @@
 
             document.getElementById('editName').readOnly = isView; document.getElementById('editId').readOnly = isView;
             document.getElementById('editDob').readOnly = isView; document.getElementById('editEmail').readOnly = isView;
+            document.getElementById('editPrimaryShift').disabled = isView; document.getElementById('editSecondaryShift').disabled = isView;
+            document.getElementById('secShiftFrom').readOnly = isView; document.getElementById('secShiftTo').readOnly = isView;
             
             document.getElementById('btnChangeCard').style.display = (isView || isAdd) ? 'none' : 'block';
             document.getElementById('btnCancelChange').style.display = 'none';
@@ -693,21 +776,59 @@
             const idVal = document.getElementById('editId').value.trim();
             const dobVal = document.getElementById('editDob').value;
             const emailVal = document.getElementById('editEmail').value.trim();
+            
+            const pShiftId = document.getElementById('editPrimaryShift').value;
+            const sShiftId = document.getElementById('editSecondaryShift').value;
+            const sFrom = document.getElementById('secShiftFrom').value;
+            const sTo = document.getElementById('secShiftTo').value;
 
             if(currentModalMode === 'add' && (!nameVal || !idVal || !dobVal || !emailVal)) {
-                alert("Vui lòng điền ĐẦY ĐỦ thông tin (Email sẽ dùng đăng nhập, Mã số là mật khẩu)!"); return;
+                alert("Vui lòng điền ĐẦY ĐỦ thông tin!"); return;
             }
 
             const updates = {};
             updates['Members/' + uid + '/name'] = nameVal; updates['Members/' + uid + '/id'] = idVal;
             updates['Members/' + uid + '/dob'] = dobVal; updates['Members/' + uid + '/email'] = emailVal;
             if(currentModalMode === 'add') updates['Members/' + uid + '/lastStatus'] = "Ra"; 
+            
+            // Ép sẵn dữ liệu Start/End để ESP32 đánh giá thời gian mà không tốn RAM tính toán
+            updates['Members/' + uid + '/p_id'] = pShiftId;
+            updates['Members/' + uid + '/p_start'] = shiftsData[pShiftId] ? shiftsData[pShiftId].start : "07:00";
+            updates['Members/' + uid + '/p_end'] = shiftsData[pShiftId] ? shiftsData[pShiftId].end : "17:00";
+            
+            if (sShiftId !== 'none') {
+                updates['Members/' + uid + '/s_id'] = sShiftId;
+                updates['Members/' + uid + '/s_start'] = shiftsData[sShiftId].start;
+                updates['Members/' + uid + '/s_end'] = shiftsData[sShiftId].end;
+                updates['Members/' + uid + '/s_from'] = sFrom;
+                updates['Members/' + uid + '/s_to'] = sTo;
+            } else {
+                updates['Members/' + uid + '/s_id'] = null; updates['Members/' + uid + '/s_start'] = null; updates['Members/' + uid + '/s_end'] = null; updates['Members/' + uid + '/s_from'] = null; updates['Members/' + uid + '/s_to'] = null;
+            }
 
             update(ref(db), updates).then(() => {
                 alert('Đã lưu!');
                 if (currentModalMode === 'add') closeModal();
-                else { originalMemberInfo = { name: nameVal, id: idVal, dob: dobVal, email: emailVal }; window.checkChanges(); }
+                else { originalMemberInfo = { name: nameVal, id: idVal, dob: dobVal, email: emailVal, p_id: pShiftId, s_id: sShiftId, s_from: sFrom, s_to: sTo }; window.checkChanges(); }
             });
+        };
+
+        // Các hàm xử lý giao diện Ca làm việc
+        window.saveHC = function() {
+            update(ref(db, 'Settings/Shifts/HC'), { name: "Giờ hành chính", start: document.getElementById('hcStart').value, end: document.getElementById('hcEnd').value }).then(() => alert("Đã lưu Giờ Hành Chính!"));
+        };
+        window.openShiftModal = function() {
+            document.getElementById('newShiftName').value = ''; document.getElementById('newShiftStart').value = ''; document.getElementById('newShiftEnd').value = '';
+            document.getElementById('shiftModal').style.display = 'block';
+        };
+        window.closeShiftModal = function() { document.getElementById('shiftModal').style.display = 'none'; };
+        window.saveNewShift = function() {
+            const name = document.getElementById('newShiftName').value.trim();
+            const start = document.getElementById('newShiftStart').value;
+            const end = document.getElementById('newShiftEnd').value;
+            if(!name || !start || !end) return alert("Vui lòng điền đủ thông tin ca!");
+            const shiftId = 'Ca_' + Date.now();
+            update(ref(db, `Settings/Shifts/${shiftId}`), { name: name, start: start, end: end }).then(() => { alert("Đã thêm ca mới!"); closeShiftModal(); });
         };
 
         window.startChangeCard = function() {
