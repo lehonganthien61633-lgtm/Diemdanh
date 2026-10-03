@@ -751,10 +751,7 @@
                 document.getElementById('editId').value !== originalMemberInfo.id ||
                 document.getElementById('editDob').value !== originalMemberInfo.dob ||
                 document.getElementById('editEmail').value !== originalMemberInfo.email ||
-                document.getElementById('editPrimaryShift').value !== originalMemberInfo.p_id ||
-                document.getElementById('editSecondaryShift').value !== originalMemberInfo.s_id ||
-                document.getElementById('secShiftFrom').value !== originalMemberInfo.s_from ||
-                document.getElementById('secShiftTo').value !== originalMemberInfo.s_to
+                document.getElementById('editPrimaryShift').value !== originalMemberInfo.p_id
             );
             document.getElementById('btnSaveInfo').style.display = hasChanged ? 'block' : 'none';
         };
@@ -767,15 +764,29 @@
             document.getElementById('editOldUid').value = uid; document.getElementById('editUid').value = uid;
             document.getElementById('editName').value = originalMemberInfo.name; document.getElementById('editId').value = originalMemberInfo.id;
             document.getElementById('editDob').value = originalMemberInfo.dob; document.getElementById('editEmail').value = originalMemberInfo.email;
-            
             document.getElementById('editPrimaryShift').value = originalMemberInfo.p_id;
-            document.getElementById('editSecondaryShift').value = originalMemberInfo.s_id;
-            document.getElementById('secShiftFrom').value = originalMemberInfo.s_from;
-            document.getElementById('secShiftTo').value = originalMemberInfo.s_to;
             
+            // Xử lý Ca Phụ theo thời gian thực
+            const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+            const hasActiveTemp = (originalMemberInfo.s_id !== 'none' && originalMemberInfo.s_to && originalMemberInfo.s_to >= todayStr);
+            
+            document.getElementById('activeTempShiftInfo').style.display = hasActiveTemp ? 'block' : 'none';
+            document.getElementById('btnShowTempShift').style.display = hasActiveTemp ? 'none' : 'block';
+            document.getElementById('tempShiftFormContainer').style.display = 'none';
             document.getElementById('shiftPanelWrapper').style.display = 'none';
-            document.getElementById('tempShiftContainer').style.display = 'none';
-            document.getElementById('btnShowTempShift').style.display = 'block';
+            
+            if (hasActiveTemp) {
+                const sName = shiftsData[originalMemberInfo.s_id] ? shiftsData[originalMemberInfo.s_id].name : "Ca phụ";
+                document.getElementById('lblTempShiftName').innerText = sName;
+                document.getElementById('lblTempFrom').innerText = originalMemberInfo.s_from;
+                document.getElementById('lblTempTo').innerText = originalMemberInfo.s_to;
+                
+                const btnCancelTemp = document.getElementById('btnCancelTempShift');
+                if (todayStr < originalMemberInfo.s_from) { btnCancelTemp.innerText = "Hủy ca tạm"; } 
+                else { btnCancelTemp.innerText = "Tạm dừng"; }
+            } else {
+                document.getElementById('editSecondaryShift').value = 'none'; document.getElementById('secShiftFrom').value = ''; document.getElementById('secShiftTo').value = '';
+            }
 
             const isView = (mode === 'view'); const isAdd = (mode === 'add');
             const modalContent = document.getElementById('modalContent');
@@ -794,9 +805,7 @@
 
             document.getElementById('editName').readOnly = isView; document.getElementById('editId').readOnly = isView;
             document.getElementById('editDob').readOnly = isView; document.getElementById('editEmail').readOnly = isView;
-            // Cho phép đổi ca cả ở chế độ View (Trạng thái thành viên) và Edit
-            document.getElementById('editPrimaryShift').disabled = false; document.getElementById('editSecondaryShift').disabled = false;
-            document.getElementById('secShiftFrom').readOnly = false; document.getElementById('secShiftTo').readOnly = false;
+            document.getElementById('editPrimaryShift').disabled = false; 
             
             document.getElementById('btnChangeCard').style.display = (isView || isAdd) ? 'none' : 'block';
             document.getElementById('btnCancelChange').style.display = 'none';
@@ -814,10 +823,7 @@
             document.getElementById('memberModal').style.display = 'block';
         };
 
-        window.closeModal = function() {
-            document.getElementById('memberModal').style.display = 'none'; document.body.classList.remove('no-scroll');
-            if (changingUid || currentModalMode === 'add') { set(ref(db, 'Command/mode'), 0); set(ref(db, 'Command/new_uid'), ""); changingUid = null; }
-        };
+        window.closeModal = function() { document.getElementById('memberModal').style.display = 'none'; document.body.classList.remove('no-scroll'); };
 
         window.saveMemberInfo = function() {
             const uid = document.getElementById('editOldUid').value;
@@ -825,15 +831,9 @@
             const idVal = document.getElementById('editId').value.trim();
             const dobVal = document.getElementById('editDob').value;
             const emailVal = document.getElementById('editEmail').value.trim();
-            
             const pShiftId = document.getElementById('editPrimaryShift').value;
-            const sShiftId = document.getElementById('editSecondaryShift').value;
-            const sFrom = document.getElementById('secShiftFrom').value;
-            const sTo = document.getElementById('secShiftTo').value;
 
-            if(currentModalMode === 'add' && (!nameVal || !idVal || !dobVal || !emailVal)) {
-                alert("Vui lòng điền ĐẦY ĐỦ thông tin!"); return;
-            }
+            if(currentModalMode === 'add' && (!nameVal || !idVal || !dobVal || !emailVal)) { alert("Vui lòng điền ĐẦY ĐỦ thông tin!"); return; }
 
             const updates = {};
             updates['Members/' + uid + '/name'] = nameVal; updates['Members/' + uid + '/id'] = idVal;
@@ -843,34 +843,123 @@
             updates['Members/' + uid + '/p_id'] = pShiftId;
             updates['Members/' + uid + '/p_start'] = shiftsData[pShiftId] ? shiftsData[pShiftId].start : "07:00";
             updates['Members/' + uid + '/p_end'] = shiftsData[pShiftId] ? shiftsData[pShiftId].end : "17:00";
-            
-            if (sShiftId !== 'none') {
-                updates['Members/' + uid + '/s_id'] = sShiftId;
-                updates['Members/' + uid + '/s_start'] = shiftsData[sShiftId].start;
-                updates['Members/' + uid + '/s_end'] = shiftsData[sShiftId].end;
-                updates['Members/' + uid + '/s_from'] = sFrom;
-                updates['Members/' + uid + '/s_to'] = sTo;
-            } else {
-                updates['Members/' + uid + '/s_id'] = null; updates['Members/' + uid + '/s_start'] = null; updates['Members/' + uid + '/s_end'] = null; updates['Members/' + uid + '/s_from'] = null; updates['Members/' + uid + '/s_to'] = null;
-            }
+            if (currentModalMode === 'add') { updates['Members/' + uid + '/s_id'] = 'none'; }
 
             const tsStr = new Date().toLocaleString();
-            let shiftChanges = false;
-            let histLog = "";
+            let shiftChanges = false; let histLog = "";
             if (pShiftId !== originalMemberInfo.p_id) { shiftChanges = true; histLog += `Đổi ca chính thành ${shiftsData[pShiftId]?shiftsData[pShiftId].name:"HC"}. `; }
-            if (sShiftId !== 'none' && (sShiftId !== originalMemberInfo.s_id || sFrom !== originalMemberInfo.s_from || sTo !== originalMemberInfo.s_to)) {
-                shiftChanges = true; histLog += `Cấp ca phụ ${shiftsData[sShiftId]?shiftsData[sShiftId].name:""} (${sFrom} đến ${sTo}).`;
-            }
 
             update(ref(db), updates).then(() => {
-                if (shiftChanges && currentModalMode !== 'add') {
-                    const hRef = ref(db, `Members/${uid}/ShiftHistory/${Date.now()}`);
-                    set(hRef, { time: tsStr, action: histLog });
-                }
-                alert('Đã lưu thông tin và ca làm việc!');
+                if (shiftChanges && currentModalMode !== 'add') set(ref(db, `Members/${uid}/ShiftHistory/${Date.now()}`), { time: tsStr, action: histLog });
+                alert('Đã lưu thông tin cơ bản!');
                 if (currentModalMode === 'add') closeModal();
-                else { originalMemberInfo = { name: nameVal, id: idVal, dob: dobVal, email: emailVal, p_id: pShiftId, s_id: sShiftId, s_from: sFrom, s_to: sTo }; window.checkChanges(); }
+                else { originalMemberInfo.name = nameVal; originalMemberInfo.id = idVal; originalMemberInfo.dob = dobVal; originalMemberInfo.email = emailVal; originalMemberInfo.p_id = pShiftId; window.checkChanges(); }
             });
+        };
+
+        // --- CÁC HÀM XỬ LÝ CA ĐÃ ĐƯỢC PHỤC HỒI ---
+        window.toggleShiftPanel = function() { const p = document.getElementById('shiftPanelWrapper'); p.style.display = p.style.display === 'none' ? 'block' : 'none'; };
+        
+        window.showTempShiftForm = function() {
+            document.getElementById('btnShowTempShift').style.display = 'none';
+            document.getElementById('tempShiftFormContainer').style.display = 'block';
+            let optionsHtml = '';
+            for (const [id, shift] of Object.entries(shiftsData)) {
+                if (id !== document.getElementById('editPrimaryShift').value) { optionsHtml += `<option value="${id}">${shift.name} (${shift.start} - ${shift.end})</option>`; }
+            }
+            const sSel = document.getElementById('editSecondaryShift');
+            sSel.innerHTML = '<option value="none">-- Chọn Ca --</option>' + optionsHtml;
+            sSel.value = 'none';
+        };
+        window.hideTempShiftForm = function() { document.getElementById('btnShowTempShift').style.display = 'block'; document.getElementById('tempShiftFormContainer').style.display = 'none'; };
+        
+        window.validateTempShift = function() {
+            const pShift = document.getElementById('editPrimaryShift').value;
+            const sShift = document.getElementById('editSecondaryShift').value;
+            if (sShift !== 'none' && sShift === pShift) { alert("Ca phụ phải khác ca chính!"); document.getElementById('editSecondaryShift').value = 'none'; }
+        };
+
+        window.confirmTempShiftDirectly = function() {
+            const uid = document.getElementById('editOldUid').value;
+            const sShiftId = document.getElementById('editSecondaryShift').value;
+            const sFrom = document.getElementById('secShiftFrom').value;
+            const sTo = document.getElementById('secShiftTo').value;
+            
+            if (sShiftId === 'none' || !sFrom || !sTo) return alert("Vui lòng chọn đủ Ca phụ, Ngày Bắt đầu và Ngày Kết thúc!");
+            if (sFrom > sTo) return alert("Ngày kết thúc phải sau ngày bắt đầu!");
+            
+            const updates = {};
+            updates['Members/' + uid + '/s_id'] = sShiftId;
+            updates['Members/' + uid + '/s_start'] = shiftsData[sShiftId].start;
+            updates['Members/' + uid + '/s_end'] = shiftsData[sShiftId].end;
+            updates['Members/' + uid + '/s_from'] = sFrom;
+            updates['Members/' + uid + '/s_to'] = sTo;
+            
+            const tsStr = new Date().toLocaleString();
+            const histLog = `Cấp ca tạm: ${shiftsData[sShiftId].name} (${sFrom} đến ${sTo})`;
+            
+            update(ref(db), updates).then(() => {
+                set(ref(db, `Members/${uid}/ShiftHistory/${Date.now()}`), { time: tsStr, action: histLog });
+                alert("Đã gán ca tạm thành công!");
+                openMemberModal(uid, currentModalMode);
+            });
+        };
+
+        window.removeTempShiftDirectly = function() {
+            const btnName = document.getElementById('btnCancelTempShift').innerText;
+            if(!confirm(`Bạn muốn ${btnName.toLowerCase()}?`)) return;
+            const uid = document.getElementById('editOldUid').value;
+            const sName = document.getElementById('lblTempShiftName').innerText;
+            
+            const updates = {};
+            updates['Members/' + uid + '/s_id'] = 'none';
+            updates['Members/' + uid + '/s_start'] = null; updates['Members/' + uid + '/s_end'] = null;
+            updates['Members/' + uid + '/s_from'] = null; updates['Members/' + uid + '/s_to'] = null;
+            
+            const tsStr = new Date().toLocaleString();
+            const histLog = `${btnName} ca phụ: ${sName}`;
+            
+            update(ref(db), updates).then(() => {
+                set(ref(db, `Members/${uid}/ShiftHistory/${Date.now()}`), { time: tsStr, action: histLog });
+                alert(`Đã ${btnName.toLowerCase()} thành công!`);
+                openMemberModal(uid, currentModalMode);
+            });
+        };
+
+        window.viewShiftHistory = function() {
+            const uid = document.getElementById('editOldUid').value;
+            get(ref(db, `Members/${uid}/ShiftHistory`)).then(snapshot => {
+                let hist = snapshot.val();
+                const tbody = document.getElementById('shiftHistoryTableBody');
+                tbody.innerHTML = '';
+                if(!hist) {
+                    tbody.innerHTML = '<tr><td colspan="2" class="empty-row">Chưa có lịch sử thay đổi ca</td></tr>';
+                } else {
+                    Object.values(hist).reverse().forEach(h => {
+                        tbody.innerHTML += `<tr><td style="white-space:nowrap;">${h.time}</td><td>${h.action}</td></tr>`;
+                    });
+                }
+                document.getElementById('shiftHistoryModal').style.display = 'block';
+            });
+        };
+        window.closeShiftHistoryModal = function() { document.getElementById('shiftHistoryModal').style.display = 'none'; };
+
+        window.saveHC = function() {
+            update(ref(db, 'Settings/Shifts/HC'), { name: "Giờ hành chính", start: document.getElementById('hcStart').value, end: document.getElementById('hcEnd').value }).then(() => alert("Đã lưu Giờ Hành Chính!"));
+        };
+        window.openShiftModal = function() {
+            document.getElementById('newShiftName').value = ''; document.getElementById('newShiftStart').value = ''; document.getElementById('newShiftEnd').value = '';
+            document.getElementById('shiftModal').style.display = 'block';
+        };
+        window.closeShiftModal = function() { document.getElementById('shiftModal').style.display = 'none'; };
+        window.saveNewShift = function() {
+            const name = document.getElementById('newShiftName').value.trim();
+            const start = document.getElementById('newShiftStart').value;
+            const end = document.getElementById('newShiftEnd').value;
+            if(!name || !start || !end) return alert("Vui lòng điền đủ thông tin ca!");
+            const shiftId = 'Ca_' + Date.now();
+            update(ref(db, `Settings/Shifts/${shiftId}`), { name: name, start: start, end: end }).then(() => { alert("Đã thêm ca mới!"); closeShiftModal(); });
+        };
         };
 
         window.toggleShiftPanel = function() {
