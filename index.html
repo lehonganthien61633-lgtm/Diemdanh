@@ -960,48 +960,6 @@
             const shiftId = 'Ca_' + Date.now();
             update(ref(db, `Settings/Shifts/${shiftId}`), { name: name, start: start, end: end }).then(() => { alert("Đã thêm ca mới!"); closeShiftModal(); });
         };
-        };
-
-        window.toggleShiftPanel = function() {
-            const p = document.getElementById('shiftPanelWrapper');
-            p.style.display = p.style.display === 'none' ? 'block' : 'none';
-        };
-        window.showTempShift = function() {
-            document.getElementById('btnShowTempShift').style.display = 'none';
-            document.getElementById('tempShiftContainer').style.display = 'block';
-        };
-        window.confirmTempShift = function() {
-            alert("Ca tạm đã chọn (Nhấn 'Lưu Thông Tin' ở dưới cùng để ghi lên hệ thống)!");
-            window.checkChanges();
-        };
-        window.viewShiftHistory = function() {
-            const uid = document.getElementById('editOldUid').value;
-            get(ref(db, `Members/${uid}/ShiftHistory`)).then(snapshot => {
-                let hist = snapshot.val();
-                if(!hist) { alert("Chưa có lịch sử thay đổi ca."); return; }
-                let msg = "LỊCH SỬ THAY ĐỔI CA:\n\n";
-                Object.values(hist).reverse().forEach(h => { msg += `- ${h.time}\n  ${h.action}\n\n`; });
-                alert(msg);
-            });
-        };
-
-        window.saveHC = function() {
-            update(ref(db, 'Settings/Shifts/HC'), { name: "Giờ hành chính", start: document.getElementById('hcStart').value, end: document.getElementById('hcEnd').value }).then(() => alert("Đã lưu Giờ Hành Chính!"));
-        };
-        window.openShiftModal = function() {
-            document.getElementById('newShiftName').value = ''; document.getElementById('newShiftStart').value = ''; document.getElementById('newShiftEnd').value = '';
-            document.getElementById('shiftModal').style.display = 'block';
-        };
-        window.closeShiftModal = function() { document.getElementById('shiftModal').style.display = 'none'; };
-        window.saveNewShift = function() {
-            const name = document.getElementById('newShiftName').value.trim();
-            const start = document.getElementById('newShiftStart').value;
-            const end = document.getElementById('newShiftEnd').value;
-            if(!name || !start || !end) return alert("Vui lòng điền đủ thông tin ca!");
-            const shiftId = 'Ca_' + Date.now();
-            update(ref(db, `Settings/Shifts/${shiftId}`), { name: name, start: start, end: end }).then(() => { alert("Đã thêm ca mới!"); closeShiftModal(); });
-        };
-
         window.startChangeCard = function() {
             changingUid = document.getElementById('editOldUid').value;
             set(ref(db, 'Command/mode'), 1); set(ref(db, 'Command/new_uid'), "");
