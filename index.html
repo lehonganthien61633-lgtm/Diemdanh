@@ -870,6 +870,42 @@
                 });
             }
         };
+        window.renderDevices = function() {
+            const tbody = document.getElementById('devicesTable'); 
+            if(!tbody) return; 
+            tbody.innerHTML = "";
+            
+            const now = Math.floor(Date.now() / 1000); 
+            let stt = 1;
+            
+            if(Object.keys(devicesData).length > 0) {
+                for (const [devId, devInfo] of Object.entries(devicesData)) {
+                    // Mạch ping trong vòng 10 giây được tính là Online
+                    const isOnline = (now - devInfo.lastPing) < 10; 
+                    const statusHtml = isOnline ? `<span style="color:green;font-weight:bold;">🟢 Online</span>` : `<span style="color:red;font-weight:bold;">🔴 Offline</span>`;
+                    
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${stt++}</td>
+                            <td><strong style="color: #2c3e50;">${devInfo.name || devId}</strong></td>
+                            <td>${statusHtml}</td>
+                            <td>
+                                <button class="btn btn-active" style="padding: 6px 12px; font-size: 13px;" onclick="openDeviceModal('${devId}')">⚙️ Cấu Hình</button>
+                                <button class="btn btn-delete" style="padding: 6px 12px; font-size: 13px; margin: 0 0 0 5px; display: inline-block;" onclick="deleteDevice('${devId}')">🗑️ Xóa</button>
+                            </td>
+                        </tr>`;
+                }
+            } else { 
+                tbody.innerHTML = `<tr><td colspan="4" class="empty-row">Chưa có thiết bị nào kết nối</td></tr>`; 
+            }
+        };
+
+        // Chạy vòng lặp tự động cập nhật trạng thái Online/Offline mỗi 3 giây
+        setInterval(() => {
+            if (currentUser && currentUser.role === 'admin') {
+                renderDevices();
+            }
+        }, 3000);
     </script>
 </body>
 </html>
