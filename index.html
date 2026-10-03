@@ -309,15 +309,17 @@
                 <div style="overflow-y: auto; max-height: 70vh;">
                     <div id="dev-basic" class="dev-tab-content active">
                         <input type="hidden" id="devOldId">
-                        <label style="color: #7f8c8d; font-size: 13px;">Mã Thiết Bị (ID):</label>
-                        <input type="text" id="devEditId" placeholder="VD: ESP32_CuaChinh" style="border: 1px solid #ddd; background: white;">
-                        <label style="color: #7f8c8d; font-size: 13px; margin-top: 10px;">Tên Hiển Thị:</label>
+                        <label style="color: #7f8c8d; font-size: 13px;">Mã Thiết Bị (Cố định theo phần cứng):</label>
+                        <input type="text" id="devEditId" readonly style="border: 1px solid #ddd; background: #ecf0f1; font-weight: bold; color: #7f8c8d; cursor: not-allowed;">
+                        
+                        <label style="color: #7f8c8d; font-size: 13px; margin-top: 10px;">Tên Hiển Thị (Có thể thay đổi):</label>
                         <input type="text" id="devEditName" placeholder="Tên gợi nhớ..." style="border: 1px solid #ddd; background: white;">
+                        
                         <div style="display:flex; gap:15px; background: #eef2f5; padding: 12px; border-radius: 6px; margin-top: 15px; border: 1px solid #dcdde1;">
                             <div style="flex:1;"><span style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 3px;">IPv4 Address</span><span id="devEditIp" style="font-weight: bold; color: #2c3e50; font-family: monospace;">-</span></div>
                             <div style="flex:1;"><span style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 3px;">MAC Address</span><span id="devEditMac" style="font-weight: bold; color: #2c3e50; font-family: monospace;">-</span></div>
                         </div>
-                        <button type="button" class="btn btn-active" style="width:100%; margin-top: 20px;" onclick="saveDeviceConfig()">💾 Cập Nhật Tên & ID</button>
+                        <button type="button" class="btn btn-active" style="width:100%; margin-top: 20px;" onclick="saveDeviceConfig()">💾 Cập Nhật Tên Thiết Bị</button>
                     </div>
 
                     <div id="dev-network" class="dev-tab-content">
@@ -780,9 +782,15 @@
         };
         window.closeDeviceModal = function() { document.getElementById('deviceModal').style.display = 'none'; };
         window.saveDeviceConfig = function() {
-            const oldId = document.getElementById('devOldId').value, newId = document.getElementById('devEditId').value.trim(), newName = document.getElementById('devEditName').value.trim();
-            if(newId === "" || newName === "") return alert("ID và Tên không được rỗng!");
-            update(ref(db, `Devices/${oldId}/Command`), { action: "update_info", new_id: newId, new_name: newName }).then(() => { alert("Đã gửi lệnh!"); closeDeviceModal(); });
+            const oldId = document.getElementById('devOldId').value;
+            const newName = document.getElementById('devEditName').value.trim();
+            if(newName === "") return alert("Tên không được rỗng!");
+            
+            update(ref(db, `Devices/${oldId}/Command`), { action: "update_info", new_name: newName })
+            .then(() => { 
+                alert("Đã gửi lệnh cập nhật Tên Thiết Bị!"); 
+                closeDeviceModal(); 
+            });
         };
         window.connectDeviceWifi = function() {
             const devId = document.getElementById('devOldId').value, ssid = document.getElementById('devNewSsid').value.trim(), pass = document.getElementById('devNewPass').value;
