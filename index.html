@@ -854,7 +854,23 @@
             if(ssid === "") return alert("Nhập SSID!");
             if(confirm(`Đổi mạch sang Wi-Fi: ${ssid}?`)) {
                 set(ref(db, `SavedWiFi/${ssid}`), pass);
-                update(ref(db, `Devices/${devId}/Command`), { action: "connect_wifi", ssid: ssid, pass: pass }).then(() => { alert("Đã gửi lệnh!"); closeDeviceModal(); });
+                update(ref(db, `Devices/${devId}/Command`), { action: "connect_wifi", ssid: ssid, pass: pass, wifi_status: "pending" });
+                alert("⏳ Đang yêu cầu thiết bị kiểm tra Wi-Fi mới (Khoảng 10 giây). Vui lòng không đóng trang...");
+                
+                const statusRef = ref(db, `Devices/${devId}/Command/wifi_status`);
+                const unsubscribe = onValue(statusRef, (snapshot) => {
+                    const status = snapshot.val();
+                    if (status === "success") {
+                        alert(`✅ Đổi Wi-Fi thành công! Thiết bị đã kết nối vào: ${ssid}`);
+                        update(ref(db, `Devices/${devId}/Command`), { wifi_status: null });
+                        unsubscribe();
+                        closeDeviceModal();
+                    } else if (status === "fail") {
+                        alert(`❌ Sai mật khẩu hoặc mất sóng! Thiết bị đã tự động khôi phục mạng Wi-Fi cũ.`);
+                        update(ref(db, `Devices/${devId}/Command`), { wifi_status: null });
+                        unsubscribe();
+                    }
+                });
             }
         };
 
@@ -864,10 +880,22 @@
             const devId = document.getElementById('devOldId').value;
             
             if(confirm(`Yêu cầu mạch tự động đổi sang Wi-Fi: ${ssid}?`)) {
-                update(ref(db, `Devices/${devId}/Command`), { action: "connect_wifi", ssid: ssid, pass: pass })
-                .then(() => {
-                    alert("Đã gửi lệnh đổi mạng! Thiết bị đang khởi động lại để kết nối...");
-                    closeDeviceModal();
+                update(ref(db, `Devices/${devId}/Command`), { action: "connect_wifi", ssid: ssid, pass: pass, wifi_status: "pending" });
+                alert("⏳ Đang yêu cầu thiết bị kiểm tra mạng. Vui lòng chờ 10 giây...");
+                
+                const statusRef = ref(db, `Devices/${devId}/Command/wifi_status`);
+                const unsubscribe = onValue(statusRef, (snapshot) => {
+                    const status = snapshot.val();
+                    if (status === "success") {
+                        alert(`✅ Đổi Wi-Fi thành công! Thiết bị đã kết nối vào: ${ssid}`);
+                        update(ref(db, `Devices/${devId}/Command`), { wifi_status: null });
+                        unsubscribe();
+                        closeDeviceModal();
+                    } else if (status === "fail") {
+                        alert(`❌ Không thể kết nối tới Wi-Fi này! Mạch vẫn giữ kết nối mạng cũ.`);
+                        update(ref(db, `Devices/${devId}/Command`), { wifi_status: null });
+                        unsubscribe();
+                    }
                 });
             }
         };
