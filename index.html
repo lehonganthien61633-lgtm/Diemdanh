@@ -311,25 +311,23 @@
                             
                             <div id="shiftPanelWrapper" style="display:none; margin-top:10px; background:#f9f9f9; padding:10px; border-radius:6px; border:1px solid #eee;">
                                 <label style="font-size: 13px; font-weight:bold;">Ca chính (Mặc định):</label>
-                                <select id="editPrimaryShift" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;" onchange="checkChanges()"></select>
+                                <select id="editPrimaryShift" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; margin-bottom:10px;" onchange="checkChanges()"></select>
                                 
                                 <div style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;">
-                                    <!-- Ca phụ đang hoạt động -->
-                                    <div id="activeTempShiftInfo" style="display:none; background:#eafaf1; padding:10px; border-radius:6px; border:1px solid #2ecc71; margin-bottom:10px;">
-                                        <div style="font-size:13px; color:#27ae60; font-weight:bold; margin-bottom:5px;">✅ Đang có ca tạm: <span id="lblTempShiftName"></span></div>
-                                        <div style="font-size:12px; color:#2c3e50; margin-bottom:10px;">⏰ Từ <b id="lblTempFrom"></b> đến <b id="lblTempTo"></b></div>
-                                        <button type="button" id="btnCancelTempShift" class="btn btn-cancel" style="width:100%; margin:0; padding:6px; font-size:12px; background:#e74c3c; color:white;" onclick="removeTempShiftDirectly()">Hủy ca tạm</button>
-                                    </div>
+                                    <label style="font-size: 13px; font-weight:bold; color:#d35400;">Danh sách ca phụ (tạm thời):</label>
+                                    
+                                    <!-- Danh sách các ca tạm -->
+                                    <div id="tempShiftsListUI" style="margin-bottom: 10px;"></div>
 
                                     <!-- Thêm ca tạm mới -->
                                     <button type="button" id="btnShowTempShift" class="btn btn-add" style="width:100%; padding:8px; font-size:13px; margin:0;" onclick="showTempShiftForm()">➕ Thêm ca phụ (tạm thời)</button>
                                     
-                                    <div id="tempShiftFormContainer" style="display:none; background:#fff; padding:10px; border:1px solid #f39c12; border-radius:6px;">
-                                        <label style="font-size: 13px; font-weight:bold; color:#d35400;">Chọn ca phụ (Phải khác ca chính):</label>
-                                        <select id="editSecondaryShift" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; margin-bottom:10px;" onchange="validateTempShift()"></select>
+                                    <div id="tempShiftFormContainer" style="display:none; background:#fff; padding:10px; border:1px solid #f39c12; border-radius:6px; margin-top:10px;">
+                                        <label style="font-size: 13px; font-weight:bold; color:#d35400;">Chọn ca phụ (Khác ca chính):</label>
+                                        <select id="editSecondaryShift" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; margin-bottom:10px;"></select>
                                         <div style="display:flex; gap:10px;">
-                                            <div style="flex:1;"><span style="font-size:12px; color:#7f8c8d;">Từ ngày:</span><input type="date" id="secShiftFrom" onchange="validateTempShift()"></div>
-                                            <div style="flex:1;"><span style="font-size:12px; color:#7f8c8d;">Đến ngày:</span><input type="date" id="secShiftTo" onchange="validateTempShift()"></div>
+                                            <div style="flex:1;"><span style="font-size:12px; color:#7f8c8d;">Từ ngày:</span><input type="date" id="secShiftFrom"></div>
+                                            <div style="flex:1;"><span style="font-size:12px; color:#7f8c8d;">Đến ngày:</span><input type="date" id="secShiftTo"></div>
                                         </div>
                                         <div style="display:flex; gap:10px; margin-top:10px;">
                                             <button type="button" class="btn btn-active" style="flex:1; padding:8px; font-size:13px; margin:0;" onclick="confirmTempShiftDirectly()">Xác nhận</button>
@@ -759,34 +757,19 @@
         window.openMemberModal = function(uid, mode) {
             currentModalMode = mode;
             const info = membersData[uid] || {};
-            originalMemberInfo = { name: info.name || '', id: info.id || '', dob: info.dob || '', email: info.email || '', p_id: info.p_id || 'HC', s_id: info.s_id || 'none', s_from: info.s_from || '', s_to: info.s_to || '' };
+            originalMemberInfo = { name: info.name || '', id: info.id || '', dob: info.dob || '', email: info.email || '', p_id: info.p_id || 'HC', tempShifts: info.tempShifts || {} };
             
             document.getElementById('editOldUid').value = uid; document.getElementById('editUid').value = uid;
             document.getElementById('editName').value = originalMemberInfo.name; document.getElementById('editId').value = originalMemberInfo.id;
             document.getElementById('editDob').value = originalMemberInfo.dob; document.getElementById('editEmail').value = originalMemberInfo.email;
             document.getElementById('editPrimaryShift').value = originalMemberInfo.p_id;
             
-            // Xử lý Ca Phụ theo thời gian thực
-            const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
-            const hasActiveTemp = (originalMemberInfo.s_id !== 'none' && originalMemberInfo.s_to && originalMemberInfo.s_to >= todayStr);
-            
-            document.getElementById('activeTempShiftInfo').style.display = hasActiveTemp ? 'block' : 'none';
-            document.getElementById('btnShowTempShift').style.display = hasActiveTemp ? 'none' : 'block';
-            document.getElementById('tempShiftFormContainer').style.display = 'none';
             document.getElementById('shiftPanelWrapper').style.display = 'none';
+            document.getElementById('tempShiftFormContainer').style.display = 'none';
+            document.getElementById('btnShowTempShift').style.display = 'block';
             
-            if (hasActiveTemp) {
-                const sName = shiftsData[originalMemberInfo.s_id] ? shiftsData[originalMemberInfo.s_id].name : "Ca phụ";
-                document.getElementById('lblTempShiftName').innerText = sName;
-                document.getElementById('lblTempFrom').innerText = originalMemberInfo.s_from;
-                document.getElementById('lblTempTo').innerText = originalMemberInfo.s_to;
-                
-                const btnCancelTemp = document.getElementById('btnCancelTempShift');
-                if (todayStr < originalMemberInfo.s_from) { btnCancelTemp.innerText = "Hủy ca tạm"; } 
-                else { btnCancelTemp.innerText = "Tạm dừng"; }
-            } else {
-                document.getElementById('editSecondaryShift').value = 'none'; document.getElementById('secShiftFrom').value = ''; document.getElementById('secShiftTo').value = '';
-            }
+            // Vẽ danh sách Ca phụ
+            renderTempShiftsList();
 
             const isView = (mode === 'view'); const isAdd = (mode === 'add');
             const modalContent = document.getElementById('modalContent');
@@ -843,7 +826,6 @@
             updates['Members/' + uid + '/p_id'] = pShiftId;
             updates['Members/' + uid + '/p_start'] = shiftsData[pShiftId] ? shiftsData[pShiftId].start : "07:00";
             updates['Members/' + uid + '/p_end'] = shiftsData[pShiftId] ? shiftsData[pShiftId].end : "17:00";
-            if (currentModalMode === 'add') { updates['Members/' + uid + '/s_id'] = 'none'; }
 
             const tsStr = new Date().toLocaleString();
             let shiftChanges = false; let histLog = "";
@@ -857,9 +839,39 @@
             });
         };
 
-        // --- CÁC HÀM XỬ LÝ CA ĐÃ ĐƯỢC PHỤC HỒI ---
+        // --- HÀM VẼ VÀ XỬ LÝ DANH SÁCH CA TẠM ---
         window.toggleShiftPanel = function() { const p = document.getElementById('shiftPanelWrapper'); p.style.display = p.style.display === 'none' ? 'block' : 'none'; };
         
+        window.renderTempShiftsList = function() {
+            const container = document.getElementById('tempShiftsListUI'); container.innerHTML = '';
+            const shifts = originalMemberInfo.tempShifts || {};
+            const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+            
+            if (Object.keys(shifts).length === 0) {
+                container.innerHTML = '<div style="font-size:12px; color:#7f8c8d; font-style:italic;">Chưa có ca phụ nào.</div>'; return;
+            }
+
+            for (const [key, shift] of Object.entries(shifts)) {
+                let btnHtml = '';
+                if (todayStr < shift.s_from) {
+                    btnHtml = `<button type="button" class="btn btn-cancel" style="padding:4px 8px; font-size:11px; margin:0; display:block;" onclick="actionTempShift('${key}', 'Hủy')">Hủy</button>`;
+                } else if (todayStr >= shift.s_from && todayStr <= shift.s_to) {
+                    btnHtml = `<button type="button" class="btn btn-delete" style="padding:4px 8px; font-size:11px; margin:0; display:block;" onclick="actionTempShift('${key}', 'Kết thúc')">Kết thúc</button>`;
+                } else {
+                    btnHtml = `<span style="font-size:11px; color:#bdc3c7; font-weight:bold;">Đã qua</span>`;
+                }
+
+                container.innerHTML += `
+                    <div style="background:#eafaf1; padding:8px 12px; border-radius:6px; border:1px solid #2ecc71; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                        <div>
+                            <div style="font-size:13px; color:#27ae60; font-weight:bold;">${shift.s_name}</div>
+                            <div style="font-size:11px; color:#2c3e50;">Từ ${shift.s_from} đến ${shift.s_to}</div>
+                        </div>
+                        <div>${btnHtml}</div>
+                    </div>`;
+            }
+        };
+
         window.showTempShiftForm = function() {
             document.getElementById('btnShowTempShift').style.display = 'none';
             document.getElementById('tempShiftFormContainer').style.display = 'block';
@@ -871,13 +883,8 @@
             sSel.innerHTML = '<option value="none">-- Chọn Ca --</option>' + optionsHtml;
             sSel.value = 'none';
         };
+
         window.hideTempShiftForm = function() { document.getElementById('btnShowTempShift').style.display = 'block'; document.getElementById('tempShiftFormContainer').style.display = 'none'; };
-        
-        window.validateTempShift = function() {
-            const pShift = document.getElementById('editPrimaryShift').value;
-            const sShift = document.getElementById('editSecondaryShift').value;
-            if (sShift !== 'none' && sShift === pShift) { alert("Ca phụ phải khác ca chính!"); document.getElementById('editSecondaryShift').value = 'none'; }
-        };
 
         window.confirmTempShiftDirectly = function() {
             const uid = document.getElementById('editOldUid').value;
@@ -887,63 +894,56 @@
             
             if (sShiftId === 'none' || !sFrom || !sTo) return alert("Vui lòng chọn đủ Ca phụ, Ngày Bắt đầu và Ngày Kết thúc!");
             if (sFrom > sTo) return alert("Ngày kết thúc phải sau ngày bắt đầu!");
+            if (sShiftId === document.getElementById('editPrimaryShift').value) return alert("Ca phụ phải khác ca chính!");
             
-            const updates = {};
-            updates['Members/' + uid + '/s_id'] = sShiftId;
-            updates['Members/' + uid + '/s_start'] = shiftsData[sShiftId].start;
-            updates['Members/' + uid + '/s_end'] = shiftsData[sShiftId].end;
-            updates['Members/' + uid + '/s_from'] = sFrom;
-            updates['Members/' + uid + '/s_to'] = sTo;
+            const shiftName = shiftsData[sShiftId].name;
+            const newKey = Date.now().toString();
+            const newShift = { s_id: sShiftId, s_name: shiftName, s_start: shiftsData[sShiftId].start, s_end: shiftsData[sShiftId].end, s_from: sFrom, s_to: sTo };
             
-            const tsStr = new Date().toLocaleString();
-            const histLog = `Cấp ca tạm: ${shiftsData[sShiftId].name} (${sFrom} đến ${sTo})`;
-            
-            update(ref(db), updates).then(() => {
-                set(ref(db, `Members/${uid}/ShiftHistory/${Date.now()}`), { time: tsStr, action: histLog });
+            update(ref(db, `Members/${uid}/tempShifts/${newKey}`), newShift).then(() => {
+                const tsStr = new Date().toLocaleString();
+                set(ref(db, `Members/${uid}/ShiftHistory/${Date.now()}`), { time: tsStr, action: `Cấp ca tạm: ${shiftName} (${sFrom} đến ${sTo})` });
                 alert("Đã gán ca tạm thành công!");
                 openMemberModal(uid, currentModalMode);
             });
         };
 
-        window.removeTempShiftDirectly = function() {
-            const btnName = document.getElementById('btnCancelTempShift').innerText;
-            if(!confirm(`Bạn muốn ${btnName.toLowerCase()}?`)) return;
+        window.actionTempShift = function(key, actionType) {
+            if(!confirm(`Bạn chắc chắn muốn ${actionType.toLowerCase()} ca phụ này?`)) return;
             const uid = document.getElementById('editOldUid').value;
-            const sName = document.getElementById('lblTempShiftName').innerText;
+            const shiftInfo = originalMemberInfo.tempShifts[key];
             
-            const updates = {};
-            updates['Members/' + uid + '/s_id'] = 'none';
-            updates['Members/' + uid + '/s_start'] = null; updates['Members/' + uid + '/s_end'] = null;
-            updates['Members/' + uid + '/s_from'] = null; updates['Members/' + uid + '/s_to'] = null;
-            
-            const tsStr = new Date().toLocaleString();
-            const histLog = `${btnName} ca phụ: ${sName}`;
-            
-            update(ref(db), updates).then(() => {
-                set(ref(db, `Members/${uid}/ShiftHistory/${Date.now()}`), { time: tsStr, action: histLog });
-                alert(`Đã ${btnName.toLowerCase()} thành công!`);
-                openMemberModal(uid, currentModalMode);
-            });
+            if (actionType === 'Hủy') {
+                remove(ref(db, `Members/${uid}/tempShifts/${key}`)).then(() => {
+                    const tsStr = new Date().toLocaleString();
+                    set(ref(db, `Members/${uid}/ShiftHistory/${Date.now()}`), { time: tsStr, action: `Hủy ca phụ: ${shiftInfo.s_name}` });
+                    alert("Đã hủy thành công!");
+                    openMemberModal(uid, currentModalMode);
+                });
+            } else if (actionType === 'Kết thúc') {
+                const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+                update(ref(db, `Members/${uid}/tempShifts/${key}`), { s_to: todayStr }).then(() => {
+                    const tsStr = new Date().toLocaleString();
+                    set(ref(db, `Members/${uid}/ShiftHistory/${Date.now()}`), { time: tsStr, action: `Kết thúc sớm ca phụ: ${shiftInfo.s_name}` });
+                    alert("Đã kết thúc sớm ca tạm!");
+                    openMemberModal(uid, currentModalMode);
+                });
+            }
         };
 
         window.viewShiftHistory = function() {
             const uid = document.getElementById('editOldUid').value;
             get(ref(db, `Members/${uid}/ShiftHistory`)).then(snapshot => {
                 let hist = snapshot.val();
-                const tbody = document.getElementById('shiftHistoryTableBody');
-                tbody.innerHTML = '';
-                if(!hist) {
-                    tbody.innerHTML = '<tr><td colspan="2" class="empty-row">Chưa có lịch sử thay đổi ca</td></tr>';
-                } else {
-                    Object.values(hist).reverse().forEach(h => {
-                        tbody.innerHTML += `<tr><td style="white-space:nowrap;">${h.time}</td><td>${h.action}</td></tr>`;
-                    });
+                const tbody = document.getElementById('shiftHistoryTableBody'); tbody.innerHTML = '';
+                if(!hist) { tbody.innerHTML = '<tr><td colspan="2" class="empty-row">Chưa có lịch sử thay đổi ca</td></tr>'; } 
+                else {
+                    Object.values(hist).reverse().forEach(h => { tbody.innerHTML += `<tr><td style="white-space:nowrap;">${h.time}</td><td>${h.action}</td></tr>`; });
                 }
                 document.getElementById('shiftHistoryModal').style.display = 'block';
             });
         };
         window.closeShiftHistoryModal = function() { document.getElementById('shiftHistoryModal').style.display = 'none'; };
-
         window.saveHC = function() {
             update(ref(db, 'Settings/Shifts/HC'), { name: "Giờ hành chính", start: document.getElementById('hcStart').value, end: document.getElementById('hcEnd').value }).then(() => alert("Đã lưu Giờ Hành Chính!"));
         };
