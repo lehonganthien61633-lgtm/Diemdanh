@@ -78,6 +78,13 @@
         .dev-tab-btn.active { color: #3498db; border-bottom-color: #3498db; }
         .dev-tab-content { display: none; padding: 25px; }
         .dev-tab-content.active { display: block; }
+        .net-list { text-align:left; max-height:180px; overflow-y:auto; border:1px solid #ddd; padding:5px; border-radius:6px; background:#fafafa; margin-bottom:15px; }
+        .net-item { display: flex; align-items: center; padding:12px 10px; border-bottom:1px solid #eee; cursor:pointer; font-size:15px; transition: 0.2s; }
+        .net-item:last-child { border-bottom: none; }
+        .net-item:hover { background:#e8f8f5; color:#16a085; font-weight:bold; }
+        .wifi-icon { font-size: 20px; margin-right: 10px; }
+        .wifi-info { flex: 1; }
+        .wifi-name { font-size: 15px; font-weight: 500; color: #2c3e50; }
 
         /* Giao diện Đăng Nhập */
         #loginScreen { position: fixed; top:0; left:0; width: 100vw; height: 100vh; background: #2c3e50; display: flex; justify-content: center; align-items: center; z-index: 9999; }
@@ -325,20 +332,22 @@
                     <div id="dev-network" class="dev-tab-content">
                         <label style="color: #7f8c8d; font-size: 13px;">Mạng hiện tại đang dùng:</label>
                         <input type="text" id="devEditSsid" readonly style="background-color: #eafaf1; color: #27ae60; font-weight: bold; text-align: center; border: 1px dashed #2ecc71;">
+                        
                         <div style="background: white; padding: 15px; border-radius: 6px; border: 1px solid #f5b041; margin-top: 15px;">
-                            <label style="margin-top:0; color:#d35400; font-size: 14px; margin-bottom: 10px;">🌐 Đổi mạng Wi-Fi từ xa:</label>
-                            <div style="display:flex; gap:10px;">
-                                <input type="text" id="devNewSsid" placeholder="SSID..." style="flex:1; margin-bottom:0; border: 1px solid #ddd;">
-                                <input type="password" id="devNewPass" placeholder="Mật khẩu..." style="flex:1; margin-bottom:0; border: 1px solid #ddd;">
+                            <label style="margin-top:0; color:#d35400; font-size: 14px; margin-bottom: 10px; font-weight:bold; display:block;">🌐 Chọn từ Wi-Fi đã lưu:</label>
+                            
+                            <!-- Danh sách Wi-Fi giống ESP32 -->
+                            <div id="savedWifiListUI" class="net-list">
+                                <div style="text-align:center; padding:15px; color:#7f8c8d;">Đang tải...</div>
                             </div>
-                            <button type="button" class="btn" style="width:100%; margin: 10px 0 0 0; background-color: #e67e22;" onclick="connectDeviceWifi()">🚀 Gửi Lệnh Đổi Wi-Fi</button>
-                            <div style="margin-top: 15px; border-top: 1px dashed #fad7a1; padding-top: 15px;">
-                                <label style="font-size: 13px; color: #d35400;">Hoặc chọn từ danh sách đã lưu:</label>
-                                <div style="display:flex; gap:10px; margin-top: 5px;">
-                                    <select id="savedWifiSelect" style="flex:1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; outline: none; background: #fdfdfd;"></select>
-                                    <button type="button" class="btn" style="margin:0; background-color: #27ae60;" onclick="quickConnectWifi()">⚡ Kết nối</button>
-                                </div>
+                            
+                            <label style="color:#d35400; font-size: 13px; font-weight:bold; display:block; border-top: 1px dashed #fad7a1; padding-top: 15px;">Hoặc nhập Wi-Fi mới:</label>
+                            <div style="display:flex; flex-direction:column; gap:10px; margin-top: 10px;">
+                                <input type="text" id="devNewSsid" placeholder="Tên Wi-Fi (SSID)..." style="margin-bottom:0; border: 1px solid #ddd;">
+                                <input type="password" id="devNewPass" placeholder="Mật khẩu..." style="margin-bottom:0; border: 1px solid #ddd;">
                             </div>
+                            <button type="button" class="btn" style="width:100%; margin: 15px 0 0 0; background-color: #e67e22;" onclick="connectDeviceWifi()">🚀 Gửi Lệnh Đổi Wi-Fi</button>
+                            <p style="font-size: 12px; color: #7f8c8d; margin-top: 8px; text-align:center;">Thiết bị sẽ tự khởi động lại để kết nối mạng mới.</p>
                         </div>
                     </div>
 
@@ -545,12 +554,25 @@
                 runAutoDelete();
             });
 
+            // Tải danh sách mạng Wi-Fi đã lưu thành giao diện danh sách
             onValue(ref(db, 'SavedWiFi'), (snapshot) => {
-                const list = snapshot.val() || {};
-                const select = document.getElementById('savedWifiSelect');
-                select.innerHTML = '<option value="">-- Chọn Wi-Fi --</option>';
-                for (const [ssid, pass] of Object.entries(list)) {
-                    select.innerHTML += `<option value="${ssid}" data-pass="${pass}">${ssid}</option>`;
+                savedWifiList = snapshot.val() || {};
+                const listUI = document.getElementById('savedWifiListUI');
+                listUI.innerHTML = '';
+                
+                const keys = Object.keys(savedWifiList);
+                if(keys.length === 0) {
+                    listUI.innerHTML = '<div style="text-align:center; padding:15px; color:#7f8c8d;">Chưa có mạng nào được lưu</div>';
+                } else {
+                    for (const [ssid, pass] of Object.entries(savedWifiList)) {
+                        listUI.innerHTML += `
+                            <div class="net-item" onclick="selectSavedWifi('${ssid}')">
+                                <div class="wifi-icon">📶</div>
+                                <div class="wifi-info">
+                                    <div class="wifi-name">${ssid}</div>
+                                </div>
+                            </div>`;
+                    }
                 }
             });
         }
@@ -800,12 +822,12 @@
                 update(ref(db, `Devices/${devId}/Command`), { action: "connect_wifi", ssid: ssid, pass: pass }).then(() => { alert("Đã gửi lệnh!"); closeDeviceModal(); });
             }
         };
-        window.quickConnectWifi = function() {
-            const sel = document.getElementById('savedWifiSelect'); if(sel.value === "") return alert("Chọn mạng!");
-            document.getElementById('devNewSsid').value = sel.value; document.getElementById('devNewPass').value = sel.options[sel.selectedIndex].getAttribute('data-pass');
-            connectDeviceWifi();
+        // Xử lý khi người dùng bấm vào một mạng trong danh sách
+        window.selectSavedWifi = function(ssid) {
+            document.getElementById('devNewSsid').value = ssid;
+            document.getElementById('devNewPass').value = savedWifiList[ssid] || '';
+            document.getElementById('devNewPass').focus();
         };
-
         function renderDevices() {
             const tbody = document.getElementById('devicesTable'); if(!tbody) return; tbody.innerHTML = "";
             const now = Math.floor(Date.now() / 1000); let stt = 1;
