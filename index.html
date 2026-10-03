@@ -178,10 +178,10 @@
                     </div>
                     <table>
                         <thead>
-                            <tr><th>Thời Gian</th><th>Họ và Tên</th><th>UID Thẻ</th><th>Trạng Thái</th></tr>
+                            <tr><th>Thời Gian</th><th>Họ và Tên</th><th>UID Thẻ</th><th>Vào/Ra</th><th>Tình Trạng</th></tr>
                         </thead>
                         <tbody id="attendanceTable">
-                            <tr><td colspan="4" class="empty-row">Đang tải dữ liệu...</td></tr>
+                            <tr><td colspan="5" class="empty-row">Đang tải dữ liệu...</td></tr>
                         </tbody>
                     </table>
                     <div id="globalPagination" class="pagination"></div>
@@ -259,9 +259,9 @@
                 </div>
                 <h3>Lịch Sử Điểm Danh Của Bạn</h3>
                 <table>
-                    <thead><tr><th>Thời Gian</th><th>Hoạt Động</th></tr></thead>
+                    <thead><tr><th>Thời Gian</th><th>Hoạt Động</th><th>Tình Trạng</th></tr></thead>
                     <tbody id="userPersonalHistory">
-                        <tr><td colspan="2" class="empty-row">Đang tải...</td></tr>
+                        <tr><td colspan="3" class="empty-row">Đang tải...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -303,15 +303,26 @@
                         <input type="email" id="editEmail" placeholder="example@email.com" oninput="checkChanges()">
                         
                         <div style="border-top: 1px dashed #ccc; margin-top: 15px; padding-top: 15px;">
-                            <label style="color:#2980b9;">🛠 Phân Ca Làm Việc:</label>
-                            <label style="margin-top:10px; font-size: 13px;">Ca chính (Mặc định):</label>
-                            <select id="editPrimaryShift" style="width:100%; padding:10px; border-radius:4px; border:1px solid #ccc; margin-bottom:10px;" onchange="checkChanges()"></select>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <label style="color:#2980b9; cursor:pointer; margin:0;" onclick="toggleShiftPanel()">▼ Phân Ca Làm Việc</label>
+                                <button type="button" class="btn btn-active" style="padding:4px 8px; font-size:12px; margin:0;" onclick="viewShiftHistory()">🕒 Lịch sử ca</button>
+                            </div>
                             
-                            <label style="margin-top:10px; font-size: 13px;">Ca phụ (Chỉ áp dụng trong thời hạn):</label>
-                            <select id="editSecondaryShift" style="width:100%; padding:10px; border-radius:4px; border:1px solid #ccc;" onchange="checkChanges()"></select>
-                            <div style="display:flex; gap:10px; margin-top:10px;">
-                                <div style="flex:1;"><span style="font-size:12px; color:#7f8c8d;">Từ ngày:</span><input type="date" id="secShiftFrom" oninput="checkChanges()"></div>
-                                <div style="flex:1;"><span style="font-size:12px; color:#7f8c8d;">Đến ngày:</span><input type="date" id="secShiftTo" oninput="checkChanges()"></div>
+                            <div id="shiftPanelWrapper" style="display:none; margin-top:10px; background:#f9f9f9; padding:10px; border-radius:6px; border:1px solid #eee;">
+                                <label style="font-size: 13px; font-weight:bold;">Ca chính (Mặc định):</label>
+                                <select id="editPrimaryShift" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; margin-bottom:10px;" onchange="checkChanges()"></select>
+                                
+                                <button type="button" id="btnShowTempShift" class="btn btn-add" style="width:100%; padding:8px; font-size:13px; margin-bottom:10px;" onclick="showTempShift()">➕ Thêm ca tạm</button>
+                                
+                                <div id="tempShiftContainer" style="display:none; border-top:1px dashed #ccc; padding-top:10px;">
+                                    <label style="font-size: 13px; font-weight:bold; color:#d35400;">Ca phụ (Tạm thời):</label>
+                                    <select id="editSecondaryShift" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; margin-bottom:5px;" onchange="checkChanges()"></select>
+                                    <div style="display:flex; gap:10px;">
+                                        <div style="flex:1;"><span style="font-size:12px; color:#7f8c8d;">Từ ngày:</span><input type="date" id="secShiftFrom" oninput="checkChanges()"></div>
+                                        <div style="flex:1;"><span style="font-size:12px; color:#7f8c8d;">Đến ngày:</span><input type="date" id="secShiftTo" oninput="checkChanges()"></div>
+                                    </div>
+                                    <button type="button" class="btn btn-active" style="width:100%; padding:8px; margin-top:10px; font-size:13px;" onclick="confirmTempShift()">Xác nhận ca tạm</button>
+                                </div>
                             </div>
                         </div>
 
@@ -332,7 +343,7 @@
                             <div class="history-container">
                                 <table style="margin-top: 0; border-top: none;">
                                     <thead style="position:sticky; top:0; z-index:1; background-color: #3498db;">
-                                        <tr><th style="color:white; border-top:none;">Thời gian</th><th style="color:white; border-top:none;">Hoạt động</th></tr>
+                                        <tr><th style="color:white; border-top:none;">Thời gian</th><th style="color:white; border-top:none;">Hoạt động</th><th style="color:white; border-top:none;">Tình trạng</th></tr>
                                     </thead>
                                     <tbody id="personalHistoryTable"></tbody>
                                 </table>
@@ -510,11 +521,16 @@
                 if(info.Attendance) {
                     const arr = Object.entries(info.Attendance).sort((a,b) => b[0] - a[0]);
                     arr.forEach(([ts, att]) => {
-                        const c = att.status === "Vào" ? "green" : "red";
-                        tbody.innerHTML += `<tr><td>${att.time}</td><td style="color:${c};font-weight:bold">${att.status}</td></tr>`;
+                        let action = att.status; let cond = "Đúng giờ";
+                        if(att.status.includes('(')) {
+                            let parts = att.status.split('('); action = parts[0].trim(); cond = parts[1].replace(')', '').trim();
+                        }
+                        const color = action === "Vào" ? "green" : "red";
+                        const condColor = (cond === "Đi trễ" || cond === "Về sớm") ? "red" : (cond === "Tăng ca" ? "#e67e22" : "green");
+                        tbody.innerHTML += `<tr><td>${att.time}</td><td style="color:${color};font-weight:bold">${action}</td><td style="color:${condColor};font-weight:bold">${cond}</td></tr>`;
                     });
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="2" class="empty-row">Chưa có lịch sử điểm danh</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="3" class="empty-row">Chưa có lịch sử điểm danh</td></tr>';
                 }
             });
         }
@@ -699,7 +715,6 @@
         };
 
         window.checkChanges = function() {
-            if (currentModalMode === 'view') return; 
             if (currentModalMode === 'add') { document.getElementById('btnSaveInfo').style.display = 'block'; return; }
             const hasChanged = (
                 document.getElementById('editName').value !== originalMemberInfo.name ||
@@ -723,19 +738,22 @@
             document.getElementById('editName').value = originalMemberInfo.name; document.getElementById('editId').value = originalMemberInfo.id;
             document.getElementById('editDob').value = originalMemberInfo.dob; document.getElementById('editEmail').value = originalMemberInfo.email;
             
-            // Gán dữ liệu Ca làm việc
             document.getElementById('editPrimaryShift').value = originalMemberInfo.p_id;
             document.getElementById('editSecondaryShift').value = originalMemberInfo.s_id;
             document.getElementById('secShiftFrom').value = originalMemberInfo.s_from;
             document.getElementById('secShiftTo').value = originalMemberInfo.s_to;
             
+            document.getElementById('shiftPanelWrapper').style.display = 'none';
+            document.getElementById('tempShiftContainer').style.display = 'none';
+            document.getElementById('btnShowTempShift').style.display = 'block';
+
             const isView = (mode === 'view'); const isAdd = (mode === 'add');
             const modalContent = document.getElementById('modalContent');
             const layoutContainer = document.getElementById('modalBodyLayout');
             const historyPanel = document.getElementById('historyPanel');
 
             if (isView) {
-                document.getElementById('modalTitle').innerText = "Chi Tiết (Chỉ Xem)";
+                document.getElementById('modalTitle').innerText = "Hồ Sơ (Trạng Thái)";
                 modalContent.classList.add('modal-fullscreen'); layoutContainer.className = 'split-container';
                 historyPanel.style.display = 'flex'; document.body.classList.add('no-scroll');
             } else {
@@ -746,8 +764,9 @@
 
             document.getElementById('editName').readOnly = isView; document.getElementById('editId').readOnly = isView;
             document.getElementById('editDob').readOnly = isView; document.getElementById('editEmail').readOnly = isView;
-            document.getElementById('editPrimaryShift').disabled = isView; document.getElementById('editSecondaryShift').disabled = isView;
-            document.getElementById('secShiftFrom').readOnly = isView; document.getElementById('secShiftTo').readOnly = isView;
+            // Cho phép đổi ca cả ở chế độ View (Trạng thái thành viên) và Edit
+            document.getElementById('editPrimaryShift').disabled = false; document.getElementById('editSecondaryShift').disabled = false;
+            document.getElementById('secShiftFrom').readOnly = false; document.getElementById('secShiftTo').readOnly = false;
             
             document.getElementById('btnChangeCard').style.display = (isView || isAdd) ? 'none' : 'block';
             document.getElementById('btnCancelChange').style.display = 'none';
@@ -791,7 +810,6 @@
             updates['Members/' + uid + '/dob'] = dobVal; updates['Members/' + uid + '/email'] = emailVal;
             if(currentModalMode === 'add') updates['Members/' + uid + '/lastStatus'] = "Ra"; 
             
-            // Ép sẵn dữ liệu Start/End để ESP32 đánh giá thời gian mà không tốn RAM tính toán
             updates['Members/' + uid + '/p_id'] = pShiftId;
             updates['Members/' + uid + '/p_start'] = shiftsData[pShiftId] ? shiftsData[pShiftId].start : "07:00";
             updates['Members/' + uid + '/p_end'] = shiftsData[pShiftId] ? shiftsData[pShiftId].end : "17:00";
@@ -806,14 +824,48 @@
                 updates['Members/' + uid + '/s_id'] = null; updates['Members/' + uid + '/s_start'] = null; updates['Members/' + uid + '/s_end'] = null; updates['Members/' + uid + '/s_from'] = null; updates['Members/' + uid + '/s_to'] = null;
             }
 
+            const tsStr = new Date().toLocaleString();
+            let shiftChanges = false;
+            let histLog = "";
+            if (pShiftId !== originalMemberInfo.p_id) { shiftChanges = true; histLog += `Đổi ca chính thành ${shiftsData[pShiftId]?shiftsData[pShiftId].name:"HC"}. `; }
+            if (sShiftId !== 'none' && (sShiftId !== originalMemberInfo.s_id || sFrom !== originalMemberInfo.s_from || sTo !== originalMemberInfo.s_to)) {
+                shiftChanges = true; histLog += `Cấp ca phụ ${shiftsData[sShiftId]?shiftsData[sShiftId].name:""} (${sFrom} đến ${sTo}).`;
+            }
+
             update(ref(db), updates).then(() => {
-                alert('Đã lưu!');
+                if (shiftChanges && currentModalMode !== 'add') {
+                    const hRef = ref(db, `Members/${uid}/ShiftHistory/${Date.now()}`);
+                    set(hRef, { time: tsStr, action: histLog });
+                }
+                alert('Đã lưu thông tin và ca làm việc!');
                 if (currentModalMode === 'add') closeModal();
                 else { originalMemberInfo = { name: nameVal, id: idVal, dob: dobVal, email: emailVal, p_id: pShiftId, s_id: sShiftId, s_from: sFrom, s_to: sTo }; window.checkChanges(); }
             });
         };
 
-        // Các hàm xử lý giao diện Ca làm việc
+        window.toggleShiftPanel = function() {
+            const p = document.getElementById('shiftPanelWrapper');
+            p.style.display = p.style.display === 'none' ? 'block' : 'none';
+        };
+        window.showTempShift = function() {
+            document.getElementById('btnShowTempShift').style.display = 'none';
+            document.getElementById('tempShiftContainer').style.display = 'block';
+        };
+        window.confirmTempShift = function() {
+            alert("Ca tạm đã chọn (Nhấn 'Lưu Thông Tin' ở dưới cùng để ghi lên hệ thống)!");
+            window.checkChanges();
+        };
+        window.viewShiftHistory = function() {
+            const uid = document.getElementById('editOldUid').value;
+            get(ref(db, `Members/${uid}/ShiftHistory`)).then(snapshot => {
+                let hist = snapshot.val();
+                if(!hist) { alert("Chưa có lịch sử thay đổi ca."); return; }
+                let msg = "LỊCH SỬ THAY ĐỔI CA:\n\n";
+                Object.values(hist).reverse().forEach(h => { msg += `- ${h.time}\n  ${h.action}\n\n`; });
+                alert(msg);
+            });
+        };
+
         window.saveHC = function() {
             update(ref(db, 'Settings/Shifts/HC'), { name: "Giờ hành chính", start: document.getElementById('hcStart').value, end: document.getElementById('hcEnd').value }).then(() => alert("Đã lưu Giờ Hành Chính!"));
         };
@@ -881,11 +933,16 @@
         window.goToGlobalPage = function(p) { globalPage = p; updateGlobalTable(); };
         function updateGlobalTable() {
             const tbody = document.getElementById('attendanceTable'); tbody.innerHTML = '';
-            if (filteredGlobalAtt.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="empty-row">Không có dữ liệu</td></tr>'; document.getElementById('globalPagination').innerHTML = ''; return; }
+            if (filteredGlobalAtt.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="empty-row">Không có dữ liệu</td></tr>'; document.getElementById('globalPagination').innerHTML = ''; return; }
             const start = (globalPage - 1) * globalRows;
             filteredGlobalAtt.slice(start, start + globalRows).forEach(att => {
-                const color = att.status === "Vào" ? "green" : "red";
-                tbody.innerHTML += `<tr><td>${att.timeString}</td><td>${att.name}</td><td>${att.uid}</td><td style="color:${color}; font-weight:bold;">${att.status}</td></tr>`;
+                let action = att.status; let cond = "Đúng giờ";
+                if(att.status.includes('(')) {
+                    let parts = att.status.split('('); action = parts[0].trim(); cond = parts[1].replace(')', '').trim();
+                }
+                const color = action === "Vào" ? "green" : "red";
+                const condColor = (cond === "Đi trễ" || cond === "Về sớm") ? "red" : (cond === "Tăng ca" ? "#e67e22" : "green");
+                tbody.innerHTML += `<tr><td>${att.timeString}</td><td>${att.name}</td><td>${att.uid}</td><td style="color:${color}; font-weight:bold;">${action}</td><td style="color:${condColor}; font-weight:bold;">${cond}</td></tr>`;
             });
             renderPaginationControls(filteredGlobalAtt.length, globalRows, globalPage, 'globalPagination', 'goToGlobalPage');
         }
@@ -896,11 +953,16 @@
         window.goToPersonalPage = function(p) { personalPage = p; updatePersonalTable(); };
         function updatePersonalTable() {
             const tbody = document.getElementById('personalHistoryTable'); tbody.innerHTML = '';
-            if (filteredPersonalAtt.length === 0) { tbody.innerHTML = '<tr><td colspan="2" class="empty-row">Không có dữ liệu</td></tr>'; document.getElementById('personalPagination').innerHTML = ''; return; }
+            if (filteredPersonalAtt.length === 0) { tbody.innerHTML = '<tr><td colspan="3" class="empty-row">Không có dữ liệu</td></tr>'; document.getElementById('personalPagination').innerHTML = ''; return; }
             const start = (personalPage - 1) * personalRows;
             filteredPersonalAtt.slice(start, start + personalRows).forEach(att => {
-                const color = att.status === "Vào" ? "green" : "red";
-                tbody.innerHTML += `<tr><td>${att.time}</td><td style="color:${color};font-weight:bold">${att.status}</td></tr>`;
+                let action = att.status; let cond = "Đúng giờ";
+                if(att.status.includes('(')) {
+                    let parts = att.status.split('('); action = parts[0].trim(); cond = parts[1].replace(')', '').trim();
+                }
+                const color = action === "Vào" ? "green" : "red";
+                const condColor = (cond === "Đi trễ" || cond === "Về sớm") ? "red" : (cond === "Tăng ca" ? "#e67e22" : "green");
+                tbody.innerHTML += `<tr><td>${att.time}</td><td style="color:${color};font-weight:bold">${action}</td><td style="color:${condColor};font-weight:bold">${cond}</td></tr>`;
             });
             renderPaginationControls(filteredPersonalAtt.length, personalRows, personalPage, 'personalPagination', 'goToPersonalPage');
         }
