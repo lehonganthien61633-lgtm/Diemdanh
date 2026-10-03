@@ -333,21 +333,28 @@
                         <label style="color: #7f8c8d; font-size: 13px;">Mạng hiện tại đang dùng:</label>
                         <input type="text" id="devEditSsid" readonly style="background-color: #eafaf1; color: #27ae60; font-weight: bold; text-align: center; border: 1px dashed #2ecc71;">
                         
-                        <div style="background: white; padding: 15px; border-radius: 6px; border: 1px solid #f5b041; margin-top: 15px;">
-                            <label style="margin-top:0; color:#d35400; font-size: 14px; margin-bottom: 10px; font-weight:bold; display:block;">🌐 Chọn từ Wi-Fi đã lưu:</label>
-                            
-                            <!-- Danh sách Wi-Fi giống ESP32 -->
-                            <div id="savedWifiListUI" class="net-list">
-                                <div style="text-align:center; padding:15px; color:#7f8c8d;">Đang tải...</div>
-                            </div>
-                            
-                            <label style="color:#d35400; font-size: 13px; font-weight:bold; display:block; border-top: 1px dashed #fad7a1; padding-top: 15px;">Hoặc nhập Wi-Fi mới:</label>
-                            <div style="display:flex; flex-direction:column; gap:10px; margin-top: 10px;">
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button type="button" class="btn btn-active" style="flex: 1; margin: 0; background-color: #e67e22;" onclick="toggleNewWifiForm()">🔄 Đổi Wi-Fi Mới</button>
+                            <button type="button" class="btn btn-active" style="flex: 1; margin: 0; background-color: #27ae60;" onclick="toggleSavedWifiList()">📋 Đã Kết Nối</button>
+                        </div>
+
+                        <!-- Form nhập Wi-Fi mới (Mặc định ẩn) -->
+                        <div id="newWifiFormUI" style="display: none; background: white; padding: 15px; border-radius: 6px; border: 1px solid #f5b041; margin-top: 15px;">
+                            <label style="margin-top:0; color:#d35400; font-size: 14px; margin-bottom: 10px; font-weight:bold; display:block;">🌐 Nhập Wi-Fi Mới:</label>
+                            <div style="display:flex; flex-direction:column; gap:10px;">
                                 <input type="text" id="devNewSsid" placeholder="Tên Wi-Fi (SSID)..." style="margin-bottom:0; border: 1px solid #ddd;">
                                 <input type="password" id="devNewPass" placeholder="Mật khẩu..." style="margin-bottom:0; border: 1px solid #ddd;">
                             </div>
                             <button type="button" class="btn" style="width:100%; margin: 15px 0 0 0; background-color: #e67e22;" onclick="connectDeviceWifi()">🚀 Gửi Lệnh Đổi Wi-Fi</button>
-                            <p style="font-size: 12px; color: #7f8c8d; margin-top: 8px; text-align:center;">Thiết bị sẽ tự khởi động lại để kết nối mạng mới.</p>
+                        </div>
+
+                        <!-- Danh sách Wi-Fi đã lưu (Mặc định ẩn) -->
+                        <div id="savedWifiListContainer" style="display: none; background: white; padding: 15px; border-radius: 6px; border: 1px solid #2ecc71; margin-top: 15px;">
+                            <label style="margin-top:0; color:#27ae60; font-size: 14px; margin-bottom: 10px; font-weight:bold; display:block;">📋 Chọn từ Wi-Fi đã kết nối:</label>
+                            <div id="savedWifiListUI" class="net-list" style="margin-bottom: 0;">
+                                <div style="text-align:center; padding:15px; color:#7f8c8d;">Đang tải...</div>
+                            </div>
+                            <p style="font-size: 12px; color: #7f8c8d; margin-top: 8px; text-align:center;">Bấm vào một mạng để tự động gửi lệnh đổi.</p>
                         </div>
                     </div>
 
@@ -558,6 +565,7 @@
             onValue(ref(db, 'SavedWiFi'), (snapshot) => {
                 savedWifiList = snapshot.val() || {};
                 const listUI = document.getElementById('savedWifiListUI');
+                if(!listUI) return;
                 listUI.innerHTML = '';
                 
                 const keys = Object.keys(savedWifiList);
@@ -780,29 +788,53 @@
             document.querySelectorAll('.dev-tab-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById(tabId).classList.add('active'); event.currentTarget.classList.add('active');
         };
+
+        // Bật/tắt Form nhập Wi-Fi mới
+        window.toggleNewWifiForm = function() {
+            const form = document.getElementById('newWifiFormUI');
+            const list = document.getElementById('savedWifiListContainer');
+            if (form.style.display === 'none') { form.style.display = 'block'; list.style.display = 'none'; } 
+            else { form.style.display = 'none'; }
+        };
+
+        // Bật/tắt Danh sách Wi-Fi đã lưu
+        window.toggleSavedWifiList = function() {
+            const form = document.getElementById('newWifiFormUI');
+            const list = document.getElementById('savedWifiListContainer');
+            if (list.style.display === 'none') { list.style.display = 'block'; form.style.display = 'none'; } 
+            else { list.style.display = 'none'; }
+        };
+
         window.toggleModuleFromModal = function(moduleName, isChecked) { set(ref(db, `Devices/${document.getElementById('devOldId').value}/modules/${moduleName}`), isChecked); };
+        
         window.deleteDevice = function(devId) {
             if(confirm(`Bạn có chắc chắn muốn xóa thiết bị ${devId}?\nMạch sẽ bị ngắt kết nối, xóa toàn bộ bộ nhớ và chuyển sang trạng thái nghỉ.`)) {
-                // Gửi lệnh xóa xuống ESP32
                 update(ref(db, `Devices/${devId}/Command`), { action: "delete" })
                 .then(() => {
                     alert("Đã gửi lệnh xóa thiết bị thành công!");
-                    // Xóa hẳn nhánh thiết bị trên Firebase (dự phòng trường hợp mạch đang Offline)
                     setTimeout(() => { remove(ref(db, `Devices/${devId}`)); }, 2000);
                 });
             }
         };
+
         window.openDeviceModal = function(devId) {
             const dev = devicesData[devId]; if(!dev) return;
             document.getElementById('devOldId').value = devId; document.getElementById('devEditId').value = devId;
             document.getElementById('devEditName').value = dev.name || ''; document.getElementById('devEditIp').innerText = dev.ip || 'Chưa rõ';
             document.getElementById('devEditMac').innerText = dev.mac || 'Chưa rõ'; document.getElementById('devEditSsid').value = dev.ssid || 'Mất kết nối';
+            
+            // Ẩn các form mạng khi mới mở
+            document.getElementById('newWifiFormUI').style.display = 'none';
+            document.getElementById('savedWifiListContainer').style.display = 'none';
             document.getElementById('devNewSsid').value = ''; document.getElementById('devNewPass').value = '';
+            
             document.getElementById('modalRfidToggle').checked = dev.modules?.rfid ?? true; document.getElementById('modalLedToggle').checked = dev.modules?.led ?? true;
             switchDevTab('dev-basic'); document.querySelectorAll('.dev-tab-btn')[0].classList.add('active');
             document.getElementById('deviceModal').style.display = 'block';
         };
+
         window.closeDeviceModal = function() { document.getElementById('deviceModal').style.display = 'none'; };
+
         window.saveDeviceConfig = function() {
             const oldId = document.getElementById('devOldId').value;
             const newName = document.getElementById('devEditName').value.trim();
@@ -814,6 +846,8 @@
                 closeDeviceModal(); 
             });
         };
+
+        // Gửi lệnh Wi-Fi thủ công
         window.connectDeviceWifi = function() {
             const devId = document.getElementById('devOldId').value, ssid = document.getElementById('devNewSsid').value.trim(), pass = document.getElementById('devNewPass').value;
             if(ssid === "") return alert("Nhập SSID!");
@@ -822,32 +856,20 @@
                 update(ref(db, `Devices/${devId}/Command`), { action: "connect_wifi", ssid: ssid, pass: pass }).then(() => { alert("Đã gửi lệnh!"); closeDeviceModal(); });
             }
         };
-        // Xử lý khi người dùng bấm vào một mạng trong danh sách
+
+        // Tự động Gửi lệnh Wi-Fi khi bấm vào danh sách
         window.selectSavedWifi = function(ssid) {
-            document.getElementById('devNewSsid').value = ssid;
-            document.getElementById('devNewPass').value = savedWifiList[ssid] || '';
-            document.getElementById('devNewPass').focus();
+            const pass = savedWifiList[ssid] || '';
+            const devId = document.getElementById('devOldId').value;
+            
+            if(confirm(`Yêu cầu mạch tự động đổi sang Wi-Fi: ${ssid}?`)) {
+                update(ref(db, `Devices/${devId}/Command`), { action: "connect_wifi", ssid: ssid, pass: pass })
+                .then(() => {
+                    alert("Đã gửi lệnh đổi mạng! Thiết bị đang khởi động lại để kết nối...");
+                    closeDeviceModal();
+                });
+            }
         };
-        function renderDevices() {
-            const tbody = document.getElementById('devicesTable'); if(!tbody) return; tbody.innerHTML = "";
-            const now = Math.floor(Date.now() / 1000); let stt = 1;
-            if(Object.keys(devicesData).length > 0) {
-                for (const [devId, devInfo] of Object.entries(devicesData)) {
-                    const isOnline = (now - devInfo.lastPing) < 10; 
-                    const statusHtml = isOnline ? `<span style="color:green;font-weight:bold;">🟢 Online</span>` : `<span style="color:red;font-weight:bold;">🔴 Offline</span>`;
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${stt++}</td>
-                            <td><strong style="color: #2c3e50;">${devInfo.name || devId}</strong></td>
-                            <td>${statusHtml}</td>
-                            <td>
-                                <button class="btn btn-active" style="padding: 6px 12px; font-size: 13px;" onclick="openDeviceModal('${devId}')">⚙️ Cấu Hình</button>
-                                <button class="btn btn-delete" style="padding: 6px 12px; font-size: 13px; margin: 0 0 0 5px; display: inline-block;" onclick="deleteDevice('${devId}')">🗑️ Xóa</button>
-                            </td>
-                        </tr>`;
-                }
-            } else { tbody.innerHTML = `<tr><td colspan="4" class="empty-row">Chưa thiết bị nào kết nối</td></tr>`; }
-        }
     </script>
 </body>
 </html>
