@@ -302,6 +302,7 @@
                         <label>Email (Tài khoản Đăng nhập):</label>
                         <input type="email" id="editEmail" placeholder="example@email.com" oninput="checkChanges()">
                         
+                        <!-- QUẢN LÝ CA LÀM VIỆC -->
                         <div style="border-top: 1px dashed #ccc; margin-top: 15px; padding-top: 15px;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <label style="color:#2980b9; cursor:pointer; margin:0;" onclick="toggleShiftPanel()">▼ Phân Ca Làm Việc</label>
@@ -310,18 +311,31 @@
                             
                             <div id="shiftPanelWrapper" style="display:none; margin-top:10px; background:#f9f9f9; padding:10px; border-radius:6px; border:1px solid #eee;">
                                 <label style="font-size: 13px; font-weight:bold;">Ca chính (Mặc định):</label>
-                                <select id="editPrimaryShift" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; margin-bottom:10px;" onchange="checkChanges()"></select>
+                                <select id="editPrimaryShift" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;" onchange="checkChanges()"></select>
                                 
-                                <button type="button" id="btnShowTempShift" class="btn btn-add" style="width:100%; padding:8px; font-size:13px; margin-bottom:10px;" onclick="showTempShift()">➕ Thêm ca tạm</button>
-                                
-                                <div id="tempShiftContainer" style="display:none; border-top:1px dashed #ccc; padding-top:10px;">
-                                    <label style="font-size: 13px; font-weight:bold; color:#d35400;">Ca phụ (Tạm thời):</label>
-                                    <select id="editSecondaryShift" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; margin-bottom:5px;" onchange="checkChanges()"></select>
-                                    <div style="display:flex; gap:10px;">
-                                        <div style="flex:1;"><span style="font-size:12px; color:#7f8c8d;">Từ ngày:</span><input type="date" id="secShiftFrom" oninput="checkChanges()"></div>
-                                        <div style="flex:1;"><span style="font-size:12px; color:#7f8c8d;">Đến ngày:</span><input type="date" id="secShiftTo" oninput="checkChanges()"></div>
+                                <div style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;">
+                                    <!-- Ca phụ đang hoạt động -->
+                                    <div id="activeTempShiftInfo" style="display:none; background:#eafaf1; padding:10px; border-radius:6px; border:1px solid #2ecc71; margin-bottom:10px;">
+                                        <div style="font-size:13px; color:#27ae60; font-weight:bold; margin-bottom:5px;">✅ Đang có ca tạm: <span id="lblTempShiftName"></span></div>
+                                        <div style="font-size:12px; color:#2c3e50; margin-bottom:10px;">⏰ Từ <b id="lblTempFrom"></b> đến <b id="lblTempTo"></b></div>
+                                        <button type="button" id="btnCancelTempShift" class="btn btn-cancel" style="width:100%; margin:0; padding:6px; font-size:12px; background:#e74c3c; color:white;" onclick="removeTempShiftDirectly()">Hủy ca tạm</button>
                                     </div>
-                                    <button type="button" class="btn btn-active" style="width:100%; padding:8px; margin-top:10px; font-size:13px;" onclick="confirmTempShift()">Xác nhận ca tạm</button>
+
+                                    <!-- Thêm ca tạm mới -->
+                                    <button type="button" id="btnShowTempShift" class="btn btn-add" style="width:100%; padding:8px; font-size:13px; margin:0;" onclick="showTempShiftForm()">➕ Thêm ca phụ (tạm thời)</button>
+                                    
+                                    <div id="tempShiftFormContainer" style="display:none; background:#fff; padding:10px; border:1px solid #f39c12; border-radius:6px;">
+                                        <label style="font-size: 13px; font-weight:bold; color:#d35400;">Chọn ca phụ (Phải khác ca chính):</label>
+                                        <select id="editSecondaryShift" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; margin-bottom:10px;" onchange="validateTempShift()"></select>
+                                        <div style="display:flex; gap:10px;">
+                                            <div style="flex:1;"><span style="font-size:12px; color:#7f8c8d;">Từ ngày:</span><input type="date" id="secShiftFrom" onchange="validateTempShift()"></div>
+                                            <div style="flex:1;"><span style="font-size:12px; color:#7f8c8d;">Đến ngày:</span><input type="date" id="secShiftTo" onchange="validateTempShift()"></div>
+                                        </div>
+                                        <div style="display:flex; gap:10px; margin-top:10px;">
+                                            <button type="button" class="btn btn-active" style="flex:1; padding:8px; font-size:13px; margin:0;" onclick="confirmTempShiftDirectly()">Xác nhận</button>
+                                            <button type="button" class="btn btn-cancel" style="flex:1; padding:8px; font-size:13px; margin:0; display:block;" onclick="hideTempShiftForm()">Hủy</button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -431,7 +445,23 @@
         </div>
     </div>
 
-    <!-- Tải Firebase SDK -->
+    <!-- Modal Lịch Sử Thay Đổi Ca -->
+        <div id="shiftHistoryModal" class="modal">
+            <div class="modal-content" style="max-width: 600px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
+                    <h2 style="margin: 0; color: #2c3e50;">Lịch Sử Phân Ca</h2>
+                    <span class="close" onclick="closeShiftHistoryModal()" title="Đóng bảng">&times;</span>
+                </div>
+                <div style="max-height: 400px; overflow-y: auto;">
+                    <table style="margin-top:0;">
+                        <thead style="position:sticky; top:0; z-index:1; background-color: #3498db;">
+                            <tr><th style="color:white;">Thời Gian</th><th style="color:white;">Nội Dung Thay Đổi</th></tr>
+                        </thead>
+                        <tbody id="shiftHistoryTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     <!-- Tải Firebase SDK (Modular v9+) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
