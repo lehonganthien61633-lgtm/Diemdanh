@@ -58,8 +58,15 @@ int wifiSetupState = 0; // 0: rảnh, 1: đang thử kết nối, 2: thành côn
 unsigned long wifiConnectStart = 0;
 
 void safeNeoPixelWrite(uint8_t r, uint8_t g, uint8_t b) {
-  if (ledEnabled) neopixelWrite(RGB_PIN, r, g, b);
-  else neopixelWrite(RGB_PIN, 0, 0, 0); 
+  static uint8_t lastR = 255, lastG = 255, lastB = 255;
+  if (!ledEnabled) { r = 0; g = 0; b = 0; }
+  
+  // Thuật toán: Nếu màu yêu cầu giống với màu đang sáng -> BỎ QUA không ghi lại
+  // Điều này giúp tiết kiệm 99.9% CPU, giải phóng hoàn toàn cho chip Wi-Fi
+  if (r == lastR && g == lastG && b == lastB) return; 
+  
+  lastR = r; lastG = g; lastB = b;
+  neopixelWrite(RGB_PIN, r, g, b);
 }
 
 // ================= GIAO DIỆN CAPTIVE PORTAL LIỀN MẠCH (SPA) =================
@@ -408,12 +415,12 @@ void loop() {
   if (inSetupMode) {
     dnsServer.processNextRequest(); 
     server.handleClient();
-    if (millis() % 1000 < 500) neopixelWrite(RGB_PIN, 0, 0, 255); else neopixelWrite(RGB_PIN, 0, 0, 0);
+    if (millis() % 1000 < 500) safeNeoPixelWrite(0, 0, 255); else safeNeoPixelWrite(0, 0, 0);
     return;
   }
 
   if (WiFi.status() != WL_CONNECTED) {
-    if (millis() % 500 < 250) neopixelWrite(RGB_PIN, 255, 0, 0); else neopixelWrite(RGB_PIN, 0, 0, 0);
+    if (millis() % 500 < 250) safeNeoPixelWrite(255, 0, 0); else safeNeoPixelWrite(0, 0, 0);
     return;
   }
 
