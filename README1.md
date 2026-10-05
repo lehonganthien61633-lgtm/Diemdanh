@@ -18,6 +18,7 @@ DNSServer dnsServer;
 #define SS_PIN 10
 #define RGB_PIN 48   
 #define BOOT_PIN 0 
+#define AUDIO_PIN 4     // Chân cho Còi chip (Buzzer)
 
 FirebaseData fbdo;
 FirebaseAuth auth;
@@ -62,15 +63,13 @@ void safeNeoPixelWrite(uint8_t r, uint8_t g, uint8_t b) {
   if (!ledEnabled) { r = 0; g = 0; b = 0; }
   
   // Thuật toán: Nếu màu yêu cầu giống với màu đang sáng -> BỎ QUA không ghi lại
-  // Điều này giúp tiết kiệm 99.9% CPU, giải phóng hoàn toàn cho chip Wi-Fi
   if (r == lastR && g == lastG && b == lastB) return; 
   
   lastR = r; lastG = g; lastB = b;
   neopixelWrite(RGB_PIN, r, g, b);
 }
 
-// ================= GIAO DIỆN CAPTIVE PORTAL LIỀN MẠCH (SPA) =================
-// Lưu trên PROGMEM để load siêu nhanh và tiết kiệm RAM
+// ================= GIAO DIỆN CAPTIVE PORTAL LIỀN MẠCH =================
 const char CAPTIVE_PORTAL_HTML[] PROGMEM = R"=====(
 <!DOCTYPE html>
 <html lang="vi">
@@ -305,7 +304,50 @@ void startSetupMode() {
   Serial.println("\n[!] DANG MO CHE DO CAI DAT: ESP32-S3 Setup (Khong mat khau)");
 }
 
-// ================= SETUP CHÍNH =================
+// ================= HỆ THỐNG ÂM THANH (BUZZER) =================
+#define NOTE_G5  784
+#define NOTE_A5  880
+#define NOTE_C6  1047
+#define NOTE_D6  1175
+#define NOTE_E6  1319
+#define NOTE_G6  1568
+#define NOTE_A6  1760
+
+void playStartupMelody() {
+  // Nhạc "Super Mario Bros" (Đoạn Intro kinh điển)
+  int notes[] = {NOTE_E6, NOTE_E6, NOTE_E6, NOTE_C6, NOTE_E6, NOTE_G6, NOTE_G5};
+  
+  // Thời gian giữ nốt nhạc (độ ngân)
+  int durations[] = {120, 120, 120, 120, 120, 150, 150};
+  
+  // Thời gian nghỉ SAU mỗi nốt (Tạo ra nhịp điệu Tưng - Tưng - Tưng đặc trưng của Mario)
+  int pauses[] = {150, 300, 300, 120, 300, 600, 600};
+  
+  for (int i = 0; i < 7; i++) {
+    tone(AUDIO_PIN, notes[i]);
+    delay(durations[i]);
+    noTone(AUDIO_PIN);
+    delay(pauses[i]); 
+  }
+}
+
+void playSuccessMelody() {
+  // Nhạc vui tươi (Ting - ting - tiiing)
+  int notes[] = {NOTE_C6, NOTE_E6, NOTE_G6, NOTE_C6 * 2};
+  for(int i = 0; i < 4; i++) {
+    tone(AUDIO_PIN, notes[i]);
+    delay(100);
+    noTone(AUDIO_PIN);
+    delay(50);
+  }
+}
+
+void playWrongMelody() {
+  // Âm thanh Wrong (Tèeee - Tòooo)
+  tone(AUDIO_PIN, 300); delay(300); noTone(AUDIO_PIN); delay(50);
+  tone(AUDIO_PIN, 150); delay(500); noTone(AUDIO_PIN);
+}
+// ===============================================================
 
 void setup() {
   Serial.begin(115200);
@@ -314,6 +356,13 @@ void setup() {
   mfrc522.PCD_Init();
   mfrc522.PCD_SetAntennaGain(mfrc522.RxGain_max);
   
+  // Khởi tạo Còi chip
+  pinMode(AUDIO_PIN, OUTPUT);
+  digitalWrite(AUDIO_PIN, LOW);
+  
+  // Phát nhạc khởi động
+  playStartupMelody();
+
   prefs.begin("config", false);
 
   // TẠO MÃ ĐỊNH DANH NGẪU NHIÊN 10 KÝ TỰ VĨNH VIỄN
@@ -530,93 +579,66 @@ void loop() {
 
     if (Firebase.ready() && signupOK) {
       if (currentMode == 1) {
-        Firebase.RTDB.setString(&fbdo, "/Command/new_uid", uid); Firebase.RTDB.setInt(&fbdo, "/Command/mode", 0); currentMode = 0;
+        Firebase.RTDB.setString(&fbdo, "/Command/new_uid", uid);
+        Firebase.RTDB.setInt(&fbdo, "/Command/mode", 0); currentMode = 0;
+        playSuccessMelody(); // Phát nhạc Vui tươi
+        
         for(int i = 0; i < 3; i++) { safeNeoPixelWrite(0,0,0); delay(200); safeNeoPixelWrite(0,255,0); delay(200); }
       } else {
         if (Firebase.RTDB.getJSON(&fbdo, "/Members/" + uid)) {
-        FirebaseJson &jsonNode = fbdo.jsonObject();
-        FirebaseJsonData result;
-        
-        // Kiểm tra xem thẻ có trong danh sách không
-        jsonNode.get(result, "name");
-        if (!result.success) {
-            for(int i = 0; i < 4; i++) { safeNeoPixelWrite(0,0,255); delay(150); safeNeoPixelWrite(0,0,0); delay(150); }
-            return;
-        }
-        
-        String currentStatus = "Vào";
-        jsonNode.get(result, "lastStatus");
-        if (result.success) {
-            String ls = result.stringValue;
-            if (ls == "Vào") currentStatus = "Ra";
-        }
-        
-        // Lấy dữ liệu Ca làm việc từ JSON Firebase
-        String activeStart = "07:00";
-        String activeEnd = "17:00";
-        String p_start = "", p_end = "";
-        
-        jsonNode.get(result, "p_start"); if (result.success) p_start = result.stringValue;
-        jsonNode.get(result, "p_end"); if (result.success) p_end = result.stringValue;
-        
-        if (p_start != "") { activeStart = p_start; activeEnd = p_end; }
-        
-        // Quét danh sách Ca phụ (tempShifts) xem có ca nào đang hoạt động hôm nay không
-        String today = timestamp.substring(0, 10);
-        jsonNode.get(result, "tempShifts");
-        if (result.success) {
-            FirebaseJson tsJson;
-            tsJson.setJsonData(result.stringValue);
-            size_t len = tsJson.iteratorBegin();
-            for (size_t i = 0; i < len; i++) {
-                int type; String key, val;
-                tsJson.iteratorGet(i, type, key, val);
-                
-                FirebaseJson item; item.setJsonData(val);
-                FirebaseJsonData itemData;
-                item.get(itemData, "s_from"); String s_from = itemData.stringValue;
-                item.get(itemData, "s_to"); String s_to = itemData.stringValue;
-                
-                if (today >= s_from && today <= s_to) {
-                    item.get(itemData, "s_start"); activeStart = itemData.stringValue;
-                    item.get(itemData, "s_end"); activeEnd = itemData.stringValue;
-                    break; // Ưu tiên ca phụ tìm thấy đầu tiên hợp lệ
+            FirebaseJson &jsonNode = fbdo.jsonObject(); FirebaseJsonData result;
+            jsonNode.get(result, "name");
+            if (!result.success) { // Thẻ rác
+                playWrongMelody(); // Phát nhạc Wrong
+                for(int i = 0; i < 4; i++) { safeNeoPixelWrite(0,0,255); delay(150); safeNeoPixelWrite(0,0,0); delay(150); }
+                return;
+            }
+            
+            String currentStatus = "Vào";
+            jsonNode.get(result, "lastStatus"); if (result.success && result.stringValue == "Vào") currentStatus = "Ra";
+            
+            String activeStart = "07:00", activeEnd = "17:00", p_start = "", p_end = "";
+            jsonNode.get(result, "p_start"); if (result.success) p_start = result.stringValue;
+            jsonNode.get(result, "p_end"); if (result.success) p_end = result.stringValue;
+            if (p_start != "") { activeStart = p_start; activeEnd = p_end; }
+            
+            String today = timestamp.substring(0, 10);
+            jsonNode.get(result, "tempShifts");
+            if (result.success) {
+                FirebaseJson tsJson; tsJson.setJsonData(result.stringValue);
+                size_t len = tsJson.iteratorBegin();
+                for (size_t i = 0; i < len; i++) {
+                    int type; String key, val; tsJson.iteratorGet(i, type, key, val);
+                    FirebaseJson item; item.setJsonData(val); FirebaseJsonData itemData;
+                    item.get(itemData, "s_from"); String s_from = itemData.stringValue;
+                    item.get(itemData, "s_to"); String s_to = itemData.stringValue;
+                    if (today >= s_from && today <= s_to) {
+                        item.get(itemData, "s_start"); activeStart = itemData.stringValue;
+                        item.get(itemData, "s_end"); activeEnd = itemData.stringValue;
+                        break;
+                    }
                 }
             }
-            tsJson.iteratorEnd();
+            
+            String currentTime = timestamp.substring(11, 16); String eval = "Đúng giờ";
+            if (currentStatus == "Vào" && currentTime > activeStart) eval = "Đi trễ";
+            else if (currentStatus == "Ra") {
+                if (currentTime < activeEnd) eval = "Về sớm"; else if (currentTime > activeEnd) eval = "Tăng ca";
+            }
+            
+            Firebase.RTDB.setString(&fbdo, "/Members/" + uid + "/lastStatus", currentStatus);
+            String saveStatus = currentStatus + " (" + eval + ")";
+            FirebaseJson jsonLog; jsonLog.set("time", timestamp); jsonLog.set("status", saveStatus); 
+            Firebase.RTDB.setJSON(&fbdo, "/Members/" + uid + "/Attendance/" + String(now), &jsonLog);
+            
+            playSuccessMelody(); // Phát nhạc Vui tươi
+            safeNeoPixelWrite(0, 255, 0); delay(500);
+        } else {
+            playWrongMelody(); // Phát nhạc Wrong
+            for(int i = 0; i < 4; i++) { safeNeoPixelWrite(0,0,255); delay(150); safeNeoPixelWrite(0,0,0); delay(150); }
         }
-        
-        // Đánh giá chuyên sâu: Đi trễ hay Tăng ca
-        String currentTime = timestamp.substring(11, 16);
-        String eval = "Đúng giờ";
-        
-        if (currentStatus == "Vào") {
-            if (currentTime > activeStart) eval = "Đi trễ";
-        } else { // "Ra"
-            if (currentTime < activeEnd) eval = "Về sớm";
-            else if (currentTime > activeEnd) eval = "Tăng ca";
-        }
-        
-        // Nạp cờ Trạng Thái Gốc
-        Firebase.RTDB.setString(&fbdo, "/Members/" + uid + "/lastStatus", currentStatus);
-        
-        // Nạp Lịch Sử có đính kèm Đánh Giá
-        String saveStatus = currentStatus + " (" + eval + ")";
-        FirebaseJson jsonLog; 
-        jsonLog.set("time", timestamp); 
-        jsonLog.set("status", saveStatus); 
-        Firebase.RTDB.setJSON(&fbdo, "/Members/" + uid + "/Attendance/" + String(now), &jsonLog);
-        
-        safeNeoPixelWrite(0, 255, 0); delay(500);
-      } else {
-        // Thẻ lạ
-        for(int i = 0; i < 4; i++) { safeNeoPixelWrite(0,0,255); delay(150); safeNeoPixelWrite(0,0,0); delay(150); }
-      }
       }
     }
-    
-    if (currentMode == 1) safeNeoPixelWrite(0, 255, 0); else safeNeoPixelWrite(255, 0, 0);
     mfrc522.PICC_HaltA(); 
   }
 }
-
