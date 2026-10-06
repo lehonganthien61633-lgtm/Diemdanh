@@ -121,7 +121,10 @@ const char CAPTIVE_PORTAL_HTML[] PROGMEM = R"=====(
   <div id="screen-pass" class="screen">
     <h2 id="selected-ssid" style="margin-top:0; color:#007c8a; word-break:break-all;">SSID</h2>
     <p style="color:#606770; margin-bottom: 5px;">Nhập mật khẩu mạng</p>
-    <input type="password" id="wifi-pass" placeholder="Mật khẩu...">
+    <div style="position: relative;">
+      <input type="password" id="wifi-pass" placeholder="Mật khẩu..." style="padding-right: 40px;">
+      <span id="eye-wifi" style="position: absolute; right: 15px; top: 22px; cursor: pointer; font-size: 20px;" onclick="toggleVisibility('wifi-pass', 'eye-wifi')">👁️</span>
+    </div>
     <div id="wifi-noti" style="color:#e74c3c; font-size:14px; margin-top:10px; display:none;"></div>
     <button class="btn-primary" onclick="connectWifi()">Kết Nối</button>
     <button class="btn-cancel" onclick="showScreen('screen-wifi')">Hủy</button>
@@ -142,7 +145,10 @@ const char CAPTIVE_PORTAL_HTML[] PROGMEM = R"=====(
       <p style="color:#606770; font-size:14px;">Bảo mật thiết bị với cơ sở dữ liệu</p>
     </div>
     <input type="email" id="admin-email" placeholder="Email (admin@test.com)" value="admin@test.com">
-    <input type="password" id="admin-pass" placeholder="Mật khẩu (12345678)">
+    <div style="position: relative;">
+      <input type="password" id="admin-pass" placeholder="Mật khẩu (12345678)" style="padding-right: 40px;">
+      <span id="eye-admin" style="position: absolute; right: 15px; top: 22px; cursor: pointer; font-size: 20px;" onclick="toggleVisibility('admin-pass', 'eye-admin')">👁️</span>
+    </div>
     <div id="admin-noti" style="color:#e74c3c; font-size:14px; margin-top:10px; display:none;"></div>
     <button class="btn-primary" onclick="verifyAdmin()">Lưu & Hoàn Tất</button>
   </div>
@@ -155,6 +161,17 @@ const char CAPTIVE_PORTAL_HTML[] PROGMEM = R"=====(
   </div>
 
   <script>
+    function toggleVisibility(inputId, iconId) {
+      let input = document.getElementById(inputId);
+      let icon = document.getElementById(iconId);
+      if (input.type === "password") {
+        input.type = "text";
+        icon.innerText = "🙈"; // Đổi icon khi hiện mật khẩu
+      } else {
+        input.type = "password";
+        icon.innerText = "👁️";
+      }
+    }
     let currentSsid = "";
     
     function showScreen(id) {
@@ -250,6 +267,10 @@ void handleConnect() {
   targetSSID = server.arg("ssid");
   targetPASS = server.arg("pass");
   
+  // Dọn dẹp kết nối cũ kẹt trong bộ nhớ trước khi thử cái mới
+  WiFi.disconnect(); 
+  delay(100);
+  
   wifiSetupState = 1; 
   wifiConnectStart = millis();
   WiFi.begin(targetSSID.c_str(), targetPASS.c_str());
@@ -261,8 +282,8 @@ void handleStatus() {
   if (wifiSetupState == 1) {
     if (WiFi.status() == WL_CONNECTED) {
       wifiSetupState = 2; // Thành công
-    } else if (millis() - wifiConnectStart > 10000) { 
-      // Timeout sau 10 giây nếu sai mật khẩu
+    } else if (millis() - wifiConnectStart > 20000) { 
+      // TĂNG LÊN 20 GIÂY: Chờ mạch xin IP từ Router
       wifiSetupState = 3; // Thất bại
       WiFi.disconnect();
     }
@@ -305,29 +326,38 @@ void startSetupMode() {
 }
 
 // ================= HỆ THỐNG ÂM THANH (BUZZER) =================
+#define NOTE_E5  659
 #define NOTE_G5  784
 #define NOTE_A5  880
+#define NOTE_AS5 932
+#define NOTE_B5  988
 #define NOTE_C6  1047
 #define NOTE_D6  1175
 #define NOTE_E6  1319
+#define NOTE_F6  1397
 #define NOTE_G6  1568
 #define NOTE_A6  1760
 
 void playStartupMelody() {
-  // Nhạc "Super Mario Bros" (Đoạn Intro kinh điển)
-  int notes[] = {NOTE_E6, NOTE_E6, NOTE_E6, NOTE_C6, NOTE_E6, NOTE_G6, NOTE_G5};
+  // Nhạc "Super Mario Bros" (Đoạn Intro + Điệp khúc chính)
+  int notes[] = {
+    NOTE_E6, NOTE_E6, NOTE_E6, NOTE_C6, NOTE_E6, NOTE_G6, NOTE_G5,
+    NOTE_C6, NOTE_G5, NOTE_E5, NOTE_A5, NOTE_B5, NOTE_AS5, NOTE_A5,
+    NOTE_G5, NOTE_E6, NOTE_G6, NOTE_A6, NOTE_F6, NOTE_G6, NOTE_E6, NOTE_C6, NOTE_D6, NOTE_B5
+  };
   
-  // Thời gian giữ nốt nhạc (độ ngân)
-  int durations[] = {120, 120, 120, 120, 120, 150, 150};
+  // Ma trận nhịp điệu (Tempo) đặc trưng của Mario
+  int tempo[] = {
+    150, 300, 150, 150, 300, 600, 600,
+    450, 150, 450, 300, 300, 150, 300,
+    200, 200, 200, 300, 150, 300, 300, 150, 150, 450
+  };
   
-  // Thời gian nghỉ SAU mỗi nốt (Tạo ra nhịp điệu Tưng - Tưng - Tưng đặc trưng của Mario)
-  int pauses[] = {150, 300, 300, 120, 300, 600, 600};
-  
-  for (int i = 0; i < 7; i++) {
+  for (int i = 0; i < 24; i++) {
     tone(AUDIO_PIN, notes[i]);
-    delay(durations[i]);
+    delay(tempo[i] * 0.8);      // Giữ nốt 80% nhịp
     noTone(AUDIO_PIN);
-    delay(pauses[i]); 
+    delay(tempo[i] * 0.2);      // Nghỉ 20% nhịp để âm thanh nảy (staccato)
   }
 }
 
