@@ -275,7 +275,7 @@
                     
                     <label style="font-weight: bold; margin-top: 10px; display: block; font-size: 14px; color: #34495e;">Email:</label>
                     <input type="email" id="uViewEmail" readonly style="width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; background-color: #f9f9f9;">
-                    
+                    <button type="button" id="btnGenerateQR" class="btn btn-add" style="width: 100%; margin-top: 15px;" onclick="openQRModal()">📷 Tạo Mã QR Ra Ngoài Sớm (Kèm lý do)</button>
                     <div style="border-top: 1px dashed #ccc; margin-top: 15px; padding-top: 15px;">
                         <label style="color:#2980b9; font-weight: bold; font-size: 14px;">▼ Phân Ca Làm Việc</label>
                         <div style="margin-top:10px; background:#f9f9f9; padding:10px; border-radius:6px; border:1px solid #eee;">
@@ -498,7 +498,33 @@
             </div>
         </div>
     </div>
+<!-- BẮT ĐẦU THÊM MỚI (Modal QR và Modal Lý do) -->
+<div id="qrModal" class="modal">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
+            <h2 style="margin: 0; color: #2c3e50;">Khai Báo Về Sớm</h2>
+            <span class="close" onclick="closeQRModal()" title="Đóng bảng">&times;</span>
+        </div>
+        <label style="text-align: left; font-weight: bold; color: #34495e; display: block;">Lý do về sớm:</label>
+        <input type="text" id="qrReason" placeholder="Nhập lý do chính đáng..." style="width: 100%; padding: 10px; margin: 10px 0 20px 0; border: 1px solid #ccc; border-radius: 4px; font-size: 15px;">
+        <button type="button" class="btn btn-active" style="width: 100%; font-size: 16px; padding: 12px;" onclick="generateQRCode()">Xác nhận & Tạo Mã</button>
+        
+        <div id="qrResult" style="margin-top: 20px; display: none;">
+            <p style="font-weight: bold; color: #e74c3c;">Đưa mã này vào Camera OV3660 để quét xuất bến</p>
+            <img id="qrImage" src="" alt="QR Code" style="max-width: 250px; border: 1px solid #ccc; padding: 10px; border-radius: 8px;">
+        </div>
+    </div>
+</div>
 
+<div id="reasonModal" class="modal">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
+            <h2 style="margin: 0; color: #e74c3c;">Lý Do Về Sớm</h2>
+            <span class="close" onclick="closeReasonModal()" title="Đóng bảng">&times;</span>
+        </div>
+        <p id="reasonText" style="font-size: 16px; color: #2c3e50; font-weight: bold; padding: 20px; background: #f9f9f9; border-radius: 8px; border: 1px dashed #ccc;"></p>
+    </div>
+</div>
     <!-- Modal Lịch Sử Thay Đổi Ca -->
         <div id="shiftHistoryModal" class="modal">
             <div class="modal-content" style="max-width: 600px;">
@@ -646,7 +672,7 @@
                     userAttData = [];
                     if(info.Attendance) {
                         const arr = Object.entries(info.Attendance).sort((a,b) => b[0] - a[0]);
-                        arr.forEach(([ts, att]) => { userAttData.push({ time: att.time, status: att.status || 'Vào' }); });
+                        arr.forEach(([ts, att]) => { userAttData.push({ time: att.time, status: att.status || 'Vào', reason: att.reason || '' }); });
                     }
                     applyUViewFilter();
                 });
@@ -710,7 +736,7 @@
 
                         if(info.Attendance) {
                             for (const [timestamp, att] of Object.entries(info.Attendance)) {
-                                globalAttData.push({ timeKey: parseInt(timestamp), timeString: att.time, name: info.name, uid: uid, status: att.status || 'Vào' });
+                                globalAttData.push({ timeKey: parseInt(timestamp), timeString: att.time, name: info.name, uid: uid, status: att.status || 'Vào', reason: att.reason || '' });
                             }
                         }
                     }
@@ -911,7 +937,7 @@
                 personalAttData = [];
                 if(info.Attendance) {
                     const arr = Object.entries(info.Attendance).sort((a,b) => b[0] - a[0]);
-                    arr.forEach(([ts, att]) => { personalAttData.push({ time: att.time, status: att.status || 'Vào' }); });
+                    arr.forEach(([ts, att]) => { personalAttData.push({ time: att.time, status: att.status || 'Vào', reason: att.reason || '' }); });
                 }
                 applyPersonalFilter(); 
             }
@@ -1150,8 +1176,18 @@
                     let parts = att.status.split('('); action = parts[0].trim(); cond = parts[1].replace(')', '').trim();
                 }
                 const color = action === "Vào" ? "green" : "red";
-                const condColor = (cond === "Đi trễ" || cond === "Về sớm") ? "red" : (cond === "Tăng ca" ? "#e67e22" : "green");
-                tbody.innerHTML += `<tr><td>${att.time}</td><td style="color:${color};font-weight:bold">${action}</td><td style="color:${condColor};font-weight:bold">${cond}</td></tr>`;
+const condColor = (cond === "Đi trễ" || cond === "Về sớm") ? "red" : (cond === "Tăng ca" ? "#e67e22" : "green");
+
+let condHtml = cond;
+if (cond === "Về sớm") {
+    const safeReason = (att.reason || "Không có lý do").replace(/'/g, "\\'");
+    condHtml = `<span style="color:${condColor};font-weight:bold; cursor:pointer; text-decoration:underline;" onclick="showReason('${safeReason}')">Về sớm ℹ️</span>`;
+} else {
+    condHtml = `<span style="color:${condColor};font-weight:bold;">${cond}</span>`;
+}
+
+// Lưu ý với hàm updateGlobalTable() chuỗi này sẽ dài hơn vì có thêm name và uid:
+tbody.innerHTML += `<tr><td>${att.time || att.timeString}</td><td style="color:${color};font-weight:bold">${action}</td><td>${condHtml}</td></tr>`;
             });
             renderPaginationControls(filteredPersonalAtt.length, personalRows, personalPage, 'personalPagination', 'goToPersonalPage');
         }
@@ -1300,7 +1336,32 @@
                 tbody.innerHTML = `<tr><td colspan="4" class="empty-row">Chưa có thiết bị nào kết nối</td></tr>`; 
             }
         };
+window.openQRModal = function() {
+    document.getElementById('qrReason').value = '';
+    document.getElementById('qrResult').style.display = 'none';
+    document.getElementById('qrModal').style.display = 'block';
+};
 
+window.closeQRModal = function() { document.getElementById('qrModal').style.display = 'none'; };
+
+window.generateQRCode = function() {
+    const reason = document.getElementById('qrReason').value.trim();
+    if (!reason) { alert("Vui lòng nhập lý do!"); return; }
+    
+    // Gộp mã định dạng QR_EXIT|UID|Lý do
+    const payload = `QR_EXIT|${currentUser.uid}|${reason}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(payload)}`;
+    
+    document.getElementById('qrImage').src = qrUrl;
+    document.getElementById('qrResult').style.display = 'block';
+};
+
+window.showReason = function(reason) {
+    document.getElementById('reasonText').innerText = reason;
+    document.getElementById('reasonModal').style.display = 'block';
+};
+
+window.closeReasonModal = function() { document.getElementById('reasonModal').style.display = 'none'; };
         // Chạy vòng lặp tự động cập nhật trạng thái Online/Offline mỗi 3 giây
         setInterval(() => {
             if (currentUser && currentUser.role === 'admin') {
