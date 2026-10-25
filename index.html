@@ -542,6 +542,21 @@
                 </div>
             </div>
         </div>
+    <div id="adminCameraModal" class="modal">
+    <div class="modal-content" style="max-width: 600px; text-align: center; background: #2c3e50; border:none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #34495e; padding-bottom: 10px; margin-bottom: 15px;">
+            <h2 style="margin: 0; color: #ecf0f1; font-size: 18px;">🔴 Trực Tiếp Camera (Màn Hình Quét QR)</h2>
+            <span class="close" onclick="closeAdminCamera()" style="color: #ecf0f1;">&times;</span>
+        </div>
+        <div style="background: #000; border-radius: 8px; overflow: hidden; min-height: 240px; display: flex; align-items: center; justify-content: center;">
+            <img id="adminCameraStream" src="" alt="Đang kết nối đến Camera..." style="width: 100%; max-width: 640px; display: block;">
+        </div>
+        <p style="color: #95a5a6; font-size: 12px; margin-top: 15px; text-align: left;">
+            * Yêu cầu thiết bị truy cập phải dùng chung mạng Wi-Fi với ESP32.<br>
+            * Hình ảnh hiển thị dạng Grayscale (Trắng/Đen) để tối ưu cho việc nhận diện mã QR ngầm.
+        </p>
+    </div>
+</div>
     <!-- Tải Firebase SDK (Modular v9+) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -1324,9 +1339,10 @@ tbody.innerHTML += `<tr><td>${att.time || att.timeString}</td><td style="color:$
                     tbody.innerHTML += `
                         <tr>
                             <td>${stt++}</td>
-                            <td><strong style="color: #2c3e50;">${devInfo.name || devId}</strong></td>
+                            <td><strong style="color: #2c3e50;">${devInfo.name || devId}</strong><div style="font-size:11px; color:#7f8c8d;">IP: ${devInfo.ip || 'Trống'}</div></td>
                             <td>${statusHtml}</td>
                             <td>
+                                <button class="btn btn-active" style="padding: 6px 12px; font-size: 13px; background-color:#8e44ad; margin-bottom: 5px;" onclick="viewCamera('${devInfo.ip}')">📹 Xem Cam</button><br>
                                 <button class="btn btn-active" style="padding: 6px 12px; font-size: 13px;" onclick="openDeviceModal('${devId}')">⚙️ Cấu Hình</button>
                                 <button class="btn btn-delete" style="padding: 6px 12px; font-size: 13px; margin: 0 0 0 5px; display: inline-block;" onclick="deleteDevice('${devId}')">🗑️ Xóa</button>
                             </td>
@@ -1362,6 +1378,21 @@ window.showReason = function(reason) {
 };
 
 window.closeReasonModal = function() { document.getElementById('reasonModal').style.display = 'none'; };
+        window.viewCamera = function(ip) {
+    if (!ip || ip === "Chưa rõ") {
+        alert("Thiết bị chưa có IP khả dụng trên mạng!");
+        return;
+    }
+    // Mở luồng video stream trên Port 81
+    document.getElementById('adminCameraStream').src = `http://${ip}:81/stream`;
+    document.getElementById('adminCameraModal').style.display = 'block';
+};
+
+window.closeAdminCamera = function() {
+    // Cắt luồng Video để giải phóng CPU cho ESP32
+    document.getElementById('adminCameraStream').src = ""; 
+    document.getElementById('adminCameraModal').style.display = 'none';
+};
         // Chạy vòng lặp tự động cập nhật trạng thái Online/Offline mỗi 3 giây
         setInterval(() => {
             if (currentUser && currentUser.role === 'admin') {
