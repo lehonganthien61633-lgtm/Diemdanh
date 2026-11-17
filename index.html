@@ -1042,6 +1042,11 @@
             const sSel = document.getElementById('editSecondaryShift');
             sSel.innerHTML = '<option value="none">-- Chọn Ca --</option>' + optionsHtml;
             sSel.value = 'none';
+
+            // Không cho phép chọn ngày bắt đầu từ quá khứ
+            const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+            document.getElementById('secShiftFrom').min = todayStr;
+            document.getElementById('secShiftTo').min = todayStr;
         };
 
         window.hideTempShiftForm = function() { document.getElementById('btnShowTempShift').style.display = 'block'; document.getElementById('tempShiftFormContainer').style.display = 'none'; };
@@ -1081,8 +1086,9 @@
                     openMemberModal(uid, currentModalMode);
                 });
             } else if (actionType === 'Kết thúc') {
-                const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
-                update(ref(db, `Members/${uid}/tempShifts/${key}`), { s_to: todayStr }).then(() => {
+                // Lùi ngày kết thúc về hôm qua để ca phụ lập tức hết hiệu lực
+                const yesterdayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000 - 86400000).toISOString().split('T')[0];
+                update(ref(db, `Members/${uid}/tempShifts/${key}`), { s_to: yesterdayStr }).then(() => {
                     const tsStr = new Date().toLocaleString();
                     set(ref(db, `Members/${uid}/ShiftHistory/${Date.now()}`), { time: tsStr, action: `Kết thúc sớm ca phụ: ${shiftInfo.s_name}` });
                     alert("Đã kết thúc sớm ca tạm!");
