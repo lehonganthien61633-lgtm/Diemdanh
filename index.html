@@ -1443,27 +1443,26 @@ window.closeAdminCamera = function() {
             }
         }, 3000);
         // BẮT ĐẦU SỬA JS: Thêm hàm xử lý đăng ký vào sớm
+// BẮT ĐẦU SỬA JS: Fix lỗi đăng ký vào sớm bằng Unix Timestamp
 window.registerEarlyEntry = function() {
     if (!currentUser || !currentUser.uid) {
         alert("Vui lòng đăng nhập để sử dụng tính năng này!");
         return;
     }
     
-    // Yêu cầu nhập lý do
     const reason = prompt("Bạn đang yêu cầu vào sớm quá 3 tiếng. Vui lòng nhập lý do (VD: Họp đột xuất, Tăng ca trước...):");
     
     if (reason && reason.trim() !== "") {
-        const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
         const uid = currentUser.uid;
+        // Lưu thời gian hiện tại (giây) thay vì chuỗi ngày
+        const currentTimestamp = Math.floor(Date.now() / 1000); 
         
-        // Ghi dữ liệu đăng ký vào Firebase (để ESP32 kiểm tra)
-        // Lưu theo ngày hiện tại để mỗi ngày chỉ đăng ký 1 lần
         update(ref(db, `Members/${uid}/earlyEntry`), {
-            date: todayStr,
+            timestamp: currentTimestamp, // Sử dụng timestamp
             reason: reason.trim(),
-            approved: true // Mặc định cho phép, nếu muốn duyệt thủ công thì set false
+            approved: true 
         }).then(() => {
-            alert(`Đã đăng ký vào sớm cho ngày ${todayStr} thành công! Bây giờ bạn có thể quét thẻ.`);
+            alert(`Đã đăng ký vào sớm thành công! Bây giờ bạn có thể quét thẻ.`);
         }).catch((error) => {
             alert("Lỗi khi đăng ký: " + error.message);
         });
