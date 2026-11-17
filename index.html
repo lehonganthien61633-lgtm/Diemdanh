@@ -229,20 +229,21 @@
                     </div>
                 </div>
 
-        <!-- Shift Modal (Thêm Ca Mới) -->
+        <!-- Shift Modal (Thêm/Sửa Ca Làm Việc) -->
         <div id="shiftModal" class="modal">
             <div class="modal-content" style="max-width: 400px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
-                    <h2 style="margin: 0; color: #2c3e50;">Thêm Ca Làm Việc</h2>
+                    <h2 id="shiftModalTitle" style="margin: 0; color: #2c3e50;">Thêm Ca Làm Việc</h2>
                     <span class="close" onclick="closeShiftModal()" title="Đóng bảng">&times;</span>
                 </div>
+                <input type="hidden" id="editingShiftId">
                 <label>Tên Ca:</label>
                 <input type="text" id="newShiftName" placeholder="VD: Ca Sáng, Ca Đêm...">
                 <div style="display:flex; gap:15px; margin-top:10px;">
                     <div style="flex:1;"><label>Bắt đầu:</label><input type="time" id="newShiftStart"></div>
                     <div style="flex:1;"><label>Kết thúc:</label><input type="time" id="newShiftEnd"></div>
                 </div>
-                <button type="button" class="btn btn-primary" style="margin-top:20px;" onclick="saveNewShift()">Lưu Ca Mới</button>
+                <button type="button" class="btn btn-primary" style="margin-top:20px; background-color:#3498db; width: 100%; border:none; padding:12px; color:white; border-radius:5px; font-weight:bold; cursor:pointer;" onclick="saveNewShift()">Lưu Ca Làm Việc</button>
             </div>
         </div>
             </div>
@@ -835,10 +836,16 @@
                 
                 document.getElementById('hcStart').value = shiftsData['HC'].start;
                 document.getElementById('hcEnd').value = shiftsData['HC'].end;
-                
                 const sList = document.getElementById('shiftList'); let html = '';
                 for (const [id, shift] of Object.entries(shiftsData)) {
-                    html += `<div style="border-bottom: 1px solid #ccc; padding: 5px 0;"><strong>${shift.name}</strong> <span style="float:right; color:#7f8c8d;">${shift.start} - ${shift.end}</span></div>`;
+                    let actionBtns = id === 'HC' ? '<span style="font-size:11px; color:#bdc3c7;">(Mặc định)</span>' : `
+                        <button type="button" class="btn btn-active" style="padding: 2px 6px; font-size: 11px; margin: 0 5px;" onclick="editShift('${id}')">✏️ Sửa</button>
+                        <button type="button" class="btn btn-delete" style="padding: 2px 6px; font-size: 11px; margin: 0;" onclick="deleteShift('${id}')">🗑️ Xóa</button>
+                    `;
+                    html += `<div style="border-bottom: 1px solid #ccc; padding: 8px 0; display: flex; justify-content: space-between; align-items: center;">
+                                <div><strong>${shift.name}</strong> <span style="color:#7f8c8d; font-size:12px;">(${shift.start} - ${shift.end})</span></div>
+                                <div>${actionBtns}</div>
+                             </div>`;
                 }
                 if (sList) sList.innerHTML = html;
                 
@@ -1101,17 +1108,44 @@
             update(ref(db, 'Settings/Shifts/HC'), { name: "Giờ hành chính", start: document.getElementById('hcStart').value, end: document.getElementById('hcEnd').value }).then(() => alert("Đã lưu Giờ Hành Chính!"));
         };
         window.openShiftModal = function() {
+            document.getElementById('shiftModalTitle').innerText = "Thêm Ca Làm Việc";
+            document.getElementById('editingShiftId').value = '';
             document.getElementById('newShiftName').value = ''; document.getElementById('newShiftStart').value = ''; document.getElementById('newShiftEnd').value = '';
             document.getElementById('shiftModal').style.display = 'block';
         };
+
+        window.editShift = function(id) {
+            const shift = shiftsData[id];
+            if (!shift) return;
+            document.getElementById('shiftModalTitle').innerText = "Sửa Ca Làm Việc";
+            document.getElementById('editingShiftId').value = id;
+            document.getElementById('newShiftName').value = shift.name; 
+            document.getElementById('newShiftStart').value = shift.start; 
+            document.getElementById('newShiftEnd').value = shift.end;
+            document.getElementById('shiftModal').style.display = 'block';
+        };
+
+        window.deleteShift = function(id) {
+            if(confirm(`Bạn có chắc chắn muốn xóa: ${shiftsData[id].name}?`)) {
+                remove(ref(db, `Settings/Shifts/${id}`)).then(() => alert("Đã xóa ca làm việc thành công!"));
+            }
+        };
+
         window.closeShiftModal = function() { document.getElementById('shiftModal').style.display = 'none'; };
+
         window.saveNewShift = function() {
             const name = document.getElementById('newShiftName').value.trim();
             const start = document.getElementById('newShiftStart').value;
             const end = document.getElementById('newShiftEnd').value;
+            const editId = document.getElementById('editingShiftId').value;
+
             if(!name || !start || !end) return alert("Vui lòng điền đủ thông tin ca!");
-            const shiftId = 'Ca_' + Date.now();
-            update(ref(db, `Settings/Shifts/${shiftId}`), { name: name, start: start, end: end }).then(() => { alert("Đã thêm ca mới!"); closeShiftModal(); });
+            
+            const shiftId = editId ? editId : ('Ca_' + Date.now());
+            update(ref(db, `Settings/Shifts/${shiftId}`), { name: name, start: start, end: end }).then(() => { 
+                alert(editId ? "Đã cập nhật ca làm việc!" : "Đã thêm ca mới!"); 
+                closeShiftModal(); 
+            });
         };
         window.startChangeCard = function() {
             changingUid = document.getElementById('editOldUid').value;
