@@ -276,7 +276,10 @@
                     
                     <label style="font-weight: bold; margin-top: 10px; display: block; font-size: 14px; color: #34495e;">Email:</label>
                     <input type="email" id="uViewEmail" readonly style="width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; background-color: #f9f9f9;">
-                    <button type="button" id="btnGenerateQR" class="btn btn-add" style="width: 100%; margin-top: 15px;" onclick="openQRModal()">📷 Tạo Mã QR Ra Ngoài Sớm (Kèm lý do)</button>
+                    <!-- BẮT ĐẦU SỬA HTML: Thêm nút Đăng Ký Vào Sớm -->
+<button type="button" id="btnGenerateQR" class="btn btn-add" style="width: 100%; margin-top: 15px;" onclick="openQRModal()">📷 Tạo Mã QR Ra Ngoài Sớm (Kèm lý do)</button>
+<button type="button" id="btnEarlyEntry" class="btn btn-active" style="width: 100%; margin-top: 10px; background-color:#8e44ad;" onclick="registerEarlyEntry()">🕒 Đăng Ký Vào Sớm</button>
+<!-- KẾT THÚC SỬA HTML -->
                     <div style="border-top: 1px dashed #ccc; margin-top: 15px; padding-top: 15px;">
                         <label style="color:#2980b9; font-weight: bold; font-size: 14px;">▼ Phân Ca Làm Việc</label>
                         <div style="margin-top:10px; background:#f9f9f9; padding:10px; border-radius:6px; border:1px solid #eee;">
@@ -1439,6 +1442,36 @@ window.closeAdminCamera = function() {
                 renderDevices();
             }
         }, 3000);
+        // BẮT ĐẦU SỬA JS: Thêm hàm xử lý đăng ký vào sớm
+window.registerEarlyEntry = function() {
+    if (!currentUser || !currentUser.uid) {
+        alert("Vui lòng đăng nhập để sử dụng tính năng này!");
+        return;
+    }
+    
+    // Yêu cầu nhập lý do
+    const reason = prompt("Bạn đang yêu cầu vào sớm quá 3 tiếng. Vui lòng nhập lý do (VD: Họp đột xuất, Tăng ca trước...):");
+    
+    if (reason && reason.trim() !== "") {
+        const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+        const uid = currentUser.uid;
+        
+        // Ghi dữ liệu đăng ký vào Firebase (để ESP32 kiểm tra)
+        // Lưu theo ngày hiện tại để mỗi ngày chỉ đăng ký 1 lần
+        update(ref(db, `Members/${uid}/earlyEntry`), {
+            date: todayStr,
+            reason: reason.trim(),
+            approved: true // Mặc định cho phép, nếu muốn duyệt thủ công thì set false
+        }).then(() => {
+            alert(`Đã đăng ký vào sớm cho ngày ${todayStr} thành công! Bây giờ bạn có thể quét thẻ.`);
+        }).catch((error) => {
+            alert("Lỗi khi đăng ký: " + error.message);
+        });
+    } else if (reason !== null) {
+        alert("Bạn phải nhập lý do để đăng ký!");
+    }
+};
+// KẾT THÚC SỬA JS
     </script>
 </body>
 </html>
