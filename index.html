@@ -673,7 +673,6 @@
         let userAttData = []; let filteredUserAtt = []; let uViewPage = 1; let uViewRows = 10;
 
         function startUserListeners(uid) {
-            // Lấy dữ liệu Ca làm việc trước để hiển thị tên ca thay vì ID
             get(ref(db, 'Settings/Shifts')).then((shiftSnap) => {
                 const sData = shiftSnap.val() || {};
                 if (!sData['HC']) sData['HC'] = { name: "Giờ hành chính", start: "07:00", end: "17:00" };
@@ -682,18 +681,15 @@
                     const info = snapshot.val();
                     if(!info) return;
                     
-                    // Điền thông tin cơ bản
                     document.getElementById('uViewUid').value = uid;
                     document.getElementById('uViewName').value = info.name || 'N/A';
                     document.getElementById('uViewId').value = info.id || 'N/A';
                     document.getElementById('uViewDob').value = info.dob || '';
                     document.getElementById('uViewEmail').value = info.email || 'N/A';
                     
-                    // Xử lý Ca chính
                     const pShift = sData[info.p_id] ? `${sData[info.p_id].name} (${sData[info.p_id].start} - ${sData[info.p_id].end})` : "Giờ hành chính";
                     document.getElementById('uViewPrimaryShift').value = pShift;
                     
-                    // Xử lý Danh sách Ca phụ
                     const tUI = document.getElementById('uViewTempShiftsUI');
                     tUI.innerHTML = '';
                     if (!info.tempShifts || Object.keys(info.tempShifts).length === 0) {
@@ -717,29 +713,32 @@
                         }
                     }
 
-                    // Xử lý Trạng thái Trực tiếp
                     const isInside = (info.lastStatus === "Vào");
                     const tag = document.getElementById('uViewStatusTag');
                     if(isInside) { tag.innerText = "🟢 Đang ở trong"; tag.style.backgroundColor = "#eafaf1"; tag.style.color = "#27ae60"; tag.style.borderColor = "#2ecc71"; }
                     else { tag.innerText = "🔴 Đã ra ngoài"; tag.style.backgroundColor = "#fceceb"; tag.style.color = "#e74c3c"; tag.style.borderColor = "#e74c3c"; }
 
-                    // Cập nhật Lịch sử Điểm danh
+                    // Render lịch sử điểm danh
                     userAttData = [];
                     if(info.Attendance) {
                         const arr = Object.entries(info.Attendance).sort((a,b) => b[0] - a[0]);
                         arr.forEach(([ts, att]) => { userAttData.push({ time: att.time, status: att.status || 'Vào', reason: att.reason || '' }); });
                     }
                     applyUViewFilter();
+
+                    // Mặc định luôn hiện tab lịch sử điểm danh (tránh trắng trang khi load lại)
+                    switchUserRightTab('history');
+                    
                     // Vẽ lịch sử đăng ký vào sớm cho User
                     const regTbody = document.getElementById('uViewRegisterTable');
                     regTbody.innerHTML = '';
-                    if (!info.earlyEntryHistory) {
+                    if (!info.earlyEntryHistory || Object.keys(info.earlyEntryHistory).length === 0) {
                         regTbody.innerHTML = '<tr><td colspan="3" class="empty-row">Chưa có lịch sử đăng ký</td></tr>';
                     } else {
                         Object.values(info.earlyEntryHistory).sort((a,b) => b.timestamp - a.timestamp).forEach(reg => {
                             const dateStr = new Date(reg.timestamp * 1000).toLocaleString();
                             const status = reg.approved ? '<span style="color:green;font-weight:bold;">Đã duyệt</span>' : '<span style="color:#e67e22;font-weight:bold;">Chờ duyệt</span>';
-                            regTbody.innerHTML += `<tr><td>${dateStr}</td><td>${reg.reason}</td><td>${status}</td></tr>`;
+                            regTbody.innerHTML += `<tr><td>${dateStr}</td><td>${reg.reason || 'Không rõ'}</td><td>${status}</td></tr>`;
                         });
                     }
                 });
@@ -1019,22 +1018,27 @@
             if (!isView && !isAdd) { changingUid = null; document.getElementById('btnChangeCard').disabled = false; }
             
             if (isView) {
+                // Đảm bảo tab mặc định là Lịch sử điểm danh khi mở lên
+                switchAdminRightTab('history');
+
+                // Render Lịch sử điểm danh (Tương thích dữ liệu cũ)
                 personalAttData = [];
                 if(info.Attendance) {
                     const arr = Object.entries(info.Attendance).sort((a,b) => b[0] - a[0]);
                     arr.forEach(([ts, att]) => { personalAttData.push({ time: att.time, status: att.status || 'Vào', reason: att.reason || '' }); });
                 }
-                applyPersonalFilter();
-                // Vẽ lịch sử đăng ký vào sớm cho Admin
+                applyPersonalFilter(); 
+
+                // Render Lịch sử đăng ký vào sớm (Tương thích dữ liệu cũ/mới)
                 const aRegTbody = document.getElementById('aViewRegisterTable');
                 aRegTbody.innerHTML = '';
-                if (!info.earlyEntryHistory) {
+                if (!info.earlyEntryHistory || Object.keys(info.earlyEntryHistory).length === 0) {
                     aRegTbody.innerHTML = '<tr><td colspan="3" class="empty-row">Chưa có lịch sử đăng ký</td></tr>';
                 } else {
                     Object.values(info.earlyEntryHistory).sort((a,b) => b.timestamp - a.timestamp).forEach(reg => {
                         const dateStr = new Date(reg.timestamp * 1000).toLocaleString();
                         const status = reg.approved ? '<span style="color:green;font-weight:bold;">Đã duyệt</span>' : '<span style="color:#e67e22;font-weight:bold;">Chờ duyệt</span>';
-                        aRegTbody.innerHTML += `<tr><td>${dateStr}</td><td>${reg.reason}</td><td>${status}</td></tr>`;
+                        aRegTbody.innerHTML += `<tr><td>${dateStr}</td><td>${reg.reason || 'Không rõ'}</td><td>${status}</td></tr>`;
                     });
                 }
             }
