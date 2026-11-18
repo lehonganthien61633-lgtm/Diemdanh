@@ -112,6 +112,11 @@
     <!-- MAIN APP (Ẩn cho đến khi đăng nhập) -->
     <div id="mainApp" style="display: none;">
         <div class="header-top">
+            <!-- NÚT THÔNG BÁO CHO ADMIN -->
+            <button id="btnAdminNoti" class="btn btn-add" style="display: none; padding: 5px 10px; margin-right: 15px; position: relative;" onclick="openApprovalModal()">
+                🔔 Yêu Cầu Duyệt <span id="notiBadge" style="background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 12px; position: absolute; top: -5px; right: -5px; display: none;">0</span>
+            </button>
+            
             <span id="currentUserDisp" style="font-weight: bold; margin-right: 15px; color: #2c3e50;"></span>
             <button class="btn btn-cancel" style="display: inline-block; padding: 5px 10px;" onclick="performLogout()">Đăng xuất</button>
         </div>
@@ -637,7 +642,17 @@
         window.performLogin = function() {
             const email = document.getElementById('loginEmail').value.trim();
             const pass = document.getElementById('loginPass').value.trim();
-            
+            if (email === "admin@test.com" && pass === "12345678") {
+                currentUser = { role: 'admin', name: 'Quản trị viên' };
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                document.getElementById('adminControls').style.display = 'block';
+                document.getElementById('userControls').style.display = 'none';
+                document.getElementById('currentUserDisp').innerText = "Chào Admin";
+                startAdminListeners();
+                
+                listenForApprovals(); // THÊM DÒNG NÀY ĐỂ KÍCH HOẠT QUÉT YÊU CẦU CHỜ DUYỆT
+            }
             if (email === "admin@test.com" && pass === "12345678") {
                 currentUser = { role: 'admin', name: 'Quản trị viên' };
                 document.getElementById('loginScreen').style.display = 'none';
@@ -1564,7 +1579,119 @@ window.registerEarlyEntry = function() {
         alert("Bạn phải nhập lý do để đăng ký!");
     }
 };
-// KẾT THÚC SỬA JS
+// ================= XỬ LÝ DUYỆT YÊU CẦU VÀO SỚM =================
+        let pendingApprovals = {}; // Chứa danh sách các yêu cầu đang chờ duyệt
+        
+        // Hàm lắng nghe và đếm số lượng yêu cầu cần duyệt (Chỉ chạy khi là Admin)
+        function listenForApprovals() {
+            onValue(ref(db, 'Members'), (snapshot) => {
+                pendingApprovals = {};
+                let count = 0;
+                
+                snapshot.forEach((childSnap) => {
+                    const uid = childSnap.key;
+                    const info = childSnap.val();
+                    
+                    // Nếu user có earlyEntry và trạng thái là false (chưa duyệt)
+                    if (info.earlyEntry && info.earlyEntry.approved === false) {
+                        pendingApprovals[uid] = {
+                            name: info.name || "Không rõ",
+                            reason: info.earlyEntry.reason || "Không có",
+                            timestamp: info.earlyEntry.timestamp
+                        };
+                        count++;
+                    }
+                });
+                
+                // Cập nhật giao diện nút Thông báo
+                const notiBtn = document.getElementById('btnAdminNoti');
+                const badge = document.getElementById('notiBadge');
+                
+                if (currentUser && currentUser.role === 'admin') {
+                    notiBtn.style.display = 'inline-block';
+                    if (count > 0) {
+                        badge.innerText = count;
+                        badge.style.display = 'inline-block';
+                        notiBtn.style.animation = "spin 1s infinite alternate"; // Hiệu ứng nhấp nháy nhẹ (tùy chọn CSS)
+                    } else {
+                        badge.style.display = 'none';
+                        notiBtn.style.animation = "none";
+                    }
+                } else {
+                    notiBtn.style.display = 'none';
+                }
+            });
+        }
+
+        // Mở Modal Danh sách duyệt
+        window.openApprovalModal = function() {
+            const tbody = document.getElementById('approvalTableBody');
+            tbody.innerHTML = '';
+            
+            if (Object.keys(pendingApprovals).length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="empty-row">Không có yêu cầu nào</td></tr>';
+            } else {
+                for (const [uid, data] of Object.entries(pendingApprovals)) {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${data.name}</strong><br><span style="font-size:11px;color:#7f8c8d;">${uid}</span></td>
+                            <td>${data.reason}</td>
+                            <td>
+                                <button class="btn btn-active" style="background:#27ae60; padding:5px 10px; font-size:13px;" onclick="approveEarlyEntry('${uid}', ${data.timestamp})">✅ Duyệt</button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+            document.getElementById('approvalModal').style.display = 'block';
+        };
+
+        window.closeApprovalModal = function() {
+            document.getElementById('approvalModal').style.display = 'none';
+        };
+
+        // Xử lý nút Duyệt
+        window.approveEarlyEntry = function(uid, timestamp) {
+            if(confirm("Xác nhận cho phép nhân viên này vào sớm?")) {
+                const updates = {};
+                // Đổi trạng thái biến earlyEntry thành true để phần cứng ESP32 đọc được
+                updates[`Members/${uid}/earlyEntry/approved`] = true;
+                // Đồng thời cập nhật trạng thái trong lịch sử
+                updates[`Members/${uid}/earlyEntryHistory/${timestamp}/approved`] = true;
+                
+                update(ref(db), updates).then(() => {
+                    alert("Đã duyệt thành công! Thiết bị sẽ chấp nhận thẻ của nhân viên này.");
+                    // Lịch sử điểm danh (user/admin modal) sẽ tự động reload do đã có onValue lắng nghe
+                    // Nếu Modal duyệt đang mở và hết danh sách, đóng lại
+                    if (Object.keys(pendingApprovals).length <= 1) {
+                        closeApprovalModal();
+                    }
+                });
+            }
+        };
     </script>
+<!-- Modal Chờ Duyệt (Dành cho Admin) -->
+    <div id="approvalModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
+                <h2 style="margin: 0; color: #e67e22;">Danh Sách Chờ Duyệt Vào Sớm</h2>
+                <span class="close" onclick="closeApprovalModal()" title="Đóng bảng">&times;</span>
+            </div>
+            <div style="max-height: 400px; overflow-y: auto;">
+                <table style="margin-top:0;">
+                    <thead style="position:sticky; top:0; z-index:1; background-color: #e67e22;">
+                        <tr>
+                            <th style="color:white;">Họ Tên (UID)</th>
+                            <th style="color:white;">Lý do</th>
+                            <th style="color:white; width: 100px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="approvalTableBody">
+                        <tr><td colspan="3" class="empty-row">Không có yêu cầu nào</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
