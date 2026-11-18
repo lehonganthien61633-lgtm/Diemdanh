@@ -294,14 +294,18 @@
                     </div>
                 </div>
 
-                <!-- Cột phải: Lịch sử -->
+                <!-- Cột phải: Lịch sử & Đăng ký -->
                 <div class="right-panel" style="flex: 1.5; display: flex; flex-direction: column; border-left: 2px solid #ecf0f1; padding: 20px; overflow: hidden; min-height: 0;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0;">
-                        <h3 style="margin:0; color: #2c3e50;">Lịch sử cá nhân</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px;">
+                        <div style="display:flex; gap:10px;">
+                            <button id="uBtnHist" class="btn btn-active" style="padding: 8px 12px; font-size: 14px; margin: 0;" onclick="switchUserRightTab('history')">🕒 Lịch sử cá nhân</button>
+                            <button id="uBtnReg" class="btn" style="padding: 8px 12px; font-size: 14px; margin: 0; background-color: #7f8c8d;" onclick="switchUserRightTab('register')">📋 Lịch sử đăng ký</button>
+                        </div>
                         <div id="uViewStatusTag" style="padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; border: 1px solid #ddd;"></div>
                     </div>
                     
-                    <div style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+                    <!-- TAB LỊCH SỬ ĐIỂM DANH -->
+                    <div id="uTabHistory" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
                         <div class="filter-container" style="padding: 10px; margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; flex-shrink: 0;">
                             <div>
                                 <select id="uViewRows" onchange="changeUViewRows()">
@@ -324,6 +328,18 @@
                         </div>
                         <div id="uViewPagination" class="pagination" style="flex-shrink: 0; margin-top: 10px; margin-bottom: 10px;"></div>
                     </div>
+
+                    <!-- TAB LỊCH SỬ ĐĂNG KÝ VÀO SỚM -->
+                    <div id="uTabRegister" style="display: none; flex-direction: column; flex: 1; overflow: hidden;">
+                        <div class="history-container" style="flex: 1; overflow-y: auto; border: 1px solid #bdc3c7; min-height: 0; border-radius: 4px;">
+                            <table style="margin-top: 0; border-top: none;">
+                                <thead style="position:sticky; top:0; z-index:1; background-color: #8e44ad;">
+                                    <tr><th style="color:white; border-top:none; width:150px;">Thời gian đăng ký</th><th style="color:white; border-top:none;">Lý do vào sớm</th><th style="color:white; border-top:none; width:100px;">Trạng thái</th></tr>
+                                </thead>
+                                <tbody id="uViewRegisterTable">
+                                    <tr><td colspan="3" class="empty-row">Chưa có lịch sử đăng ký</td></tr>
+                                </tbody>
+                            </table>
                 </div>
             </div>
         </div>
@@ -402,8 +418,15 @@
                     </div>
 
                     <div id="historyPanel" class="right-panel">
-                        <h3 style="margin-top:0; margin-bottom: 15px; color: #2c3e50; flex-shrink: 0;">Lịch sử cá nhân</h3>
-                        <div style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px;">
+                            <div style="display:flex; gap:10px;">
+                                <button id="aBtnHist" class="btn btn-active" style="padding: 8px 12px; font-size: 14px; margin: 0;" onclick="switchAdminRightTab('history')">🕒 Lịch sử cá nhân</button>
+                                <button id="aBtnReg" class="btn" style="padding: 8px 12px; font-size: 14px; margin: 0; background-color: #7f8c8d;" onclick="switchAdminRightTab('register')">📋 Lịch sử đăng ký</button>
+                            </div>
+                        </div>
+
+                        <!-- TAB LỊCH SỬ ĐIỂM DANH -->
+                        <div id="aTabHistory" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
                             <div class="filter-container" style="padding: 10px; margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; flex-shrink: 0;">
                                 <div><select id="personalRows" onchange="changePersonalRows()"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
                                 <div style="display:flex; gap: 5px; align-items: center;">
@@ -422,8 +445,21 @@
                             </div>
                             <div id="personalPagination" class="pagination" style="flex-shrink: 0; margin-top: 10px; margin-bottom: 10px;"></div>
                         </div>
+
+                        <!-- TAB LỊCH SỬ ĐĂNG KÝ VÀO SỚM -->
+                        <div id="aTabRegister" style="display: none; flex-direction: column; flex: 1; overflow: hidden;">
+                            <div class="history-container" style="flex: 1; overflow-y: auto; border: 1px solid #bdc3c7; min-height: 0; border-radius: 4px;">
+                                <table style="margin-top: 0; border-top: none;">
+                                    <thead style="position:sticky; top:0; z-index:1; background-color: #8e44ad;">
+                                        <tr><th style="color:white; border-top:none; width:150px;">Thời gian đăng ký</th><th style="color:white; border-top:none;">Lý do vào sớm</th><th style="color:white; border-top:none; width:100px;">Trạng thái</th></tr>
+                                    </thead>
+                                    <tbody id="aViewRegisterTable">
+                                        <tr><td colspan="3" class="empty-row">Chưa có lịch sử đăng ký</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                </div>
             </div>
         </div>
 
@@ -694,6 +730,18 @@
                         arr.forEach(([ts, att]) => { userAttData.push({ time: att.time, status: att.status || 'Vào', reason: att.reason || '' }); });
                     }
                     applyUViewFilter();
+                    // Vẽ lịch sử đăng ký vào sớm cho User
+                    const regTbody = document.getElementById('uViewRegisterTable');
+                    regTbody.innerHTML = '';
+                    if (!info.earlyEntryHistory) {
+                        regTbody.innerHTML = '<tr><td colspan="3" class="empty-row">Chưa có lịch sử đăng ký</td></tr>';
+                    } else {
+                        Object.values(info.earlyEntryHistory).sort((a,b) => b.timestamp - a.timestamp).forEach(reg => {
+                            const dateStr = new Date(reg.timestamp * 1000).toLocaleString();
+                            const status = reg.approved ? '<span style="color:green;font-weight:bold;">Đã duyệt</span>' : '<span style="color:#e67e22;font-weight:bold;">Chờ duyệt</span>';
+                            regTbody.innerHTML += `<tr><td>${dateStr}</td><td>${reg.reason}</td><td>${status}</td></tr>`;
+                        });
+                    }
                 });
             });
         }
@@ -904,7 +952,19 @@
             const btnMap = { 'status': 'btnStatus', 'members': 'btnMembers', 'history': 'btnHistory', 'devices': 'btnDevices', 'settings': 'btnSettings' };
             document.getElementById(btnMap[tabName]).classList.add('btn-active');
         };
+        window.switchUserRightTab = function(tab) {
+            document.getElementById('uTabHistory').style.display = tab === 'history' ? 'flex' : 'none';
+            document.getElementById('uTabRegister').style.display = tab === 'register' ? 'flex' : 'none';
+            document.getElementById('uBtnHist').style.backgroundColor = tab === 'history' ? '#2c3e50' : '#7f8c8d';
+            document.getElementById('uBtnReg').style.backgroundColor = tab === 'register' ? '#2c3e50' : '#7f8c8d';
+        };
 
+        window.switchAdminRightTab = function(tab) {
+            document.getElementById('aTabHistory').style.display = tab === 'history' ? 'flex' : 'none';
+            document.getElementById('aTabRegister').style.display = tab === 'register' ? 'flex' : 'none';
+            document.getElementById('aBtnHist').style.backgroundColor = tab === 'history' ? '#2c3e50' : '#7f8c8d';
+            document.getElementById('aBtnReg').style.backgroundColor = tab === 'register' ? '#2c3e50' : '#7f8c8d';
+        };
         window.checkChanges = function() {
             if (currentModalMode === 'add') { document.getElementById('btnSaveInfo').style.display = 'block'; return; }
             const hasChanged = (
@@ -964,7 +1024,19 @@
                     const arr = Object.entries(info.Attendance).sort((a,b) => b[0] - a[0]);
                     arr.forEach(([ts, att]) => { personalAttData.push({ time: att.time, status: att.status || 'Vào', reason: att.reason || '' }); });
                 }
-                applyPersonalFilter(); 
+                applyPersonalFilter();
+                // Vẽ lịch sử đăng ký vào sớm cho Admin
+                const aRegTbody = document.getElementById('aViewRegisterTable');
+                aRegTbody.innerHTML = '';
+                if (!info.earlyEntryHistory) {
+                    aRegTbody.innerHTML = '<tr><td colspan="3" class="empty-row">Chưa có lịch sử đăng ký</td></tr>';
+                } else {
+                    Object.values(info.earlyEntryHistory).sort((a,b) => b.timestamp - a.timestamp).forEach(reg => {
+                        const dateStr = new Date(reg.timestamp * 1000).toLocaleString();
+                        const status = reg.approved ? '<span style="color:green;font-weight:bold;">Đã duyệt</span>' : '<span style="color:#e67e22;font-weight:bold;">Chờ duyệt</span>';
+                        aRegTbody.innerHTML += `<tr><td>${dateStr}</td><td>${reg.reason}</td><td>${status}</td></tr>`;
+                    });
+                }
             }
             document.getElementById('memberModal').style.display = 'block';
         };
@@ -1443,7 +1515,6 @@ window.closeAdminCamera = function() {
             }
         }, 3000);
         // BẮT ĐẦU SỬA JS: Thêm hàm xử lý đăng ký vào sớm
-// BẮT ĐẦU SỬA JS: Fix lỗi đăng ký vào sớm bằng Unix Timestamp
 window.registerEarlyEntry = function() {
     if (!currentUser || !currentUser.uid) {
         alert("Vui lòng đăng nhập để sử dụng tính năng này!");
@@ -1454,14 +1525,20 @@ window.registerEarlyEntry = function() {
     
     if (reason && reason.trim() !== "") {
         const uid = currentUser.uid;
-        // Lưu thời gian hiện tại (giây) thay vì chuỗi ngày
         const currentTimestamp = Math.floor(Date.now() / 1000); 
         
-        update(ref(db, `Members/${uid}/earlyEntry`), {
-            timestamp: currentTimestamp, // Sử dụng timestamp
+        const newEntry = {
+            timestamp: currentTimestamp,
             reason: reason.trim(),
             approved: true 
-        }).then(() => {
+        };
+
+        // Ghi vào "earlyEntry" cho phần cứng kiểm tra
+        update(ref(db, `Members/${uid}/earlyEntry`), newEntry);
+        
+        // Đồng thời ghi một bản sao vào "earlyEntryHistory" để làm lịch sử
+        set(ref(db, `Members/${uid}/earlyEntryHistory/${currentTimestamp}`), newEntry)
+        .then(() => {
             alert(`Đã đăng ký vào sớm thành công! Bây giờ bạn có thể quét thẻ.`);
         }).catch((error) => {
             alert("Lỗi khi đăng ký: " + error.message);
