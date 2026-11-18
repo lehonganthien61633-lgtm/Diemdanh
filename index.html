@@ -435,7 +435,7 @@
                                     <button class="btn btn-cancel" style="display:inline-block; padding: 6px 10px; margin:0;" onclick="clearPersonalFilter()">Xóa</button>
                                 </div>
                             </div>
-                            <div class="history-container">
+                            <div class="history-container" style="flex: 1; overflow-y: auto; border: 1px solid #bdc3c7; border-top: none; min-height: 0;">
                                 <table style="margin-top: 0; border-top: none;">
                                     <thead style="position:sticky; top:0; z-index:1; background-color: #3498db;">
                                         <tr><th style="color:white; border-top:none;">Thời gian</th><th style="color:white; border-top:none;">Hoạt động</th><th style="color:white; border-top:none;">Tình trạng</th></tr>
@@ -459,11 +459,10 @@
                                 </table>
                             </div>
                         </div>
-                        </div>
                     </div>
+                </div> <!-- Sửa thiếu: Thêm thẻ đóng cho div#modalBodyLayout -->
             </div>
         </div>
-
         <!-- Modal Chi Tiết Thiết Bị -->
         <div id="deviceModal" class="modal">
             <div class="modal-content" style="max-width: 500px; padding: 0; overflow: hidden; background-color: #f8f9fa;">
