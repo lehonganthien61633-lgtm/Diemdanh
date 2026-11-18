@@ -227,27 +227,9 @@
                             <button type="button" class="btn btn-add" style="width: 100%; margin:0;" onclick="openShiftModal()">➕ Thêm Ca Mới</button>
                         </div>
                     </div>
-                </div> <!-- Đóng tab-settings -->
+                </div> <!-- Đóng Bảng Thiết Lập Hệ Thống -->
             </div> <!-- Đóng container của ADMIN VIEW -->
         </div> <!-- Đóng adminControls -->
-
-        <!-- Shift Modal (Thêm/Sửa Ca Làm Việc) Nằm ngoài luồng Tabs -->
-        <div id="shiftModal" class="modal">
-            <div class="modal-content" style="max-width: 400px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
-                    <h2 id="shiftModalTitle" style="margin: 0; color: #2c3e50;">Thêm Ca Làm Việc</h2>
-                    <span class="close" onclick="closeShiftModal()" title="Đóng bảng">&times;</span>
-                </div>
-                <input type="hidden" id="editingShiftId">
-                <label>Tên Ca:</label>
-                <input type="text" id="newShiftName" placeholder="VD: Ca Sáng, Ca Đêm...">
-                <div style="display:flex; gap:15px; margin-top:10px;">
-                    <div style="flex:1;"><label>Bắt đầu:</label><input type="time" id="newShiftStart"></div>
-                    <div style="flex:1;"><label>Kết thúc:</label><input type="time" id="newShiftEnd"></div>
-                </div>
-                <button type="button" class="btn btn-primary" style="margin-top:20px; background-color:#3498db; width: 100%; border:none; padding:12px; color:white; border-radius:5px; font-weight:bold; cursor:pointer;" onclick="saveNewShift()">Lưu Ca Làm Việc</button>
-            </div>
-        </div>
 
         <!-- USER VIEW (Chỉ xem lịch sử cá nhân) -->
         <div id="userControls" style="display: none; padding: 20px; height: calc(100vh - 80px); box-sizing: border-box;">
@@ -276,10 +258,10 @@
                     
                     <label style="font-weight: bold; margin-top: 10px; display: block; font-size: 14px; color: #34495e;">Email:</label>
                     <input type="email" id="uViewEmail" readonly style="width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; background-color: #f9f9f9;">
-                    <!-- BẮT ĐẦU SỬA HTML: Thêm nút Đăng Ký Vào Sớm -->
-<button type="button" id="btnGenerateQR" class="btn btn-add" style="width: 100%; margin-top: 15px;" onclick="openQRModal()">📷 Tạo Mã QR Ra Ngoài Sớm (Kèm lý do)</button>
-<button type="button" id="btnEarlyEntry" class="btn btn-active" style="width: 100%; margin-top: 10px; background-color:#8e44ad;" onclick="registerEarlyEntry()">🕒 Đăng Ký Vào Sớm</button>
-<!-- KẾT THÚC SỬA HTML -->
+                    
+                    <button type="button" id="btnGenerateQR" class="btn btn-add" style="width: 100%; margin-top: 15px;" onclick="openQRModal()">📷 Tạo Mã QR Ra Ngoài Sớm (Kèm lý do)</button>
+                    <button type="button" id="btnEarlyEntry" class="btn btn-active" style="width: 100%; margin-top: 10px; background-color:#8e44ad;" onclick="registerEarlyEntry()">🕒 Đăng Ký Vào Sớm</button>
+                    
                     <div style="border-top: 1px dashed #ccc; margin-top: 15px; padding-top: 15px;">
                         <label style="color:#2980b9; font-weight: bold; font-size: 14px;">▼ Phân Ca Làm Việc</label>
                         <div style="margin-top:10px; background:#f9f9f9; padding:10px; border-radius:6px; border:1px solid #eee;">
@@ -340,263 +322,293 @@
                                     <tr><td colspan="3" class="empty-row">Chưa có lịch sử đăng ký</td></tr>
                                 </tbody>
                             </table>
-                </div>
-            </div>
-        </div>
-        <!-- Modal Admin Form -->
-        <div id="memberModal" class="modal">
-            <div id="modalContent" class="modal-content">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px; flex-shrink: 0;">
-                    <h2 id="modalTitle" style="margin: 0; color: #2c3e50;">Hồ Sơ Thành Viên</h2>
-                    <span class="close" onclick="closeModal()" title="Đóng bảng">&times;</span>
-                </div>
-                
-                <div id="modalBodyLayout">
-                    <div id="infoPanel" class="left-panel">
-                        <input type="hidden" id="editOldUid">
-                        <label>UID Thẻ Tích Hợp:</label>
-                        <div style="display:flex; gap:10px;">
-                            <input type="text" id="editUid" readonly style="flex:1; background-color: #ecf0f1; font-weight: bold;">
-                            <button type="button" class="btn btn-delete" style="margin: 5px 0 10px 0; display: none;" onclick="startChangeCard()" id="btnChangeCard">🔄 Đổi thẻ</button>
-                            <button type="button" class="btn btn-cancel" style="margin: 5px 0 10px 0; display: none;" onclick="cancelChangeCard()" id="btnCancelChange">❌ Hủy</button>
                         </div>
-                        
-                        <label>Họ và Tên:</label>
-                        <input type="text" id="editName" placeholder="Nhập họ và tên..." oninput="checkChanges()">
-                        
-                        <div style="display:flex; gap:15px;">
-                            <div style="flex:1;">
-                                <label>Mã Số (ID/MSSV):</label>
-                                <input type="text" id="editId" placeholder="Mã này cũng là Mật Khẩu" oninput="checkChanges()">
-                            </div>
-                            <div style="flex:1;">
-                                <label>Ngày Sinh:</label>
-                                <input type="date" id="editDob" oninput="checkChanges()">
-                            </div>
-                        </div>
-                        
-                        <label>Email (Tài khoản Đăng nhập):</label>
-                        <input type="email" id="editEmail" placeholder="example@email.com" oninput="checkChanges()">
-                        
-                        <!-- QUẢN LÝ CA LÀM VIỆC -->
-                        <div style="border-top: 1px dashed #ccc; margin-top: 15px; padding-top: 15px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <label style="color:#2980b9; cursor:pointer; margin:0;" onclick="toggleShiftPanel()">▼ Phân Ca Làm Việc</label>
-                                <button type="button" class="btn btn-active" style="padding:4px 8px; font-size:12px; margin:0;" onclick="viewShiftHistory()">🕒 Lịch sử ca</button>
-                            </div>
-                            
-                            <div id="shiftPanelWrapper" style="display:none; margin-top:10px; background:#f9f9f9; padding:10px; border-radius:6px; border:1px solid #eee;">
-                                <label style="font-size: 13px; font-weight:bold;">Ca chính (Mặc định):</label>
-                                <select id="editPrimaryShift" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; margin-bottom:10px;" onchange="checkChanges()"></select>
-                                
-                                <div style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;">
-                                    <label style="font-size: 13px; font-weight:bold; color:#d35400;">Danh sách ca phụ (tạm thời):</label>
-                                    
-                                    <!-- Danh sách các ca tạm -->
-                                    <div id="tempShiftsListUI" style="margin-bottom: 10px;"></div>
+                    </div>
+                </div>
+            </div> <!-- Đóng split-container của USER VIEW -->
+        </div> <!-- Đóng userControls -->
 
-                                    <!-- Thêm ca tạm mới -->
-                                    <button type="button" id="btnShowTempShift" class="btn btn-add" style="width:100%; padding:8px; font-size:13px; margin:0;" onclick="showTempShiftForm()">➕ Thêm ca phụ (tạm thời)</button>
-                                    
-                                    <div id="tempShiftFormContainer" style="display:none; background:#fff; padding:10px; border:1px solid #f39c12; border-radius:6px; margin-top:10px;">
-                                        <label style="font-size: 13px; font-weight:bold; color:#d35400;">Chọn ca phụ (Khác ca chính):</label>
-                                        <select id="editSecondaryShift" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; margin-bottom:10px;"></select>
-                                        <div style="display:flex; gap:10px;">
-                                            <div style="flex:1;"><span style="font-size:12px; color:#7f8c8d;">Từ ngày:</span><input type="date" id="secShiftFrom"></div>
-                                            <div style="flex:1;"><span style="font-size:12px; color:#7f8c8d;">Đến ngày:</span><input type="date" id="secShiftTo"></div>
-                                        </div>
-                                        <div style="display:flex; gap:10px; margin-top:10px;">
-                                            <button type="button" class="btn btn-active" style="flex:1; padding:8px; font-size:13px; margin:0;" onclick="confirmTempShiftDirectly()">Xác nhận</button>
-                                            <button type="button" class="btn btn-cancel" style="flex:1; padding:8px; font-size:13px; margin:0; display:block;" onclick="hideTempShiftForm()">Hủy</button>
-                                        </div>
+    </div> <!-- Đóng mainApp -->
+
+    <!-- CÁC MODAL ĐƯỢC CHUYỂN RA NGOÀI ĐỂ KHÔNG BỊ CHẶN BỞI TABS -->
+
+    <!-- Modal Admin Form -->
+    <div id="memberModal" class="modal">
+        <div id="modalContent" class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px; flex-shrink: 0;">
+                <h2 id="modalTitle" style="margin: 0; color: #2c3e50;">Hồ Sơ Thành Viên</h2>
+                <span class="close" onclick="closeModal()" title="Đóng bảng">&times;</span>
+            </div>
+            
+            <div id="modalBodyLayout">
+                <div id="infoPanel" class="left-panel">
+                    <input type="hidden" id="editOldUid">
+                    <label>UID Thẻ Tích Hợp:</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="editUid" readonly style="flex:1; background-color: #ecf0f1; font-weight: bold;">
+                        <button type="button" class="btn btn-delete" style="margin: 5px 0 10px 0; display: none;" onclick="startChangeCard()" id="btnChangeCard">🔄 Đổi thẻ</button>
+                        <button type="button" class="btn btn-cancel" style="margin: 5px 0 10px 0; display: none;" onclick="cancelChangeCard()" id="btnCancelChange">❌ Hủy</button>
+                    </div>
+                    
+                    <label>Họ và Tên:</label>
+                    <input type="text" id="editName" placeholder="Nhập họ và tên..." oninput="checkChanges()">
+                    
+                    <div style="display:flex; gap:15px;">
+                        <div style="flex:1;">
+                            <label>Mã Số (ID/MSSV):</label>
+                            <input type="text" id="editId" placeholder="Mã này cũng là Mật Khẩu" oninput="checkChanges()">
+                        </div>
+                        <div style="flex:1;">
+                            <label>Ngày Sinh:</label>
+                            <input type="date" id="editDob" oninput="checkChanges()">
+                        </div>
+                    </div>
+                    
+                    <label>Email (Tài khoản Đăng nhập):</label>
+                    <input type="email" id="editEmail" placeholder="example@email.com" oninput="checkChanges()">
+                    
+                    <!-- QUẢN LÝ CA LÀM VIỆC -->
+                    <div style="border-top: 1px dashed #ccc; margin-top: 15px; padding-top: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <label style="color:#2980b9; cursor:pointer; margin:0;" onclick="toggleShiftPanel()">▼ Phân Ca Làm Việc</label>
+                            <button type="button" class="btn btn-active" style="padding:4px 8px; font-size:12px; margin:0;" onclick="viewShiftHistory()">🕒 Lịch sử ca</button>
+                        </div>
+                        
+                        <div id="shiftPanelWrapper" style="display:none; margin-top:10px; background:#f9f9f9; padding:10px; border-radius:6px; border:1px solid #eee;">
+                            <label style="font-size: 13px; font-weight:bold;">Ca chính (Mặc định):</label>
+                            <select id="editPrimaryShift" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; margin-bottom:10px;" onchange="checkChanges()"></select>
+                            
+                            <div style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;">
+                                <label style="font-size: 13px; font-weight:bold; color:#d35400;">Danh sách ca phụ (tạm thời):</label>
+                                
+                                <!-- Danh sách các ca tạm -->
+                                <div id="tempShiftsListUI" style="margin-bottom: 10px;"></div>
+
+                                <!-- Thêm ca tạm mới -->
+                                <button type="button" id="btnShowTempShift" class="btn btn-add" style="width:100%; padding:8px; font-size:13px; margin:0;" onclick="showTempShiftForm()">➕ Thêm ca phụ (tạm thời)</button>
+                                
+                                <div id="tempShiftFormContainer" style="display:none; background:#fff; padding:10px; border:1px solid #f39c12; border-radius:6px; margin-top:10px;">
+                                    <label style="font-size: 13px; font-weight:bold; color:#d35400;">Chọn ca phụ (Khác ca chính):</label>
+                                    <select id="editSecondaryShift" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; margin-bottom:10px;"></select>
+                                    <div style="display:flex; gap:10px;">
+                                        <div style="flex:1;"><span style="font-size:12px; color:#7f8c8d;">Từ ngày:</span><input type="date" id="secShiftFrom"></div>
+                                        <div style="flex:1;"><span style="font-size:12px; color:#7f8c8d;">Đến ngày:</span><input type="date" id="secShiftTo"></div>
+                                    </div>
+                                    <div style="display:flex; gap:10px; margin-top:10px;">
+                                        <button type="button" class="btn btn-active" style="flex:1; padding:8px; font-size:13px; margin:0;" onclick="confirmTempShiftDirectly()">Xác nhận</button>
+                                        <button type="button" class="btn btn-cancel" style="flex:1; padding:8px; font-size:13px; margin:0; display:block;" onclick="hideTempShiftForm()">Hủy</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        <button type="button" id="btnSaveInfo" class="btn btn-active" style="width:100%; margin-top: 25px; margin-bottom: 10px; display: none; flex-shrink: 0;" onclick="saveMemberInfo()">💾 Lưu Thông Tin</button>
                     </div>
 
-                    <div id="historyPanel" class="right-panel">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px;">
-                            <div style="display:flex; gap:10px;">
-                                <button id="aBtnHist" class="btn btn-active" style="padding: 8px 12px; font-size: 14px; margin: 0;" onclick="switchAdminRightTab('history')">🕒 Lịch sử cá nhân</button>
-                                <button id="aBtnReg" class="btn" style="padding: 8px 12px; font-size: 14px; margin: 0; background-color: #7f8c8d;" onclick="switchAdminRightTab('register')">📋 Lịch sử đăng ký</button>
-                            </div>
-                        </div>
+                    <button type="button" id="btnSaveInfo" class="btn btn-active" style="width:100%; margin-top: 25px; margin-bottom: 10px; display: none; flex-shrink: 0;" onclick="saveMemberInfo()">💾 Lưu Thông Tin</button>
+                </div>
 
-                        <!-- TAB LỊCH SỬ ĐIỂM DANH -->
-                        <div id="aTabHistory" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
-                            <div class="filter-container" style="padding: 10px; margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; flex-shrink: 0;">
-                                <div><select id="personalRows" onchange="changePersonalRows()"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
-                                <div style="display:flex; gap: 5px; align-items: center;">
-                                    <input type="date" id="personalStartDate"> - <input type="date" id="personalEndDate">
-                                    <button class="btn btn-active" style="padding: 6px 10px;" onclick="applyPersonalFilter()">Lọc</button>
-                                    <button class="btn btn-cancel" style="display:inline-block; padding: 6px 10px; margin:0;" onclick="clearPersonalFilter()">Xóa</button>
-                                </div>
-                            </div>
-                            <div class="history-container" style="flex: 1; overflow-y: auto; border: 1px solid #bdc3c7; border-top: none; min-height: 0;">
-                                <table style="margin-top: 0; border-top: none;">
-                                    <thead style="position:sticky; top:0; z-index:1; background-color: #3498db;">
-                                        <tr><th style="color:white; border-top:none;">Thời gian</th><th style="color:white; border-top:none;">Hoạt động</th><th style="color:white; border-top:none;">Tình trạng</th></tr>
-                                    </thead>
-                                    <tbody id="personalHistoryTable"></tbody>
-                                </table>
-                            </div>
-                            <div id="personalPagination" class="pagination" style="flex-shrink: 0; margin-top: 10px; margin-bottom: 10px;"></div>
-                        </div>
-
-                        <!-- TAB LỊCH SỬ ĐĂNG KÝ VÀO SỚM -->
-                        <div id="aTabRegister" style="display: none; flex-direction: column; flex: 1; overflow: hidden;">
-                            <div class="history-container" style="flex: 1; overflow-y: auto; border: 1px solid #bdc3c7; min-height: 0; border-radius: 4px;">
-                                <table style="margin-top: 0; border-top: none;">
-                                    <thead style="position:sticky; top:0; z-index:1; background-color: #8e44ad;">
-                                        <tr><th style="color:white; border-top:none; width:150px;">Thời gian đăng ký</th><th style="color:white; border-top:none;">Lý do vào sớm</th><th style="color:white; border-top:none; width:100px;">Trạng thái</th></tr>
-                                    </thead>
-                                    <tbody id="aViewRegisterTable">
-                                        <tr><td colspan="3" class="empty-row">Chưa có lịch sử đăng ký</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                <div id="historyPanel" class="right-panel">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px;">
+                        <div style="display:flex; gap:10px;">
+                            <button id="aBtnHist" class="btn btn-active" style="padding: 8px 12px; font-size: 14px; margin: 0;" onclick="switchAdminRightTab('history')">🕒 Lịch sử cá nhân</button>
+                            <button id="aBtnReg" class="btn" style="padding: 8px 12px; font-size: 14px; margin: 0; background-color: #7f8c8d;" onclick="switchAdminRightTab('register')">📋 Lịch sử đăng ký</button>
                         </div>
                     </div>
-                </div> <!-- Sửa thiếu: Thêm thẻ đóng cho div#modalBodyLayout -->
+
+                    <!-- TAB LỊCH SỬ ĐIỂM DANH -->
+                    <div id="aTabHistory" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+                        <div class="filter-container" style="padding: 10px; margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; flex-shrink: 0;">
+                            <div><select id="personalRows" onchange="changePersonalRows()"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
+                            <div style="display:flex; gap: 5px; align-items: center;">
+                                <input type="date" id="personalStartDate"> - <input type="date" id="personalEndDate">
+                                <button class="btn btn-active" style="padding: 6px 10px;" onclick="applyPersonalFilter()">Lọc</button>
+                                <button class="btn btn-cancel" style="display:inline-block; padding: 6px 10px; margin:0;" onclick="clearPersonalFilter()">Xóa</button>
+                            </div>
+                        </div>
+                        <div class="history-container" style="flex: 1; overflow-y: auto; border: 1px solid #bdc3c7; border-top: none; min-height: 0;">
+                            <table style="margin-top: 0; border-top: none;">
+                                <thead style="position:sticky; top:0; z-index:1; background-color: #3498db;">
+                                    <tr><th style="color:white; border-top:none;">Thời gian</th><th style="color:white; border-top:none;">Hoạt động</th><th style="color:white; border-top:none;">Tình trạng</th></tr>
+                                </thead>
+                                <tbody id="personalHistoryTable"></tbody>
+                            </table>
+                        </div>
+                        <div id="personalPagination" class="pagination" style="flex-shrink: 0; margin-top: 10px; margin-bottom: 10px;"></div>
+                    </div>
+
+                    <!-- TAB LỊCH SỬ ĐĂNG KÝ VÀO SỚM -->
+                    <div id="aTabRegister" style="display: none; flex-direction: column; flex: 1; overflow: hidden;">
+                        <div class="history-container" style="flex: 1; overflow-y: auto; border: 1px solid #bdc3c7; min-height: 0; border-radius: 4px;">
+                            <table style="margin-top: 0; border-top: none;">
+                                <thead style="position:sticky; top:0; z-index:1; background-color: #8e44ad;">
+                                    <tr><th style="color:white; border-top:none; width:150px;">Thời gian đăng ký</th><th style="color:white; border-top:none;">Lý do vào sớm</th><th style="color:white; border-top:none; width:100px;">Trạng thái</th></tr>
+                                </thead>
+                                <tbody id="aViewRegisterTable">
+                                    <tr><td colspan="3" class="empty-row">Chưa có lịch sử đăng ký</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div> <!-- Đóng modalBodyLayout -->
+        </div> <!-- Đóng modalContent -->
+    </div> <!-- Đóng memberModal -->
+
+    <!-- Shift Modal (Thêm/Sửa Ca Làm Việc) -->
+    <div id="shiftModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
+                <h2 id="shiftModalTitle" style="margin: 0; color: #2c3e50;">Thêm Ca Làm Việc</h2>
+                <span class="close" onclick="closeShiftModal()" title="Đóng bảng">&times;</span>
+            </div>
+            <input type="hidden" id="editingShiftId">
+            <label>Tên Ca:</label>
+            <input type="text" id="newShiftName" placeholder="VD: Ca Sáng, Ca Đêm...">
+            <div style="display:flex; gap:15px; margin-top:10px;">
+                <div style="flex:1;"><label>Bắt đầu:</label><input type="time" id="newShiftStart"></div>
+                <div style="flex:1;"><label>Kết thúc:</label><input type="time" id="newShiftEnd"></div>
+            </div>
+            <button type="button" class="btn btn-primary" style="margin-top:20px; background-color:#3498db; width: 100%; border:none; padding:12px; color:white; border-radius:5px; font-weight:bold; cursor:pointer;" onclick="saveNewShift()">Lưu Ca Làm Việc</button>
+        </div>
+    </div>
+
+    <!-- Modal Chi Tiết Thiết Bị -->
+    <div id="deviceModal" class="modal">
+        <div class="modal-content" style="max-width: 500px; padding: 0; overflow: hidden; background-color: #f8f9fa;">
+            <div style="background: #3498db; color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0; font-size: 20px;">⚙️ Cấu Hình Thiết Bị</h2>
+                <span class="close" onclick="closeDeviceModal()" style="color: white; opacity: 0.8; margin-top: 0;">&times;</span>
+            </div>
+
+            <div class="dev-tabs">
+                <button class="dev-tab-btn active" onclick="switchDevTab('dev-basic')">Cơ Bản</button>
+                <button class="dev-tab-btn" onclick="switchDevTab('dev-network')">Mạng</button>
+                <button class="dev-tab-btn" onclick="switchDevTab('dev-module')">Module</button>
+            </div>
+            
+            <div style="overflow-y: auto; max-height: 70vh;">
+                <div id="dev-basic" class="dev-tab-content active">
+                    <input type="hidden" id="devOldId">
+                    <label style="color: #7f8c8d; font-size: 13px;">Mã Thiết Bị (Cố định theo phần cứng):</label>
+                    <input type="text" id="devEditId" readonly style="border: 1px solid #ddd; background: #ecf0f1; font-weight: bold; color: #7f8c8d; cursor: not-allowed;">
+                    
+                    <label style="color: #7f8c8d; font-size: 13px; margin-top: 10px;">Tên Hiển Thị (Có thể thay đổi):</label>
+                    <input type="text" id="devEditName" placeholder="Tên gợi nhớ..." style="border: 1px solid #ddd; background: white;">
+                    
+                    <div style="display:flex; gap:15px; background: #eef2f5; padding: 12px; border-radius: 6px; margin-top: 15px; border: 1px solid #dcdde1;">
+                        <div style="flex:1;"><span style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 3px;">IPv4 Address</span><span id="devEditIp" style="font-weight: bold; color: #2c3e50; font-family: monospace;">-</span></div>
+                        <div style="flex:1;"><span style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 3px;">MAC Address</span><span id="devEditMac" style="font-weight: bold; color: #2c3e50; font-family: monospace;">-</span></div>
+                    </div>
+                    <button type="button" class="btn btn-active" style="width:100%; margin-top: 20px;" onclick="saveDeviceConfig()">💾 Cập Nhật Tên Thiết Bị</button>
+                </div>
+
+                <div id="dev-network" class="dev-tab-content">
+                    <label style="color: #7f8c8d; font-size: 13px;">Mạng hiện tại đang dùng:</label>
+                    <input type="text" id="devEditSsid" readonly style="background-color: #eafaf1; color: #27ae60; font-weight: bold; text-align: center; border: 1px dashed #2ecc71;">
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <button type="button" class="btn btn-active" style="flex: 1; margin: 0; background-color: #e67e22;" onclick="toggleNewWifiForm()">🔄 Đổi Wi-Fi Mới</button>
+                        <button type="button" class="btn btn-active" style="flex: 1; margin: 0; background-color: #27ae60;" onclick="toggleSavedWifiList()">📋 Đã Kết Nối</button>
+                    </div>
+
+                    <!-- Form nhập Wi-Fi mới (Mặc định ẩn) -->
+                    <div id="newWifiFormUI" style="display: none; background: white; padding: 15px; border-radius: 6px; border: 1px solid #f5b041; margin-top: 15px;">
+                        <label style="margin-top:0; color:#d35400; font-size: 14px; margin-bottom: 10px; font-weight:bold; display:block;">🌐 Nhập Wi-Fi Mới:</label>
+                        <div style="display:flex; flex-direction:column; gap:10px;">
+                            <input type="text" id="devNewSsid" placeholder="Tên Wi-Fi (SSID)..." style="margin-bottom:0; border: 1px solid #ddd;">
+                            <input type="password" id="devNewPass" placeholder="Mật khẩu..." style="margin-bottom:0; border: 1px solid #ddd;">
+                        </div>
+                        <button type="button" class="btn" style="width:100%; margin: 15px 0 0 0; background-color: #e67e22;" onclick="connectDeviceWifi()">🚀 Gửi Lệnh Đổi Wi-Fi</button>
+                    </div>
+
+                    <!-- Danh sách Wi-Fi đã lưu (Mặc định ẩn) -->
+                    <div id="savedWifiListContainer" style="display: none; background: white; padding: 15px; border-radius: 6px; border: 1px solid #2ecc71; margin-top: 15px;">
+                        <label style="margin-top:0; color:#27ae60; font-size: 14px; margin-bottom: 10px; font-weight:bold; display:block;">📋 Chọn từ Wi-Fi đã kết nối:</label>
+                        <div id="savedWifiListUI" class="net-list" style="margin-bottom: 0;">
+                            <div style="text-align:center; padding:15px; color:#7f8c8d;">Đang tải...</div>
+                        </div>
+                        <p style="font-size: 12px; color: #7f8c8d; margin-top: 8px; text-align:center;">Bấm vào một mạng để tự động gửi lệnh đổi.</p>
+                    </div>
+                </div>
+
+                <div id="dev-module" class="dev-tab-content">
+                    <div style="background: white; padding: 15px 20px; border-radius: 8px; border: 1px solid #e0e6ed;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #eee;">
+                            <div><strong style="color: #2c3e50; display: block;">Đầu đọc RFID</strong><span style="font-size: 12px; color: #7f8c8d;">Bật/tắt quét thẻ</span></div>
+                            <label class="switch"><input type="checkbox" id="modalRfidToggle" onchange="toggleModuleFromModal('rfid', this.checked)"><span class="slider"></span></label>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
+                            <div><strong style="color: #2c3e50; display: block;">Đèn LED RGB</strong><span style="font-size: 12px; color: #7f8c8d;">Bật/tắt đèn ESP32</span></div>
+                            <label class="switch"><input type="checkbox" id="modalLedToggle" onchange="toggleModuleFromModal('led', this.checked)"><span class="slider"></span></label>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <!-- Modal Chi Tiết Thiết Bị -->
-        <div id="deviceModal" class="modal">
-            <div class="modal-content" style="max-width: 500px; padding: 0; overflow: hidden; background-color: #f8f9fa;">
-                <div style="background: #3498db; color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center;">
-                    <h2 style="margin: 0; font-size: 20px;">⚙️ Cấu Hình Thiết Bị</h2>
-                    <span class="close" onclick="closeDeviceModal()" style="color: white; opacity: 0.8; margin-top: 0;">&times;</span>
-                </div>
+    </div>
 
-                <div class="dev-tabs">
-                    <button class="dev-tab-btn active" onclick="switchDevTab('dev-basic')">Cơ Bản</button>
-                    <button class="dev-tab-btn" onclick="switchDevTab('dev-network')">Mạng</button>
-                    <button class="dev-tab-btn" onclick="switchDevTab('dev-module')">Module</button>
-                </div>
-                
-                <div style="overflow-y: auto; max-height: 70vh;">
-                    <div id="dev-basic" class="dev-tab-content active">
-                        <input type="hidden" id="devOldId">
-                        <label style="color: #7f8c8d; font-size: 13px;">Mã Thiết Bị (Cố định theo phần cứng):</label>
-                        <input type="text" id="devEditId" readonly style="border: 1px solid #ddd; background: #ecf0f1; font-weight: bold; color: #7f8c8d; cursor: not-allowed;">
-                        
-                        <label style="color: #7f8c8d; font-size: 13px; margin-top: 10px;">Tên Hiển Thị (Có thể thay đổi):</label>
-                        <input type="text" id="devEditName" placeholder="Tên gợi nhớ..." style="border: 1px solid #ddd; background: white;">
-                        
-                        <div style="display:flex; gap:15px; background: #eef2f5; padding: 12px; border-radius: 6px; margin-top: 15px; border: 1px solid #dcdde1;">
-                            <div style="flex:1;"><span style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 3px;">IPv4 Address</span><span id="devEditIp" style="font-weight: bold; color: #2c3e50; font-family: monospace;">-</span></div>
-                            <div style="flex:1;"><span style="font-size: 12px; color: #7f8c8d; display: block; margin-bottom: 3px;">MAC Address</span><span id="devEditMac" style="font-weight: bold; color: #2c3e50; font-family: monospace;">-</span></div>
-                        </div>
-                        <button type="button" class="btn btn-active" style="width:100%; margin-top: 20px;" onclick="saveDeviceConfig()">💾 Cập Nhật Tên Thiết Bị</button>
-                    </div>
-
-                    <div id="dev-network" class="dev-tab-content">
-                        <label style="color: #7f8c8d; font-size: 13px;">Mạng hiện tại đang dùng:</label>
-                        <input type="text" id="devEditSsid" readonly style="background-color: #eafaf1; color: #27ae60; font-weight: bold; text-align: center; border: 1px dashed #2ecc71;">
-                        
-                        <div style="display: flex; gap: 10px; margin-top: 15px;">
-                            <button type="button" class="btn btn-active" style="flex: 1; margin: 0; background-color: #e67e22;" onclick="toggleNewWifiForm()">🔄 Đổi Wi-Fi Mới</button>
-                            <button type="button" class="btn btn-active" style="flex: 1; margin: 0; background-color: #27ae60;" onclick="toggleSavedWifiList()">📋 Đã Kết Nối</button>
-                        </div>
-
-                        <!-- Form nhập Wi-Fi mới (Mặc định ẩn) -->
-                        <div id="newWifiFormUI" style="display: none; background: white; padding: 15px; border-radius: 6px; border: 1px solid #f5b041; margin-top: 15px;">
-                            <label style="margin-top:0; color:#d35400; font-size: 14px; margin-bottom: 10px; font-weight:bold; display:block;">🌐 Nhập Wi-Fi Mới:</label>
-                            <div style="display:flex; flex-direction:column; gap:10px;">
-                                <input type="text" id="devNewSsid" placeholder="Tên Wi-Fi (SSID)..." style="margin-bottom:0; border: 1px solid #ddd;">
-                                <input type="password" id="devNewPass" placeholder="Mật khẩu..." style="margin-bottom:0; border: 1px solid #ddd;">
-                            </div>
-                            <button type="button" class="btn" style="width:100%; margin: 15px 0 0 0; background-color: #e67e22;" onclick="connectDeviceWifi()">🚀 Gửi Lệnh Đổi Wi-Fi</button>
-                        </div>
-
-                        <!-- Danh sách Wi-Fi đã lưu (Mặc định ẩn) -->
-                        <div id="savedWifiListContainer" style="display: none; background: white; padding: 15px; border-radius: 6px; border: 1px solid #2ecc71; margin-top: 15px;">
-                            <label style="margin-top:0; color:#27ae60; font-size: 14px; margin-bottom: 10px; font-weight:bold; display:block;">📋 Chọn từ Wi-Fi đã kết nối:</label>
-                            <div id="savedWifiListUI" class="net-list" style="margin-bottom: 0;">
-                                <div style="text-align:center; padding:15px; color:#7f8c8d;">Đang tải...</div>
-                            </div>
-                            <p style="font-size: 12px; color: #7f8c8d; margin-top: 8px; text-align:center;">Bấm vào một mạng để tự động gửi lệnh đổi.</p>
-                        </div>
-                    </div>
-
-                    <div id="dev-module" class="dev-tab-content">
-                        <div style="background: white; padding: 15px 20px; border-radius: 8px; border: 1px solid #e0e6ed;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #eee;">
-                                <div><strong style="color: #2c3e50; display: block;">Đầu đọc RFID</strong><span style="font-size: 12px; color: #7f8c8d;">Bật/tắt quét thẻ</span></div>
-                                <label class="switch"><input type="checkbox" id="modalRfidToggle" onchange="toggleModuleFromModal('rfid', this.checked)"><span class="slider"></span></label>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
-                                <div><strong style="color: #2c3e50; display: block;">Đèn LED RGB</strong><span style="font-size: 12px; color: #7f8c8d;">Bật/tắt đèn ESP32</span></div>
-                                <label class="switch"><input type="checkbox" id="modalLedToggle" onchange="toggleModuleFromModal('led', this.checked)"><span class="slider"></span></label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <!-- Modal QR và Modal Lý do -->
+    <div id="qrModal" class="modal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
+                <h2 style="margin: 0; color: #2c3e50;">Khai Báo Về Sớm</h2>
+                <span class="close" onclick="closeQRModal()" title="Đóng bảng">&times;</span>
+            </div>
+            <label style="text-align: left; font-weight: bold; color: #34495e; display: block;">Lý do về sớm:</label>
+            <input type="text" id="qrReason" placeholder="Nhập lý do chính đáng..." style="width: 100%; padding: 10px; margin: 10px 0 20px 0; border: 1px solid #ccc; border-radius: 4px; font-size: 15px;">
+            <button type="button" class="btn btn-active" style="width: 100%; font-size: 16px; padding: 12px;" onclick="generateQRCode()">Xác nhận & Tạo Mã</button>
+            
+            <div id="qrResult" style="margin-top: 20px; display: none;">
+                <p style="font-weight: bold; color: #e74c3c;">Đưa mã này vào Camera OV3660 để quét xuất bến</p>
+                <img id="qrImage" src="" alt="QR Code" style="max-width: 250px; border: 1px solid #ccc; padding: 10px; border-radius: 8px;">
             </div>
         </div>
     </div>
-<!-- BẮT ĐẦU THÊM MỚI (Modal QR và Modal Lý do) -->
-<div id="qrModal" class="modal">
-    <div class="modal-content" style="max-width: 400px; text-align: center;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
-            <h2 style="margin: 0; color: #2c3e50;">Khai Báo Về Sớm</h2>
-            <span class="close" onclick="closeQRModal()" title="Đóng bảng">&times;</span>
-        </div>
-        <label style="text-align: left; font-weight: bold; color: #34495e; display: block;">Lý do về sớm:</label>
-        <input type="text" id="qrReason" placeholder="Nhập lý do chính đáng..." style="width: 100%; padding: 10px; margin: 10px 0 20px 0; border: 1px solid #ccc; border-radius: 4px; font-size: 15px;">
-        <button type="button" class="btn btn-active" style="width: 100%; font-size: 16px; padding: 12px;" onclick="generateQRCode()">Xác nhận & Tạo Mã</button>
-        
-        <div id="qrResult" style="margin-top: 20px; display: none;">
-            <p style="font-weight: bold; color: #e74c3c;">Đưa mã này vào Camera OV3660 để quét xuất bến</p>
-            <img id="qrImage" src="" alt="QR Code" style="max-width: 250px; border: 1px solid #ccc; padding: 10px; border-radius: 8px;">
-        </div>
-    </div>
-</div>
 
-<div id="reasonModal" class="modal">
-    <div class="modal-content" style="max-width: 400px; text-align: center;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
-            <h2 style="margin: 0; color: #e74c3c;">Lý Do Về Sớm</h2>
-            <span class="close" onclick="closeReasonModal()" title="Đóng bảng">&times;</span>
+    <div id="reasonModal" class="modal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
+                <h2 style="margin: 0; color: #e74c3c;">Lý Do Về Sớm</h2>
+                <span class="close" onclick="closeReasonModal()" title="Đóng bảng">&times;</span>
+            </div>
+            <p id="reasonText" style="font-size: 16px; color: #2c3e50; font-weight: bold; padding: 20px; background: #f9f9f9; border-radius: 8px; border: 1px dashed #ccc;"></p>
         </div>
-        <p id="reasonText" style="font-size: 16px; color: #2c3e50; font-weight: bold; padding: 20px; background: #f9f9f9; border-radius: 8px; border: 1px dashed #ccc;"></p>
     </div>
-</div>
+
     <!-- Modal Lịch Sử Thay Đổi Ca -->
-        <div id="shiftHistoryModal" class="modal">
-            <div class="modal-content" style="max-width: 600px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
-                    <h2 style="margin: 0; color: #2c3e50;">Lịch Sử Phân Ca</h2>
-                    <span class="close" onclick="closeShiftHistoryModal()" title="Đóng bảng">&times;</span>
-                </div>
-                <div style="max-height: 400px; overflow-y: auto;">
-                    <table style="margin-top:0;">
-                        <thead style="position:sticky; top:0; z-index:1; background-color: #3498db;">
-                            <tr><th style="color:white;">Thời Gian</th><th style="color:white;">Nội Dung Thay Đổi</th></tr>
-                        </thead>
-                        <tbody id="shiftHistoryTableBody"></tbody>
-                    </table>
-                </div>
+    <div id="shiftHistoryModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
+                <h2 style="margin: 0; color: #2c3e50;">Lịch Sử Phân Ca</h2>
+                <span class="close" onclick="closeShiftHistoryModal()" title="Đóng bảng">&times;</span>
+            </div>
+            <div style="max-height: 400px; overflow-y: auto;">
+                <table style="margin-top:0;">
+                    <thead style="position:sticky; top:0; z-index:1; background-color: #3498db;">
+                        <tr><th style="color:white;">Thời Gian</th><th style="color:white;">Nội Dung Thay Đổi</th></tr>
+                    </thead>
+                    <tbody id="shiftHistoryTableBody"></tbody>
+                </table>
             </div>
         </div>
-    <div id="adminCameraModal" class="modal">
-    <div class="modal-content" style="max-width: 600px; text-align: center; background: #2c3e50; border:none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #34495e; padding-bottom: 10px; margin-bottom: 15px;">
-            <h2 style="margin: 0; color: #ecf0f1; font-size: 18px;">🔴 Trực Tiếp Camera (Màn Hình Quét QR)</h2>
-            <span class="close" onclick="closeAdminCamera()" style="color: #ecf0f1;">&times;</span>
-        </div>
-        <div style="background: #000; border-radius: 8px; overflow: hidden; min-height: 240px; display: flex; align-items: center; justify-content: center;">
-            <img id="adminCameraStream" src="" alt="Đang kết nối đến Camera..." style="width: 100%; max-width: 640px; display: block;">
-        </div>
-        <p style="color: #95a5a6; font-size: 12px; margin-top: 15px; text-align: left;">
-            * Yêu cầu thiết bị truy cập phải dùng chung mạng Wi-Fi với ESP32.<br>
-            * Hình ảnh hiển thị dạng Grayscale (Trắng/Đen) để tối ưu cho việc nhận diện mã QR ngầm.
-        </p>
     </div>
-</div>
+
+    <!-- Camera Modal -->
+    <div id="adminCameraModal" class="modal">
+        <div class="modal-content" style="max-width: 600px; text-align: center; background: #2c3e50; border:none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #34495e; padding-bottom: 10px; margin-bottom: 15px;">
+                <h2 style="margin: 0; color: #ecf0f1; font-size: 18px;">🔴 Trực Tiếp Camera (Màn Hình Quét QR)</h2>
+                <span class="close" onclick="closeAdminCamera()" style="color: #ecf0f1;">&times;</span>
+            </div>
+            <div style="background: #000; border-radius: 8px; overflow: hidden; min-height: 240px; display: flex; align-items: center; justify-content: center;">
+                <img id="adminCameraStream" src="" alt="Đang kết nối đến Camera..." style="width: 100%; max-width: 640px; display: block;">
+            </div>
+            <p style="color: #95a5a6; font-size: 12px; margin-top: 15px; text-align: left;">
+                - Yêu cầu thiết bị truy cập phải dùng chung mạng Wi-Fi với ESP32.<br>
+                - Hình ảnh hiển thị dạng Grayscale (Trắng/Đen) để tối ưu cho việc nhận diện mã QR ngầm.
+            </p>
+        </div>
+    </div>
+
     <!-- Tải Firebase SDK (Modular v9+) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -726,7 +738,7 @@
                     }
                     applyUViewFilter();
 
-                    // Mặc định luôn hiện tab lịch sử điểm danh (tránh trắng trang khi load lại)
+                    // Mặc định luôn hiện tab lịch sử điểm danh
                     switchUserRightTab('history');
                     
                     // Vẽ lịch sử đăng ký vào sớm cho User
@@ -745,7 +757,6 @@
             });
         }
 
-        // --- Các hàm hỗ trợ phân trang cho User View ---
         window.changeUViewRows = function() { uViewRows = parseInt(document.getElementById('uViewRows').value); uViewPage = 1; renderUViewTable(); };
         window.applyUViewFilter = function() { filteredUserAtt = filterByDate(userAttData, document.getElementById('uViewStartDate').value, document.getElementById('uViewEndDate').value); uViewPage = 1; renderUViewTable(); };
         window.clearUViewFilter = function() { document.getElementById('uViewStartDate').value = ''; document.getElementById('uViewEndDate').value = ''; filteredUserAtt = [...userAttData]; uViewPage = 1; renderUViewTable(); };
@@ -914,7 +925,6 @@
             });
         }
 
-        // ================= HÀM HỖ TRỢ CHUNG CỦA ADMIN =================
         let globalAttData = [], filteredGlobalAtt = [], globalPage = 1, globalRows = 10;
         let personalAttData = [], filteredPersonalAtt = [], personalPage = 1, personalRows = 10;
         let retentionDays = 0;
@@ -1519,6 +1529,7 @@ window.closeAdminCamera = function() {
             }
         }, 3000);
         // BẮT ĐẦU SỬA JS: Thêm hàm xử lý đăng ký vào sớm
+// BẮT ĐẦU SỬA JS: Fix lỗi đăng ký vào sớm bằng Unix Timestamp
 window.registerEarlyEntry = function() {
     if (!currentUser || !currentUser.uid) {
         alert("Vui lòng đăng nhập để sử dụng tính năng này!");
@@ -1529,21 +1540,23 @@ window.registerEarlyEntry = function() {
     
     if (reason && reason.trim() !== "") {
         const uid = currentUser.uid;
+        // Lưu thời gian hiện tại (giây) thay vì chuỗi ngày
         const currentTimestamp = Math.floor(Date.now() / 1000); 
         
-        const newEntry = {
+        update(ref(db, `Members/${uid}/earlyEntry`), {
+            timestamp: currentTimestamp, // Sử dụng timestamp
+            reason: reason.trim(),
+            approved: false // CHUYỂN SANG false ĐỂ ADMIN DUYỆT TRƯỚC 
+        }).then(() => {
+            
+        // Đồng thời ghi một bản sao vào "earlyEntryHistory" để làm lịch sử
+        set(ref(db, `Members/${uid}/earlyEntryHistory/${currentTimestamp}`), {
             timestamp: currentTimestamp,
             reason: reason.trim(),
-            approved: true 
-        };
-
-        // Ghi vào "earlyEntry" cho phần cứng kiểm tra
-        update(ref(db, `Members/${uid}/earlyEntry`), newEntry);
-        
-        // Đồng thời ghi một bản sao vào "earlyEntryHistory" để làm lịch sử
-        set(ref(db, `Members/${uid}/earlyEntryHistory/${currentTimestamp}`), newEntry)
-        .then(() => {
-            alert(`Đã đăng ký vào sớm thành công! Bây giờ bạn có thể quét thẻ.`);
+            approved: false 
+        }).then(() => {
+            alert(`Đã gửi yêu cầu đăng ký vào sớm thành công! Vui lòng chờ Quản trị viên duyệt trước khi quét thẻ.`);
+        });
         }).catch((error) => {
             alert("Lỗi khi đăng ký: " + error.message);
         });
