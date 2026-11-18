@@ -227,9 +227,11 @@
                             <button type="button" class="btn btn-add" style="width: 100%; margin:0;" onclick="openShiftModal()">➕ Thêm Ca Mới</button>
                         </div>
                     </div>
-                </div>
+                </div> <!-- Đóng tab-settings -->
+            </div> <!-- Đóng container của ADMIN VIEW -->
+        </div> <!-- Đóng adminControls -->
 
-        <!-- Shift Modal (Thêm/Sửa Ca Làm Việc) -->
+        <!-- Shift Modal (Thêm/Sửa Ca Làm Việc) Nằm ngoài luồng Tabs -->
         <div id="shiftModal" class="modal">
             <div class="modal-content" style="max-width: 400px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
@@ -244,8 +246,6 @@
                     <div style="flex:1;"><label>Kết thúc:</label><input type="time" id="newShiftEnd"></div>
                 </div>
                 <button type="button" class="btn btn-primary" style="margin-top:20px; background-color:#3498db; width: 100%; border:none; padding:12px; color:white; border-radius:5px; font-weight:bold; cursor:pointer;" onclick="saveNewShift()">Lưu Ca Làm Việc</button>
-            </div>
-        </div>
             </div>
         </div>
 
