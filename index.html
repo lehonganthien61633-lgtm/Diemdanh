@@ -653,15 +653,7 @@
                 
                 listenForApprovals(); // THÊM DÒNG NÀY ĐỂ KÍCH HOẠT QUÉT YÊU CẦU CHỜ DUYỆT
             }
-            if (email === "admin@test.com" && pass === "12345678") {
-                currentUser = { role: 'admin', name: 'Quản trị viên' };
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('mainApp').style.display = 'block';
-                document.getElementById('adminControls').style.display = 'block';
-                document.getElementById('userControls').style.display = 'none';
-                document.getElementById('currentUserDisp').innerText = "Chào Admin";
-                startAdminListeners();
-            } else {
+            else {
                 get(ref(db, 'Members')).then((snapshot) => {
                     let foundUser = null;
                     snapshot.forEach((child) => {
@@ -1551,27 +1543,26 @@ window.registerEarlyEntry = function() {
         return;
     }
     
-    const reason = prompt("Bạn đang yêu cầu vào sớm quá 3 tiếng. Vui lòng nhập lý do (VD: Họp đột xuất, Tăng ca trước...):");
+    const reason = prompt("Bạn đang yêu cầu vào sớm hơn 1 tiếng. Vui lòng nhập lý do:");
     
     if (reason && reason.trim() !== "") {
         const uid = currentUser.uid;
-        // Lưu thời gian hiện tại (giây) thay vì chuỗi ngày
         const currentTimestamp = Math.floor(Date.now() / 1000); 
         
         update(ref(db, `Members/${uid}/earlyEntry`), {
-            timestamp: currentTimestamp, // Sử dụng timestamp
-            reason: reason.trim(),
-            approved: false // CHUYỂN SANG false ĐỂ ADMIN DUYỆT TRƯỚC 
-        }).then(() => {
-            
-        // Đồng thời ghi một bản sao vào "earlyEntryHistory" để làm lịch sử
-        set(ref(db, `Members/${uid}/earlyEntryHistory/${currentTimestamp}`), {
             timestamp: currentTimestamp,
             reason: reason.trim(),
-            approved: false 
+            approved: false,
+            approvedAt: 0,
+            used: false
         }).then(() => {
-            alert(`Đã gửi yêu cầu đăng ký vào sớm thành công! Vui lòng chờ Quản trị viên duyệt trước khi quét thẻ.`);
-        });
+            set(ref(db, `Members/${uid}/earlyEntryHistory/${currentTimestamp}`), {
+                timestamp: currentTimestamp,
+                reason: reason.trim(),
+                approved: false 
+            }).then(() => {
+                alert("Đã gửi yêu cầu vào sớm! Sau khi Admin duyệt, bạn có 15 phút để quét thẻ (chỉ quét 1 lần).");
+            });
         }).catch((error) => {
             alert("Lỗi khi đăng ký: " + error.message);
         });
@@ -1579,106 +1570,161 @@ window.registerEarlyEntry = function() {
         alert("Bạn phải nhập lý do để đăng ký!");
     }
 };
-// ================= XỬ LÝ DUYỆT YÊU CẦU VÀO SỚM =================
-        let pendingApprovals = {}; // Chứa danh sách các yêu cầu đang chờ duyệt
-        
-        // Hàm lắng nghe và đếm số lượng yêu cầu cần duyệt (Chỉ chạy khi là Admin)
-        function listenForApprovals() {
-            onValue(ref(db, 'Members'), (snapshot) => {
-                pendingApprovals = {};
-                let count = 0;
-                
-                snapshot.forEach((childSnap) => {
-                    const uid = childSnap.key;
-                    const info = childSnap.val();
-                    
-                    // Nếu user có earlyEntry và trạng thái là false (chưa duyệt)
-                    if (info.earlyEntry && info.earlyEntry.approved === false) {
-                        pendingApprovals[uid] = {
-                            name: info.name || "Không rõ",
-                            reason: info.earlyEntry.reason || "Không có",
-                            timestamp: info.earlyEntry.timestamp
-                        };
-                        count++;
-                    }
-                });
-                
-                // Cập nhật giao diện nút Thông báo
-                const notiBtn = document.getElementById('btnAdminNoti');
-                const badge = document.getElementById('notiBadge');
-                
-                if (currentUser && currentUser.role === 'admin') {
-                    notiBtn.style.display = 'inline-block';
-                    if (count > 0) {
-                        badge.innerText = count;
-                        badge.style.display = 'inline-block';
-                    } else {
-                        badge.style.display = 'none';
-                        notiBtn.style.animation = "none";
-                    }
-                } else {
-                    notiBtn.style.display = 'none';
-                }
-            });
+
+// ================= XỬ LÝ DUYỆT VÀO SỚM & TĂNG CA =================
+let pendingApprovals = {};
+let pendingOvertimes = {};
+
+function updateAdminBadge() {
+    const notiBtn = document.getElementById('btnAdminNoti');
+    const badge = document.getElementById('notiBadge');
+    const total = Object.keys(pendingApprovals).length + Object.keys(pendingOvertimes).length;
+
+    if (currentUser && currentUser.role === 'admin') {
+        notiBtn.style.display = 'inline-block';
+        if (total > 0) {
+            badge.innerText = total;
+            badge.style.display = 'inline-block';
+        } else {
+            badge.style.display = 'none';
         }
+    } else {
+        notiBtn.style.display = 'none';
+    }
+}
 
-        // Mở Modal Danh sách duyệt
-        window.openApprovalModal = function() {
-            const tbody = document.getElementById('approvalTableBody');
-            tbody.innerHTML = '';
-            
-            if (Object.keys(pendingApprovals).length === 0) {
-                tbody.innerHTML = '<tr><td colspan="3" class="empty-row">Không có yêu cầu nào</td></tr>';
-            } else {
-                for (const [uid, data] of Object.entries(pendingApprovals)) {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><strong>${data.name}</strong><br><span style="font-size:11px;color:#7f8c8d;">${uid}</span></td>
-                            <td>${data.reason}</td>
-                            <td>
-                                <button class="btn btn-active" style="background:#27ae60; padding:5px 10px; font-size:13px;" onclick="approveEarlyEntry('${uid}', ${data.timestamp})">✅ Duyệt</button>
-                            </td>
-                        </tr>
-                    `;
-                }
+function listenForApprovals() {
+    // 1. Lắng nghe yêu cầu Vào sớm (chưa duyệt và chưa sử dụng)
+    onValue(ref(db, 'Members'), (snapshot) => {
+        pendingApprovals = {};
+        snapshot.forEach((childSnap) => {
+            const uid = childSnap.key;
+            const info = childSnap.val();
+            if (info.earlyEntry && info.earlyEntry.approved === false && info.earlyEntry.used === false) {
+                pendingApprovals[uid] = {
+                    name: info.name || "Không rõ",
+                    reason: info.earlyEntry.reason || "Không có",
+                    timestamp: info.earlyEntry.timestamp
+                };
             }
-            document.getElementById('approvalModal').style.display = 'block';
-        };
+        });
+        updateAdminBadge();
+        if (document.getElementById('approvalModal').style.display === 'block') renderApprovalTables();
+    });
 
-        window.closeApprovalModal = function() {
-            document.getElementById('approvalModal').style.display = 'none';
-        };
-
-        // Xử lý nút Duyệt
-        window.approveEarlyEntry = function(uid, timestamp) {
-            if(confirm("Xác nhận cho phép nhân viên này vào sớm?")) {
-                const updates = {};
-                // Đổi trạng thái biến earlyEntry thành true để phần cứng ESP32 đọc được
-                updates[`Members/${uid}/earlyEntry/approved`] = true;
-                // Đồng thời cập nhật trạng thái trong lịch sử
-                updates[`Members/${uid}/earlyEntryHistory/${timestamp}/approved`] = true;
-                
-                update(ref(db), updates).then(() => {
-                    alert("Đã duyệt thành công! Thiết bị sẽ chấp nhận thẻ của nhân viên này.");
-                    // Lịch sử điểm danh (user/admin modal) sẽ tự động reload do đã có onValue lắng nghe
-                    // Nếu Modal duyệt đang mở và hết danh sách, đóng lại
-                    if (Object.keys(pendingApprovals).length <= 1) {
-                        closeApprovalModal();
-                    }
-                });
+    // 2. Lắng nghe yêu cầu xác nhận Tăng ca
+    onValue(ref(db, 'OvertimeRequests'), (snapshot) => {
+        pendingOvertimes = {};
+        snapshot.forEach((childSnap) => {
+            const key = childSnap.key;
+            const info = childSnap.val();
+            if (info && info.status === "pending") {
+                pendingOvertimes[key] = info;
             }
-        };
+        });
+        updateAdminBadge();
+        if (document.getElementById('approvalModal').style.display === 'block') renderApprovalTables();
+    });
+}
+
+function renderApprovalTables() {
+    const tbody = document.getElementById('approvalTableBody');
+    tbody.innerHTML = '';
+    if (Object.keys(pendingApprovals).length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="empty-row">Không có yêu cầu nào</td></tr>';
+    } else {
+        for (const [uid, data] of Object.entries(pendingApprovals)) {
+            tbody.innerHTML += `
+                <tr>
+                    <td><strong>${data.name}</strong><br><span style="font-size:11px;color:#7f8c8d;">${uid}</span></td>
+                    <td>${data.reason}</td>
+                    <td>
+                        <button class="btn btn-active" style="background:#27ae60; padding:5px 10px; font-size:13px;" onclick="approveEarlyEntry('${uid}', ${data.timestamp})">✅ Duyệt</button>
+                    </td>
+                </tr>`;
+        }
+    }
+
+    const otBody = document.getElementById('overtimeTableBody');
+    otBody.innerHTML = '';
+    if (Object.keys(pendingOvertimes).length === 0) {
+        otBody.innerHTML = '<tr><td colspan="3" class="empty-row">Không có yêu cầu tăng ca nào</td></tr>';
+    } else {
+        for (const [key, data] of Object.entries(pendingOvertimes)) {
+            otBody.innerHTML += `
+                <tr>
+                    <td><strong>${data.name}</strong><br><span style="font-size:11px;color:#7f8c8d;">${data.uid}</span></td>
+                    <td>Ra: ${data.time}<br><strong style="color:#8e44ad;">Tăng ca: ${data.otHours} giờ</strong> (Hết ca: ${data.shiftEnd})</td>
+                    <td>
+                        <button class="btn btn-active" style="background:#27ae60; padding:5px 8px; font-size:12px; margin-bottom:4px;" onclick="approveOvertime('${key}', '${data.uid}', '${data.attKey}', '${data.otHours}')">✅ Xác nhận</button>
+                        <button class="btn btn-cancel" style="display:inline-block; padding:5px 8px; font-size:12px; margin:0;" onclick="rejectOvertime('${key}', '${data.uid}', '${data.attKey}')">❌ Từ chối</button>
+                    </td>
+                </tr>`;
+        }
+    }
+}
+
+window.openApprovalModal = function() {
+    renderApprovalTables();
+    document.getElementById('approvalModal').style.display = 'block';
+};
+
+window.closeApprovalModal = function() {
+    document.getElementById('approvalModal').style.display = 'none';
+};
+
+window.approveEarlyEntry = function(uid, timestamp) {
+    if(confirm("Xác nhận duyệt vào sớm? (Nhân viên sẽ có 15 phút để quét thẻ 1 lần)")) {
+        const approvedAt = Math.floor(Date.now() / 1000);
+        const updates = {};
+        updates[`Members/${uid}/earlyEntry/approved`] = true;
+        updates[`Members/${uid}/earlyEntry/approvedAt`] = approvedAt;
+        updates[`Members/${uid}/earlyEntry/used`] = false;
+        updates[`Members/${uid}/earlyEntryHistory/${timestamp}/approved`] = true;
+        
+        update(ref(db), updates).then(() => {
+            alert("Đã duyệt! Bắt đầu đếm ngược 15 phút để nhân viên quét thẻ.");
+        });
+    }
+};
+
+window.approveOvertime = function(reqKey, uid, attKey, defaultHours) {
+    const confirmedHours = prompt("Xác nhận số giờ tăng ca cho nhân viên này (giờ):", defaultHours);
+    if (confirmedHours !== null && confirmedHours.trim() !== "") {
+        const updates = {};
+        updates[`OvertimeRequests/${reqKey}/status`] = "approved";
+        updates[`OvertimeRequests/${reqKey}/confirmedHours`] = confirmedHours.trim();
+        updates[`Members/${uid}/Attendance/${attKey}/status`] = `Ra (Tăng ca: ${confirmedHours.trim()}h)`;
+
+        update(ref(db), updates).then(() => {
+            alert(`Đã xác nhận tăng ca ${confirmedHours.trim()} giờ!`);
+        });
+    }
+};
+
+window.rejectOvertime = function(reqKey, uid, attKey) {
+    if (confirm("Từ chối tính tăng ca cho lượt ra này?")) {
+        const updates = {};
+        updates[`OvertimeRequests/${reqKey}/status`] = "rejected";
+        updates[`Members/${uid}/Attendance/${attKey}/status`] = "Ra (Tăng ca - Từ chối)";
+
+        update(ref(db), updates).then(() => {
+            alert("Đã từ chối yêu cầu tăng ca.");
+        });
+    }
+};
     </script>
 <!-- Modal Chờ Duyệt (Dành cho Admin) -->
     <div id="approvalModal" class="modal">
-        <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-content" style="max-width: 650px;">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
-                <h2 style="margin: 0; color: #e67e22;">Danh Sách Chờ Duyệt Vào Sớm</h2>
+                <h2 style="margin: 0; color: #e67e22;">Danh Sách Yêu Cầu Chờ Duyệt</h2>
                 <span class="close" onclick="closeApprovalModal()" title="Đóng bảng">&times;</span>
             </div>
-            <div style="max-height: 400px; overflow-y: auto;">
-                <table style="margin-top:0;">
-                    <thead style="position:sticky; top:0; z-index:1; background-color: #e67e22;">
+            <div style="max-height: 70vh; overflow-y: auto;">
+                <h3 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 16px;">🕒 Yêu Cầu Vào Sớm (Hiệu lực 15 phút sau khi duyệt)</h3>
+                <table style="margin-top:0; margin-bottom: 20px;">
+                    <thead style="background-color: #e67e22;">
                         <tr>
                             <th style="color:white;">Họ Tên (UID)</th>
                             <th style="color:white;">Lý do</th>
@@ -1687,6 +1733,20 @@ window.registerEarlyEntry = function() {
                     </thead>
                     <tbody id="approvalTableBody">
                         <tr><td colspan="3" class="empty-row">Không có yêu cầu nào</td></tr>
+                    </tbody>
+                </table>
+
+                <h3 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 16px;">⏱️ Xác Nhận Số Giờ Tăng Ca</h3>
+                <table style="margin-top:0;">
+                    <thead style="background-color: #8e44ad;">
+                        <tr>
+                            <th style="color:white;">Họ Tên (UID)</th>
+                            <th style="color:white;">Giờ ra / Đề xuất</th>
+                            <th style="color:white; width: 140px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="overtimeTableBody">
+                        <tr><td colspan="3" class="empty-row">Không có yêu cầu tăng ca nào</td></tr>
                     </tbody>
                 </table>
             </div>
