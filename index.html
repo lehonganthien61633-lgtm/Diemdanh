@@ -264,9 +264,8 @@
                     <label style="font-weight: bold; margin-top: 10px; display: block; font-size: 14px; color: #34495e;">Email:</label>
                     <input type="email" id="uViewEmail" readonly style="width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; background-color: #f9f9f9;">
                     
-                    <button type="button" id="btnGenerateQR" class="btn btn-add" style="width: 100%; margin-top: 15px;" onclick="openQRModal()">📷 Tạo Mã QR Ra Ngoài Sớm (Kèm lý do)</button>
-                    <button type="button" id="btnEarlyEntry" class="btn btn-active" style="width: 100%; margin-top: 10px; background-color:#8e44ad;" onclick="registerEarlyEntry()">🕒 Đăng Ký Vào Sớm</button>
-                    
+                    <button type="button" id="btnEarlyExit" class="btn btn-add" style="width: 100%; margin-top: 15px;" onclick="openEarlyExitModal()">🚪 Đăng Ký Ra Sớm (Về Sớm)</button>
+<button type="button" id="btnEarlyEntry" class="btn btn-active" style="width: 100%; margin-top: 10px; background-color:#8e44ad;" onclick="openEarlyEntryModal()">🕒 Đăng Ký Vào Sớm</button>
                     <div style="border-top: 1px dashed #ccc; margin-top: 15px; padding-top: 15px;">
                         <label style="color:#2980b9; font-weight: bold; font-size: 14px;">▼ Phân Ca Làm Việc</label>
                         <div style="margin-top:10px; background:#f9f9f9; padding:10px; border-radius:6px; border:1px solid #eee;">
@@ -551,21 +550,51 @@
         </div>
     </div>
 
-    <!-- Modal QR và Modal Lý do -->
-    <div id="qrModal" class="modal">
-        <div class="modal-content" style="max-width: 400px; text-align: center;">
+    <!-- Modal Đăng Ký Vào Sớm -->
+    <div id="earlyEntryModal" class="modal">
+        <div class="modal-content" style="max-width: 420px;">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
-                <h2 style="margin: 0; color: #2c3e50;">Khai Báo Về Sớm</h2>
-                <span class="close" onclick="closeQRModal()" title="Đóng bảng">&times;</span>
+                <h2 style="margin: 0; color: #8e44ad;">🕒 Đăng Ký Vào Sớm</h2>
+                <span class="close" onclick="closeEarlyEntryModal()" title="Đóng bảng">&times;</span>
             </div>
-            <label style="text-align: left; font-weight: bold; color: #34495e; display: block;">Lý do về sớm:</label>
-            <input type="text" id="qrReason" placeholder="Nhập lý do chính đáng..." style="width: 100%; padding: 10px; margin: 10px 0 20px 0; border: 1px solid #ccc; border-radius: 4px; font-size: 15px;">
-            <button type="button" class="btn btn-active" style="width: 100%; font-size: 16px; padding: 12px;" onclick="generateQRCode()">Xác nhận & Tạo Mã</button>
-            
-            <div id="qrResult" style="margin-top: 20px; display: none;">
-                <p style="font-weight: bold; color: #e74c3c;">Đưa mã này vào Camera OV3660 để quét xuất bến</p>
-                <img id="qrImage" src="" alt="QR Code" style="max-width: 250px; border: 1px solid #ccc; padding: 10px; border-radius: 8px;">
+            <label>Ngày cần vào sớm (Phải trước ít nhất 1 ngày):</label>
+            <input type="date" id="eeDate" onchange="updateShiftDisplay('eeDate', 'eeShift')">
+
+            <label>Ca làm việc ngày hôm đó:</label>
+            <input type="text" id="eeShift" readonly style="background-color: #ecf0f1; font-weight: bold;">
+
+            <label>Lý do vào sớm:</label>
+            <input type="text" id="eeReason" placeholder="Nhập lý do vào sớm...">
+
+            <button type="button" class="btn btn-active" style="width: 100%; background-color: #8e44ad; margin-top: 15px;" onclick="submitEarlyEntry()">Gửi Yêu Cầu Duyệt</button>
+        </div>
+    </div>
+
+    <!-- Modal Đăng Ký Ra Sớm -->
+    <div id="earlyExitModal" class="modal">
+        <div class="modal-content" style="max-width: 420px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
+                <h2 style="margin: 0; color: #27ae60;">🚪 Đăng Ký Ra Sớm</h2>
+                <span class="close" onclick="closeEarlyExitModal()" title="Đóng bảng">&times;</span>
             </div>
+            <label>Ngày cần ra sớm:</label>
+            <input type="date" id="exDate" onchange="updateShiftDisplay('exDate', 'exShift')">
+
+            <label>Ca làm việc ngày hôm đó:</label>
+            <input type="text" id="exShift" readonly style="background-color: #ecf0f1; font-weight: bold;">
+
+            <label>Lý do ra sớm:</label>
+            <input type="text" id="exReason" placeholder="Nhập lý do ra sớm...">
+
+            <div style="display: flex; align-items: center; gap: 10px; margin: 12px 0; background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #ddd;">
+                <input type="checkbox" id="exWillReturn" style="width: auto; margin: 0; transform: scale(1.3); cursor: pointer;">
+                <label for="exWillReturn" style="margin: 0; cursor: pointer; color: #2c3e50;">Có quay lại ca làm việc hôm đó</label>
+            </div>
+            <p style="font-size: 12px; color: #7f8c8d; margin: 0 0 15px 0;">
+                * Nếu tích chọn, bạn có thể quét thẻ vào lại (ghi nhận "Trở lại"). Nếu không chọn, hệ thống sẽ khóa quét vào lại trong ca hôm đó.
+            </p>
+
+            <button type="button" class="btn btn-add" style="width: 100%; margin: 0;" onclick="submitEarlyExit()">Xác Nhận Đăng Ký (Không Cần Duyệt)</button>
         </div>
     </div>
 
@@ -1488,87 +1517,120 @@ tbody.innerHTML += `<tr><td>${att.time || att.timeString}</td><td style="color:$
                 tbody.innerHTML = `<tr><td colspan="4" class="empty-row">Chưa có thiết bị nào kết nối</td></tr>`; 
             }
         };
-window.openQRModal = function() {
-    document.getElementById('qrReason').value = '';
-    document.getElementById('qrResult').style.display = 'none';
-    document.getElementById('qrModal').style.display = 'block';
-};
+// Hàm tự động lấy Ca làm việc của User theo ngày đã chọn
+window.updateShiftDisplay = function(dateInputId, shiftInputId) {
+    const selectedDate = document.getElementById(dateInputId).value;
+    const shiftInput = document.getElementById(shiftInputId);
+    if (!currentUser || !selectedDate) { shiftInput.value = ""; return; }
 
-window.closeQRModal = function() { document.getElementById('qrModal').style.display = 'none'; };
-
-window.generateQRCode = function() {
-    const reason = document.getElementById('qrReason').value.trim();
-    if (!reason) { alert("Vui lòng nhập lý do!"); return; }
-    
-    // Gộp mã định dạng QR_EXIT|UID|Lý do
-    const payload = `QR_EXIT|${currentUser.uid}|${reason}`;
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(payload)}`;
-    
-    document.getElementById('qrImage').src = qrUrl;
-    document.getElementById('qrResult').style.display = 'block';
-};
-
-window.showReason = function(reason) {
-    document.getElementById('reasonText').innerText = reason;
-    document.getElementById('reasonModal').style.display = 'block';
-};
-
-window.closeReasonModal = function() { document.getElementById('reasonModal').style.display = 'none'; };
-        window.viewCamera = function(ip) {
-    if (!ip || ip === "Chưa rõ") {
-        alert("Thiết bị chưa có IP khả dụng trên mạng!");
-        return;
-    }
-    // Mở luồng video stream trên Port 81
-    document.getElementById('adminCameraStream').src = `http://${ip}:81/stream`;
-    document.getElementById('adminCameraModal').style.display = 'block';
-};
-
-window.closeAdminCamera = function() {
-    // Cắt luồng Video để giải phóng CPU cho ESP32
-    document.getElementById('adminCameraStream').src = ""; 
-    document.getElementById('adminCameraModal').style.display = 'none';
-};
-        // Chạy vòng lặp tự động cập nhật trạng thái Online/Offline mỗi 3 giây
-        setInterval(() => {
-            if (currentUser && currentUser.role === 'admin') {
-                renderDevices();
+    // Kiểm tra ca phụ (tạm thời) trước
+    if (currentUser.tempShifts) {
+        for (const shift of Object.values(currentUser.tempShifts)) {
+            if (selectedDate >= shift.s_from && selectedDate <= shift.s_to) {
+                shiftInput.value = `${shift.s_name} (${shift.s_start} - ${shift.s_end})`;
+                return;
             }
-        }, 3000);
-        // BẮT ĐẦU SỬA JS: Thêm hàm xử lý đăng ký vào sớm
-// BẮT ĐẦU SỬA JS: Fix lỗi đăng ký vào sớm bằng Unix Timestamp
-window.registerEarlyEntry = function() {
-    if (!currentUser || !currentUser.uid) {
-        alert("Vui lòng đăng nhập để sử dụng tính năng này!");
-        return;
+        }
     }
-    
-    const reason = prompt("Bạn đang yêu cầu vào sớm hơn 1 tiếng. Vui lòng nhập lý do:");
-    
-    if (reason && reason.trim() !== "") {
-        const uid = currentUser.uid;
-        const currentTimestamp = Math.floor(Date.now() / 1000); 
-        
-        update(ref(db, `Members/${uid}/earlyEntry`), {
-            timestamp: currentTimestamp,
-            reason: reason.trim(),
-            approved: false,
-            approvedAt: 0,
-            used: false
-        }).then(() => {
-            set(ref(db, `Members/${uid}/earlyEntryHistory/${currentTimestamp}`), {
-                timestamp: currentTimestamp,
-                reason: reason.trim(),
-                approved: false 
-            }).then(() => {
-                alert("Đã gửi yêu cầu vào sớm! Sau khi Admin duyệt, bạn có 15 phút để quét thẻ (chỉ quét 1 lần).");
-            });
-        }).catch((error) => {
-            alert("Lỗi khi đăng ký: " + error.message);
+    // Nếu không có ca phụ -> Lấy ca chính
+    shiftInput.value = document.getElementById('uViewPrimaryShift').value || "Giờ hành chính (07:00 - 17:00)";
+};
+
+// --- ĐĂNG KÝ VÀO SỚM (PHẢI TRƯỚC 1 NGÀY) ---
+window.openEarlyEntryModal = function() {
+    if (!currentUser || !currentUser.uid) return alert("Vui lòng đăng nhập!");
+    const tomorrow = new Date(Date.now() + 86400000 - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    const dateEl = document.getElementById('eeDate');
+    dateEl.min = tomorrow;
+    dateEl.value = tomorrow;
+    document.getElementById('eeReason').value = '';
+    updateShiftDisplay('eeDate', 'eeShift');
+    document.getElementById('earlyEntryModal').style.display = 'block';
+};
+
+window.closeEarlyEntryModal = function() {
+    document.getElementById('earlyEntryModal').style.display = 'none';
+};
+
+window.submitEarlyEntry = function() {
+    const uid = currentUser.uid;
+    const regDate = document.getElementById('eeDate').value;
+    const shiftStr = document.getElementById('eeShift').value;
+    const reason = document.getElementById('eeReason').value.trim();
+
+    const todayStr = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    if (!regDate) return alert("Vui lòng chọn ngày!");
+    if (regDate <= todayStr) return alert("Đăng ký vào sớm phải gửi trước ít nhất 1 ngày so với ngày cần vào sớm!");
+    if (!reason) return alert("Vui lòng nhập lý do vào sớm!");
+
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    const payload = {
+        date: regDate,
+        shift: shiftStr,
+        reason: reason,
+        timestamp: currentTimestamp,
+        approved: false,
+        approvedAt: 0,
+        used: false
+    };
+
+    update(ref(db, `Members/${uid}/earlyEntry`), payload).then(() => {
+        set(ref(db, `Members/${uid}/earlyEntryHistory/${currentTimestamp}`), payload).then(() => {
+            alert(`Đã gửi yêu cầu vào sớm cho ngày ${regDate}! Vui lòng chờ Admin phê duyệt.`);
+            closeEarlyEntryModal();
         });
-    } else if (reason !== null) {
-        alert("Bạn phải nhập lý do để đăng ký!");
-    }
+    }).catch((err) => alert("Lỗi: " + err.message));
+};
+
+// --- ĐĂNG KÝ RA SỚM (KHÔNG CẦN DUYỆT) ---
+window.openEarlyExitModal = function() {
+    if (!currentUser || !currentUser.uid) return alert("Vui lòng đăng nhập!");
+    const todayStr = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    const dateEl = document.getElementById('exDate');
+    dateEl.min = todayStr;
+    dateEl.value = todayStr;
+    document.getElementById('exReason').value = '';
+    document.getElementById('exWillReturn').checked = false;
+    updateShiftDisplay('exDate', 'exShift');
+    document.getElementById('earlyExitModal').style.display = 'block';
+};
+
+window.closeEarlyExitModal = function() {
+    document.getElementById('earlyExitModal').style.display = 'none';
+};
+
+window.submitEarlyExit = function() {
+    const uid = currentUser.uid;
+    const regDate = document.getElementById('exDate').value;
+    const shiftStr = document.getElementById('exShift').value;
+    const reason = document.getElementById('exReason').value.trim();
+    const willReturn = document.getElementById('exWillReturn').checked;
+
+    if (!regDate) return alert("Vui lòng chọn ngày!");
+    if (!reason) return alert("Vui lòng nhập lý do ra sớm!");
+
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    const payload = {
+        date: regDate,
+        shift: shiftStr,
+        reason: reason,
+        willReturn: willReturn,
+        exited: false,
+        returned: false,
+        timestamp: currentTimestamp
+    };
+
+    set(ref(db, `Members/${uid}/earlyExit`), payload).then(() => {
+        // Lưu thêm vào lịch sử đăng ký để dễ theo dõi
+        set(ref(db, `Members/${uid}/earlyEntryHistory/${currentTimestamp}`), {
+            timestamp: currentTimestamp,
+            reason: `[Ra sớm ${regDate}${willReturn ? ' - Có quay lại' : ' - Không quay lại'}] ${reason}`,
+            approved: true
+        }).then(() => {
+            alert(`Đã đăng ký ra sớm ngày ${regDate} thành công! (${willReturn ? 'Được phép quét trở lại ca' : 'Không quay lại ca hôm đó'})`);
+            closeEarlyExitModal();
+        });
+    }).catch((err) => alert("Lỗi: " + err.message));
 };
 
 // ================= XỬ LÝ DUYỆT VÀO SỚM & TĂNG CA =================
