@@ -239,47 +239,60 @@
         <!-- USER VIEW (Chỉ xem lịch sử cá nhân) -->
         <div id="userControls" style="display: none; padding: 20px; height: calc(100vh - 80px); box-sizing: border-box;">
             <div class="box split-container" style="display: flex; flex-direction: row; gap: 20px; height: 100%; max-width: 1100px; margin: 0 auto; padding: 0;">
-                
-                <!-- Cột trái: Thông tin & Phân ca -->
-                <div class="left-panel" style="flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 20px; padding-right: 15px;">
-                    <h2 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px;">Hồ Sơ (Trạng Thái)</h2>
+                <!-- Cột trái: Thông tin & Thao tác (Bố cục gọn gàng) -->
+                <div class="left-panel" style="flex: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 18px 20px; gap: 14px;">
                     
-                    <label style="font-weight: bold; margin-top: 10px; display: block; font-size: 14px; color: #34495e;">UID Thẻ Tích Hợp:</label>
-                    <input type="text" id="uViewUid" readonly style="width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; background-color: #ecf0f1; font-weight: bold;">
-                    
-                    <label style="font-weight: bold; margin-top: 10px; display: block; font-size: 14px; color: #34495e;">Họ và Tên:</label>
-                    <input type="text" id="uViewName" readonly style="width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; background-color: #f9f9f9;">
-                    
-                    <div style="display:flex; gap:15px;">
-                        <div style="flex:1;">
-                            <label style="font-weight: bold; margin-top: 10px; display: block; font-size: 14px; color: #34495e;">Mã Số (ID):</label>
-                            <input type="text" id="uViewId" readonly style="width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; background-color: #f9f9f9;">
-                        </div>
-                        <div style="flex:1;">
-                            <label style="font-weight: bold; margin-top: 10px; display: block; font-size: 14px; color: #34495e;">Ngày Sinh:</label>
-                            <input type="date" id="uViewDob" readonly style="width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; background-color: #f9f9f9;">
-                        </div>
-                    </div>
-                    
-                    <label style="font-weight: bold; margin-top: 10px; display: block; font-size: 14px; color: #34495e;">Email:</label>
-                    <input type="email" id="uViewEmail" readonly style="width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; background-color: #f9f9f9;">
-                    
-                    <button type="button" id="btnEarlyExit" class="btn btn-add" style="width: 100%; margin-top: 15px;" onclick="openEarlyExitModal()">🚪 Đăng Ký Ra Sớm (Về Sớm)</button>
-                    <button type="button" id="btnEarlyEntry" class="btn btn-active" style="width: 100%; margin-top: 10px; background-color:#8e44ad;" onclick="openEarlyEntryModal()">🕒 Đăng Ký Vào Sớm</button>
-                    <button type="button" id="btnRegShift" class="btn btn-active" style="width: 100%; margin-top: 10px; background-color:#2980b9;" onclick="openRegShiftModal()">📅 Đăng Ký Ca Làm Việc</button>
-                    <button type="button" id="btnSupportEntry" class="btn btn-active" style="width: 100%; margin-top: 10px; background-color:#d35400; display:none;" onclick="openSupportModal()">⚡ Hỗ Trợ Vào Ca (Hiệu lực 15p)</button>
-                    <button type="button" id="btnOpenHR" class="btn btn-active" style="width: 100%; margin-top: 10px; background-color:#16a085; display:none;" onclick="switchToHRView()">👥 Quản Lý Nhân Sự</button>
-                    <div style="border-top: 1px dashed #ccc; margin-top: 15px; padding-top: 15px;">
-                        <label style="color:#2980b9; font-weight: bold; font-size: 14px;">▼ Phân Ca Làm Việc</label>
-                        <div style="margin-top:10px; background:#f9f9f9; padding:10px; border-radius:6px; border:1px solid #eee;">
-                            <label style="font-size: 13px; font-weight:bold;">Ca chính (Mặc định):</label>
-                            <input type="text" id="uViewPrimaryShift" readonly style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; font-size: 14px; background-color: #ecf0f1; margin-top:5px; margin-bottom:10px;">
-                            
-                            <div style="margin-top:10px; border-top:1px dashed #ccc; padding-top:10px;">
-                                <label style="font-size: 13px; font-weight:bold; color:#d35400;">Danh sách ca phụ (tạm thời):</label>
-                                <div id="uViewTempShiftsUI" style="margin-top: 10px;"></div>
+                    <!-- Khối 1: Thông tin cá nhân -->
+                    <div style="background: #f8f9fa; padding: 14px; border-radius: 8px; border: 1px solid #e0e6ed;">
+                        <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 16px; border-bottom: 1px solid #ddd; padding-bottom: 6px;">👤 Thông Tin Cá Nhân</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px;">
+                            <div>
+                                <label style="font-size: 12px; color: #7f8c8d; margin: 0;">Họ và Tên</label>
+                                <input type="text" id="uViewName" readonly style="width:100%; padding:7px 9px; margin:3px 0 0 0; border:1px solid #ddd; border-radius:5px; font-size:13px; background:#fff; font-weight:bold; box-sizing:border-box;">
+                            </div>
+                            <div>
+                                <label style="font-size: 12px; color: #7f8c8d; margin: 0;">Mã Số (ID)</label>
+                                <input type="text" id="uViewId" readonly style="width:100%; padding:7px 9px; margin:3px 0 0 0; border:1px solid #ddd; border-radius:5px; font-size:13px; background:#fff; box-sizing:border-box;">
+                            </div>
+                            <div>
+                                <label style="font-size: 12px; color: #7f8c8d; margin: 0;">UID Thẻ</label>
+                                <input type="text" id="uViewUid" readonly style="width:100%; padding:7px 9px; margin:3px 0 0 0; border:1px solid #ddd; border-radius:5px; font-size:13px; background:#ecf0f1; font-family:monospace; box-sizing:border-box;">
+                            </div>
+                            <div>
+                                <label style="font-size: 12px; color: #7f8c8d; margin: 0;">Ngày Sinh</label>
+                                <input type="date" id="uViewDob" readonly style="width:100%; padding:7px 9px; margin:3px 0 0 0; border:1px solid #ddd; border-radius:5px; font-size:13px; background:#fff; box-sizing:border-box;">
+                            </div>
+                            <div style="grid-column: span 2;">
+                                <label style="font-size: 12px; color: #7f8c8d; margin: 0;">Email</label>
+                                <input type="email" id="uViewEmail" readonly style="width:100%; padding:7px 9px; margin:3px 0 0 0; border:1px solid #ddd; border-radius:5px; font-size:13px; background:#fff; box-sizing:border-box;">
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Khối 2: Thao tác cá nhân (Lưới 2 cột gọn gàng) -->
+                    <div style="background: #fff; padding: 14px; border-radius: 8px; border: 1px solid #e0e6ed;">
+                        <h3 style="margin: 0 0 10px 0; color: #2980b9; font-size: 15px;">⚡ Thao Tác Điểm Danh & Ca</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <button type="button" id="btnEarlyExit" class="btn btn-add" style="margin:0; padding:9px; font-size:13px;" onclick="openEarlyExitModal()">🚪 Đăng Ký Ra Sớm</button>
+                            <button type="button" id="btnEarlyEntry" class="btn btn-active" style="margin:0; padding:9px; font-size:13px; background-color:#8e44ad;" onclick="openEarlyEntryModal()">🕒 Đăng Ký Vào Sớm</button>
+                            <button type="button" id="btnRegShift" class="btn btn-active" style="grid-column: span 2; margin:0; padding:9px; font-size:13px; background-color:#2980b9;" onclick="openRegShiftModal()">📅 Đăng Ký Ca Làm Việc</button>
+                        </div>
+
+                        <!-- Nút chức năng bổ nhiệm (Tự hiện khi có quyền) -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+                            <button type="button" id="btnSupportEntry" class="btn btn-active" style="margin:0; padding:9px; font-size:13px; background-color:#d35400; display:none;" onclick="openSupportModal()">⚡ Hỗ Trợ Vào Ca</button>
+                            <button type="button" id="btnOpenHR" class="btn btn-active" style="margin:0; padding:9px; font-size:13px; background-color:#16a085; display:none;" onclick="switchToHRView()">👥 Quản Lý Nhân Sự</button>
+                        </div>
+                    </div>
+
+                    <!-- Khối 3: Phân ca làm việc -->
+                    <div style="background: #f8f9fa; padding: 14px; border-radius: 8px; border: 1px solid #e0e6ed;">
+                        <h3 style="margin: 0 0 8px 0; color: #2980b9; font-size: 15px;">⏱️ Phân Ca Làm Việc</h3>
+                        <label style="font-size: 12px; font-weight:bold; color:#34495e;">Ca chính (Mặc định):</label>
+                        <input type="text" id="uViewPrimaryShift" readonly style="width:100%; padding:7px 9px; border-radius:5px; border:1px solid #ccc; font-size:13px; background-color:#ecf0f1; margin-top:4px; margin-bottom:10px; box-sizing:border-box;">
+                        
+                        <label style="font-size: 12px; font-weight:bold; color:#d35400;">Danh sách ca phụ (tạm thời):</label>
+                        <div id="uViewTempShiftsUI" style="margin-top: 6px;"></div>
                     </div>
                 </div>
 
@@ -1180,7 +1193,25 @@
             const pShiftId = document.getElementById('editPrimaryShift').value;
 
             if(currentModalMode === 'add' && (!nameVal || !idVal || !dobVal || !emailVal)) { alert("Vui lòng điền ĐẦY ĐỦ thông tin!"); return; }
+            // 1. Kiểm tra định dạng Email hợp lệ
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailVal || !emailRegex.test(emailVal)) {
+                return alert("Email không đúng định dạng (VD: ten@gmail.com)!");
+            }
+            if (emailVal.toLowerCase() === "admin@test.com") {
+                return alert("Email này trùng với tài khoản Admin hệ thống!");
+            }
 
+            // 2. Kiểm tra trùng lặp Mã số (ID) và Email với các thành viên khác
+            for (const [otherUid, otherInfo] of Object.entries(membersData)) {
+                if (otherUid === uid) continue; // Bỏ qua chính thành viên đang sửa
+                if (idVal && otherInfo.id && otherInfo.id.trim().toLowerCase() === idVal.toLowerCase()) {
+                    return alert(`Mã số (ID) "${idVal}" đã tồn tại ở thành viên ${otherInfo.name || otherUid}!`);
+                }
+                if (otherInfo.email && otherInfo.email.trim().toLowerCase() === emailVal.toLowerCase()) {
+                    return alert(`Email "${emailVal}" đã được sử dụng bởi thành viên ${otherInfo.name || otherUid}!`);
+                }
+            }
             const updates = {};
             updates['Members/' + uid + '/name'] = nameVal; updates['Members/' + uid + '/id'] = idVal;
             updates['Members/' + uid + '/dob'] = dobVal; updates['Members/' + uid + '/email'] = emailVal;
@@ -1718,19 +1749,36 @@ window.submitEarlyExit = function() {
 let pendingApprovals = {};
 let pendingOvertimes = {};
 
+window.switchApprovalTab = function(tab) {
+    document.getElementById('appTabEarly').style.display = (tab === 'early') ? 'block' : 'none';
+    document.getElementById('appTabOT').style.display = (tab === 'ot') ? 'block' : 'none';
+    document.getElementById('appTabShift').style.display = (tab === 'shift') ? 'block' : 'none';
+
+    document.getElementById('tabBtnEarly').style.background = (tab === 'early') ? '#e67e22' : '#7f8c8d';
+    document.getElementById('tabBtnOT').style.background = (tab === 'ot') ? '#8e44ad' : '#7f8c8d';
+    document.getElementById('tabBtnShift').style.background = (tab === 'shift') ? '#2980b9' : '#7f8c8d';
+};
+
 function updateAdminBadge() {
     const notiBtn = document.getElementById('btnAdminNoti');
     const badge = document.getElementById('notiBadge');
-    const total = Object.keys(pendingApprovals).length + Object.keys(pendingOvertimes).length;
+    const cEarly = Object.keys(pendingApprovals).length;
+    const cOT = Object.keys(pendingOvertimes).length;
+    const cShift = Object.keys(pendingShiftReqs).length;
+    const total = cEarly + cOT + cShift;
 
-    if (currentUser && currentUser.role === 'admin') {
+    // Cập nhật cảnh báo riêng trên từng nút Tab
+    const bEarly = document.getElementById('badgeEarly');
+    const bOT = document.getElementById('badgeOT');
+    const bShift = document.getElementById('badgeShift');
+    if (bEarly) { bEarly.innerText = cEarly; bEarly.style.display = cEarly > 0 ? 'inline-block' : 'none'; }
+    if (bOT) { bOT.innerText = cOT; bOT.style.display = cOT > 0 ? 'inline-block' : 'none'; }
+    if (bShift) { bShift.innerText = cShift; bShift.style.display = cShift > 0 ? 'inline-block' : 'none'; }
+
+    if (currentUser && (currentUser.role === 'admin' || currentUser.perms?.hr)) {
         notiBtn.style.display = 'inline-block';
-        if (total > 0) {
-            badge.innerText = total;
-            badge.style.display = 'inline-block';
-        } else {
-            badge.style.display = 'none';
-        }
+        badge.innerText = total;
+        badge.style.display = total > 0 ? 'inline-block' : 'none';
     } else {
         notiBtn.style.display = 'none';
     }
@@ -1777,13 +1825,16 @@ function renderApprovalTables() {
         tbody.innerHTML = '<tr><td colspan="3" class="empty-row">Không có yêu cầu nào</td></tr>';
     } else {
         for (const [uid, data] of Object.entries(pendingApprovals)) {
+            const isSelf = (currentUser && currentUser.uid === uid);
+            const actionHtml = isSelf
+                ? `<span style="color:#e74c3c; font-size:12px; font-style:italic;">Không thể tự duyệt</span>`
+                : `<button class="btn btn-active" style="background:#27ae60; padding:5px 8px; font-size:12px;" onclick="approveEarlyEntry('${uid}', ${data.timestamp})">✅ Duyệt</button>
+                   <button class="btn btn-cancel" style="display:inline-block; padding:5px 8px; font-size:12px; margin:0 0 0 4px;" onclick="rejectEarlyEntry('${uid}', ${data.timestamp})">❌ Từ chối</button>`;
             tbody.innerHTML += `
                 <tr>
                     <td><strong>${data.name}</strong><br><span style="font-size:11px;color:#7f8c8d;">${uid}</span></td>
                     <td>${data.reason}</td>
-                    <td>
-                        <button class="btn btn-active" style="background:#27ae60; padding:5px 10px; font-size:13px;" onclick="approveEarlyEntry('${uid}', ${data.timestamp})">✅ Duyệt</button>
-                    </td>
+                    <td>${actionHtml}</td>
                 </tr>`;
         }
     }
@@ -1794,22 +1845,41 @@ function renderApprovalTables() {
         otBody.innerHTML = '<tr><td colspan="3" class="empty-row">Không có yêu cầu tăng ca nào</td></tr>';
     } else {
         for (const [key, data] of Object.entries(pendingOvertimes)) {
+            const isSelf = (currentUser && currentUser.uid === data.uid);
+            const actionHtml = isSelf
+                ? `<span style="color:#e74c3c; font-size:12px; font-style:italic;">Không thể tự duyệt</span>`
+                : `<button class="btn btn-active" style="background:#27ae60; padding:5px 8px; font-size:12px; margin-bottom:4px;" onclick="approveOvertime('${key}', '${data.uid}', '${data.attKey}', '${data.otHours}')">✅ Xác nhận</button>
+                   <button class="btn btn-cancel" style="display:inline-block; padding:5px 8px; font-size:12px; margin:0;" onclick="rejectOvertime('${key}', '${data.uid}', '${data.attKey}')">❌ Từ chối</button>`;
             otBody.innerHTML += `
                 <tr>
                     <td><strong>${data.name}</strong><br><span style="font-size:11px;color:#7f8c8d;">${data.uid}</span></td>
                     <td>Ra: ${data.time}<br><strong style="color:#8e44ad;">Tăng ca: ${data.otHours} giờ</strong> (Hết ca: ${data.shiftEnd})</td>
-                    <td>
-                        <button class="btn btn-active" style="background:#27ae60; padding:5px 8px; font-size:12px; margin-bottom:4px;" onclick="approveOvertime('${key}', '${data.uid}', '${data.attKey}', '${data.otHours}')">✅ Xác nhận</button>
-                        <button class="btn btn-cancel" style="display:inline-block; padding:5px 8px; font-size:12px; margin:0;" onclick="rejectOvertime('${key}', '${data.uid}', '${data.attKey}')">❌ Từ chối</button>
-                    </td>
+                    <td>${actionHtml}</td>
                 </tr>`;
         }
     }
 }
+        window.rejectEarlyEntry = function(uid, timestamp) {
+    if (currentUser && currentUser.uid === uid) return alert("Bạn không thể tự xử lý yêu cầu của chính mình!");
+    if (confirm("Từ chối yêu cầu vào sớm này?")) {
+        const updates = {};
+        updates[`Members/${uid}/earlyEntry/approved`] = false;
+        updates[`Members/${uid}/earlyEntry/used`] = true; // Đóng yêu cầu để không hiện lại trong danh sách chờ
+        updates[`Members/${uid}/earlyEntryHistory/${timestamp}/approved`] = false;
+        updates[`Members/${uid}/earlyEntryHistory/${timestamp}/rejected`] = true;
+        update(ref(db), updates).then(() => alert("Đã từ chối yêu cầu vào sớm!"));
+    }
+};
 
 window.openApprovalModal = function() {
     renderApprovalTables();
     renderShiftReqTable();
+    updateAdminBadge();
+    // Tự động mở tab đầu tiên đang có yêu cầu chờ duyệt
+    if (Object.keys(pendingApprovals).length > 0) switchApprovalTab('early');
+    else if (Object.keys(pendingOvertimes).length > 0) switchApprovalTab('ot');
+    else if (Object.keys(pendingShiftReqs).length > 0) switchApprovalTab('shift');
+    else switchApprovalTab('early');
     document.getElementById('approvalModal').style.display = 'block';
 };
 
@@ -2081,14 +2151,16 @@ function renderShiftReqTable() {
         return;
     }
     for (const [key, d] of Object.entries(pendingShiftReqs)) {
+        const isSelf = (currentUser && currentUser.uid === d.uid);
+        const actionHtml = isSelf
+            ? `<span style="color:#e74c3c; font-size:12px; font-style:italic;">Không thể tự duyệt</span>`
+            : `<button class="btn btn-active" style="background:#27ae60; padding:5px 8px; font-size:12px;" onclick="approveShiftReq('${key}')">✅ Duyệt</button>
+               <button class="btn btn-cancel" style="display:inline-block; padding:5px 8px; font-size:12px; margin:0 0 0 4px;" onclick="rejectShiftReq('${key}')">❌ Từ chối</button>`;
         tbody.innerHTML += `
             <tr>
                 <td><strong>${d.name}</strong><br><span style="font-size:11px;color:#7f8c8d;">${d.uid}</span></td>
                 <td><strong>${d.s_name}</strong> (${d.s_start}-${d.s_end})<br>${d.s_from} → ${d.s_to}<br><em>Lý do: ${d.reason}</em></td>
-                <td>
-                    <button class="btn btn-active" style="background:#27ae60; padding:5px 8px; font-size:12px;" onclick="approveShiftReq('${key}')">✅ Duyệt</button>
-                    <button class="btn btn-cancel" style="display:inline-block; padding:5px 8px; font-size:12px; margin:0;" onclick="rejectShiftReq('${key}')">❌ Từ chối</button>
-                </td>
+                <td>${actionHtml}</td>
             </tr>`;
     }
 }
@@ -2097,6 +2169,7 @@ function renderShiftReqTable() {
 window.approveShiftReq = function(reqKey) {
     const d = pendingShiftReqs[reqKey];
     if (!d) return;
+    if (currentUser && currentUser.uid === d.uid) return alert("Bạn không thể tự duyệt yêu cầu đổi ca của chính mình!");
     const updates = {};
     updates[`ShiftRequests/${reqKey}/status`] = "approved";
     updates[`Members/${d.uid}/tempShifts/${Date.now()}`] = {
@@ -2106,57 +2179,85 @@ window.approveShiftReq = function(reqKey) {
 };
 
 window.rejectShiftReq = function(reqKey) {
+    const d = pendingShiftReqs[reqKey];
+    if (d && currentUser && currentUser.uid === d.uid) return alert("Bạn không thể tự xử lý yêu cầu của chính mình!");
     update(ref(db, `ShiftRequests/${reqKey}`), { status: "rejected" }).then(() => alert("Đã từ chối yêu cầu ca!"));
 };
     </script>
 <!-- Modal Chờ Duyệt (Dành cho Admin) -->
+    <!-- Modal Chờ Duyệt (Dạng Tab có cảnh báo số lượng) -->
     <div id="approvalModal" class="modal">
-        <div class="modal-content" style="max-width: 650px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
-                <h2 style="margin: 0; color: #e67e22;">Danh Sách Yêu Cầu Chờ Duyệt</h2>
-                <span class="close" onclick="closeApprovalModal()" title="Đóng bảng">&times;</span>
+        <div class="modal-content" style="max-width: 720px; padding: 0; overflow: hidden;">
+            <div style="background: #2c3e50; color: white; padding: 15px 22px; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0; color: white; border: none; padding: 0; font-size: 18px;">🔔 Danh Sách Yêu Cầu Chờ Duyệt</h2>
+                <span class="close" onclick="closeApprovalModal()" style="color: white; margin-top: 0;">&times;</span>
             </div>
-            <div style="max-height: 70vh; overflow-y: auto;">
-                <h3 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 16px;">🕒 Yêu Cầu Vào Sớm (Hiệu lực 15 phút sau khi duyệt)</h3>
-                <table style="margin-top:0; margin-bottom: 20px;">
-                    <thead style="background-color: #e67e22;">
-                        <tr>
-                            <th style="color:white;">Họ Tên (UID)</th>
-                            <th style="color:white;">Lý do</th>
-                            <th style="color:white; width: 100px;">Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="approvalTableBody">
-                        <tr><td colspan="3" class="empty-row">Không có yêu cầu nào</td></tr>
-                    </tbody>
-                </table>
 
-                <h3 style="margin: 0 0 8px 0; color: #2c3e50; font-size: 16px;">⏱️ Xác Nhận Số Giờ Tăng Ca</h3>
-                <table style="margin-top:0;">
-                    <thead style="background-color: #8e44ad;">
-                        <tr>
-                            <th style="color:white;">Họ Tên (UID)</th>
-                            <th style="color:white;">Giờ ra / Đề xuất</th>
-                            <th style="color:white; width: 140px;">Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="overtimeTableBody">
-                        <tr><td colspan="3" class="empty-row">Không có yêu cầu tăng ca nào</td></tr>
-                    </tbody>
-                </table>
-                <h3 style="margin: 15px 0 8px 0; color: #2c3e50; font-size: 16px;">📅 Yêu Cầu Đổi / Đăng Ký Ca Đột Xuất</h3>
-                <table style="margin-top:0;">
-                    <thead style="background-color: #2980b9;">
-                        <tr>
-                            <th style="color:white;">Họ Tên (UID)</th>
-                            <th style="color:white;">Ca & Thời gian</th>
-                            <th style="color:white; width: 140px;">Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="shiftReqTableBody">
-                        <tr><td colspan="3" class="empty-row">Không có yêu cầu ca đột xuất</td></tr>
-                    </tbody>
-                </table>
+            <!-- Thanh nút chuyển mục có cảnh báo -->
+            <div style="display: flex; gap: 10px; padding: 15px 20px; background: #f4f7f6; border-bottom: 1px solid #ddd; flex-wrap: wrap;">
+                <button type="button" id="tabBtnEarly" class="btn btn-active" style="flex:1; font-size:14px; padding:10px; position:relative;" onclick="switchApprovalTab('early')">
+                    🕒 Yêu Cầu Vào Sớm
+                    <span id="badgeEarly" style="display:none; background:#e74c3c; color:white; border-radius:12px; padding:2px 7px; font-size:11px; margin-left:6px;">0</span>
+                </button>
+                <button type="button" id="tabBtnOT" class="btn" style="flex:1; font-size:14px; padding:10px; background:#7f8c8d; position:relative;" onclick="switchApprovalTab('ot')">
+                    ⏱️ Xác Nhận Tăng Ca
+                    <span id="badgeOT" style="display:none; background:#e74c3c; color:white; border-radius:12px; padding:2px 7px; font-size:11px; margin-left:6px;">0</span>
+                </button>
+                <button type="button" id="tabBtnShift" class="btn" style="flex:1; font-size:14px; padding:10px; background:#7f8c8d; position:relative;" onclick="switchApprovalTab('shift')">
+                    📅 Yêu Cầu Đổi Ca
+                    <span id="badgeShift" style="display:none; background:#e74c3c; color:white; border-radius:12px; padding:2px 7px; font-size:11px; margin-left:6px;">0</span>
+                </button>
+            </div>
+
+            <!-- Nội dung từng bảng -->
+            <div style="padding: 20px; max-height: 60vh; overflow-y: auto;">
+                <!-- Bảng 1: Vào sớm -->
+                <div id="appTabEarly">
+                    <table style="margin-top:0;">
+                        <thead style="background-color: #e67e22;">
+                            <tr>
+                                <th style="background-color:#e67e22; color:white;">Họ Tên (UID)</th>
+                                <th style="background-color:#e67e22; color:white;">Lý do</th>
+                                <th style="background-color:#e67e22; color:white; width: 155px;">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="approvalTableBody">
+                            <tr><td colspan="3" class="empty-row">Không có yêu cầu nào</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Bảng 2: Tăng ca -->
+                <div id="appTabOT" style="display:none;">
+                    <table style="margin-top:0;">
+                        <thead style="background-color: #8e44ad;">
+                            <tr>
+                                <th style="background-color:#8e44ad; color:white;">Họ Tên (UID)</th>
+                                <th style="background-color:#8e44ad; color:white;">Giờ ra / Đề xuất</th>
+                                <th style="background-color:#8e44ad; color:white; width: 155px;">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="overtimeTableBody">
+                            <tr><td colspan="3" class="empty-row">Không có yêu cầu tăng ca nào</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Bảng 3: Đổi ca đột xuất -->
+                <div id="appTabShift" style="display:none;">
+                    <table style="margin-top:0;">
+                        <thead style="background-color: #2980b9;">
+                            <tr>
+                                <th style="background-color:#2980b9; color:white;">Họ Tên (UID)</th>
+                                <th style="background-color:#2980b9; color:white;">Ca & Thời gian</th>
+                                <th style="background-color:#2980b9; color:white; width: 155px;">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shiftReqTableBody">
+                            <tr><td colspan="3" class="empty-row">Không có yêu cầu ca đột xuất</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
