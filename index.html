@@ -299,6 +299,7 @@
                             <button type="button" class="btn" style="width:100%; margin:0; padding:8px; font-size:13px; background:#d35400;" onclick="openTempShiftHistoryModal('user')">📋 Lịch sử ca phụ</button>
                         </div>
                     </div>
+                </div>
 
                 <!-- Cột phải: Lịch sử & Đăng ký -->
                 <div class="right-panel" style="flex: 1.5; display: flex; flex-direction: column; border-left: 2px solid #ecf0f1; padding: 20px; overflow: hidden; min-height: 0;">
@@ -426,7 +427,15 @@
                     <input type="email" id="editEmail" placeholder="example@email.com" oninput="checkChanges()">
                     
                     <!-- QUẢN LÝ CA LÀM VIỆC -->
-                    <div style="background:#fff; padding:10px; border-radius:6px; border:1px solid #dcdde1; margin-bottom:12px;">
+                    <div style="border-top: 1px dashed #ccc; margin-top: 15px; padding-top: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <label style="color:#2980b9; cursor:pointer; margin:0;" onclick="toggleShiftPanel()">▼ Ca Làm Việc</label>
+                            <button type="button" id="btnViewShiftHist" class="btn btn-active" style="padding:4px 8px; font-size:12px; margin:0;" onclick="viewShiftHistory()">🕒 Lịch sử ca</button>
+                        </div>
+                        
+                        <div id="shiftPanelWrapper" style="display:none; margin-top:10px; background:#f9f9f9; padding:10px; border-radius:6px; border:1px solid #eee;">
+                            <!-- Khối Ca hiện tại & Lịch sử ca phụ (Sẽ tự ẩn khi Thêm mới) -->
+                            <div id="aShiftSummaryBox" style="background:#fff; padding:10px; border-radius:6px; border:1px solid #dcdde1; margin-bottom:12px;">
                                 <div style="font-size:12px; color:#7f8c8d; font-weight:bold;">Ca hiện tại:</div>
                                 <div id="aCurrentShiftDisp" style="font-size:14px; font-weight:bold; color:#2c3e50; margin:4px 0 6px 0;"></div>
                                 <div id="aPrimaryShiftSubBox" style="display:none; font-size:12px; color:#34495e; background:#f4f7f6; padding:5px 8px; border-radius:4px; margin-bottom:8px;">
@@ -434,18 +443,13 @@
                                 </div>
                                 <button type="button" class="btn" style="width:100%; margin:0; padding:7px; font-size:12px; background:#d35400;" onclick="openTempShiftHistoryModal('admin')">📋 Lịch sử ca phụ</button>
                             </div>
-                        
-                        <div id="shiftPanelWrapper" style="display:none; margin-top:10px; background:#f9f9f9; padding:10px; border-radius:6px; border:1px solid #eee;">
+
                             <label style="font-size: 13px; font-weight:bold;">Ca chính (Mặc định):</label>
                             <select id="editPrimaryShift" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc; margin-bottom:10px;" onchange="checkChanges()"></select>
                             
-                            <div style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;">
+                            <div id="aTempShiftSection" style="margin-top:15px; border-top:1px dashed #ccc; padding-top:15px;">
                                 <label style="font-size: 13px; font-weight:bold; color:#d35400;">Danh sách ca phụ (tạm thời):</label>
-                                
-                                <!-- Danh sách các ca tạm -->
                                 <div id="tempShiftsListUI" style="margin-bottom: 10px;"></div>
-
-                                <!-- Thêm ca tạm mới -->
                                 <button type="button" id="btnShowTempShift" class="btn btn-add" style="width:100%; padding:8px; font-size:13px; margin:0;" onclick="showTempShiftForm()">➕ Thêm ca phụ (tạm thời)</button>
                                 
                                 <div id="tempShiftFormContainer" style="display:none; background:#fff; padding:10px; border:1px solid #f39c12; border-radius:6px; margin-top:10px;">
@@ -817,10 +821,7 @@
                     const pShiftText = `${pShiftObj.name} (${pShiftObj.start} - ${pShiftObj.end})`;
                     currentUser.primaryShiftText = pShiftText;
                     renderShiftSummaryUI('u', info, pShiftText);
-                    tUI.innerHTML = '';
-                    if (!info.tempShifts || Object.keys(info.tempShifts).length === 0) {
-                        tUI.innerHTML = '<div style="font-size:12px; color:#7f8c8d; font-style:italic;">Không có ca phụ nào.</div>';
-                    } else {
+                    else {
                         const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
                         for (const [key, shift] of Object.entries(info.tempShifts)) {
                             let statusTxt = "";
@@ -1147,6 +1148,9 @@
             const pObj = shiftsData[originalMemberInfo.p_id] || { name: "Giờ hành chính", start: info.p_start || "07:00", end: info.p_end || "17:00" };
             renderShiftSummaryUI('a', info, `${pObj.name} (${pObj.start} - ${pObj.end})`);
             const isView = (mode === 'view'); const isAdd = (mode === 'add');
+            document.getElementById('aShiftSummaryBox').style.display = isAdd ? 'none' : 'block';
+            document.getElementById('aTempShiftSection').style.display = isAdd ? 'none' : 'block';
+            document.getElementById('btnViewShiftHist').style.display = isAdd ? 'none' : 'inline-block';
             const modalContent = document.getElementById('modalContent');
             const layoutContainer = document.getElementById('modalBodyLayout');
             const historyPanel = document.getElementById('historyPanel');
@@ -2075,7 +2079,7 @@ window.submitUserShiftReg = function() {
 
 // === HỖ TRỢ VÀO CA (HIỆU LỰC 15 PHÚT NGAY LẬP TỨC) ===
 let supportMembersCache = {};
-
+document.getElementById('supSearchWrapper').style.display = 'none';
 window.openSupportModal = function() {
     get(ref(db, 'Members')).then(snap => {
         supportMembersCache = snap.val() || {};
@@ -2114,6 +2118,7 @@ window.filterSupportMembers = function() {
 window.selectSupportMember = function(uid, name, id) {
     document.getElementById('supSelectedUid').value = uid;
     document.getElementById('supSelectedDisplay').innerText = `✅ Đang chọn: ${name} (ID: ${id || 'N/A'} | UID: ${uid})`;
+    document.getElementById('supSearchWrapper').style.display = 'none';
     filterSupportMembers();
 };
 
@@ -2362,7 +2367,7 @@ window.closeTempShiftHistoryModal = function() {
             </div>
 
             <div style="padding: 20px; overflow-y: auto; max-height: 78vh;">
-                <<div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
                     <label style="margin: 0;">1. Thành Viên Cần Hỗ Trợ:</label>
                     <button type="button" class="btn" style="padding: 6px 12px; font-size: 13px; background: #e67e22; margin: 0;" onclick="toggleSupportSearch()">🔍 Tìm thành viên</button>
                 </div>
