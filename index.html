@@ -821,25 +821,6 @@
                     const pShiftText = `${pShiftObj.name} (${pShiftObj.start} - ${pShiftObj.end})`;
                     currentUser.primaryShiftText = pShiftText;
                     renderShiftSummaryUI('u', info, pShiftText);
-                    else {
-                        const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
-                        for (const [key, shift] of Object.entries(info.tempShifts)) {
-                            let statusTxt = "";
-                            if (todayStr < shift.s_from) statusTxt = '<span style="color:#f39c12; font-weight:bold; font-size:11px;">Sắp tới</span>';
-                            else if (todayStr >= shift.s_from && todayStr <= shift.s_to) statusTxt = '<span style="color:#27ae60; font-weight:bold; font-size:11px;">Đang áp dụng</span>';
-                            else statusTxt = '<span style="color:#bdc3c7; font-weight:bold; font-size:11px;">Đã qua</span>';
-                            
-                            tUI.innerHTML += `
-                                <div style="background:#fff; padding:8px 12px; border-radius:6px; border:1px solid #ddd; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-                                    <div>
-                                        <div style="font-size:13px; color:#2c3e50; font-weight:bold;">${shift.s_name}</div>
-                                        <div style="font-size:11px; color:#7f8c8d;">Từ ${shift.s_from} đến ${shift.s_to}</div>
-                                    </div>
-                                    <div>${statusTxt}</div>
-                                </div>`;
-                        }
-                    }
-
                     const isInside = (info.lastStatus === "Vào");
                     const tag = document.getElementById('uViewStatusTag');
                     if(isInside) { tag.innerText = "🟢 Đang ở trong"; tag.style.backgroundColor = "#eafaf1"; tag.style.color = "#27ae60"; tag.style.borderColor = "#2ecc71"; }
@@ -2079,10 +2060,11 @@ window.submitUserShiftReg = function() {
 
 // === HỖ TRỢ VÀO CA (HIỆU LỰC 15 PHÚT NGAY LẬP TỨC) ===
 let supportMembersCache = {};
-document.getElementById('supSearchWrapper').style.display = 'none';
+
 window.openSupportModal = function() {
     get(ref(db, 'Members')).then(snap => {
         supportMembersCache = snap.val() || {};
+        document.getElementById('supSearchWrapper').style.display = 'none'; // <--- Đặt ở đây
         document.getElementById('supSearchInput').value = '';
         document.getElementById('supSelectedUid').value = '';
         document.getElementById('supSelectedDisplay').innerText = 'Chưa chọn thành viên nào';
