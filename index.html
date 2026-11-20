@@ -334,7 +334,41 @@
                 </div>
             </div> <!-- Đóng split-container của USER VIEW -->
         </div> <!-- Đóng userControls -->
+        <!-- HR VIEW (Giao diện riêng cho Quản lý nhân sự) -->
+        <div id="hrControls" style="display: none; padding: 20px; max-width: 1100px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #16a085, #1abc9c); color: white; padding: 18px 25px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(22,160,133,0.2);">
+                <div>
+                    <h2 style="margin: 0; color: white; border: none; padding: 0;">👥 Bảng Quản Lý Nhân Sự (HR)</h2>
+                    <span style="font-size: 13px; opacity: 0.9;">Thêm/Xóa thành viên & Hỗ trợ điều chỉnh ca làm việc trong tuần</span>
+                </div>
+                <button type="button" class="btn" style="background: rgba(255,255,255,0.2); border: 1px solid white; font-weight: bold;" onclick="exitHRView()">⬅️ Quay lại hồ sơ</button>
+            </div>
 
+            <div class="box">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button type="button" id="hrBtnAdd" class="btn btn-add" style="margin: 0;" onclick="hrStartAddMember()">➕ Thêm Thành Viên</button>
+                        <button type="button" id="hrBtnCancelAdd" class="btn btn-cancel" style="margin: 0;" onclick="hrCancelAddMember()">❌ Hủy thêm</button>
+                    </div>
+                    <input type="text" id="hrSearchInput" placeholder="🔍 Tìm theo Tên, Mã số (ID) hoặc UID..." oninput="renderHRTable()" style="padding: 10px 14px; border: 1px solid #bdc3c7; border-radius: 6px; width: 280px; font-size: 14px;">
+                </div>
+                <p id="hrAddStatus" style="color: #e67e22; font-weight: bold; display: none; margin-top: 0;">⏳ Đang chờ quét thẻ mới trên thiết bị...</p>
+
+                <table>
+                    <thead>
+                        <tr style="background-color: #16a085;">
+                            <th style="background-color: #16a085;">Họ và Tên</th>
+                            <th style="background-color: #16a085;">Mã Số (ID)</th>
+                            <th style="background-color: #16a085;">Ca Đang Áp Dụng</th>
+                            <th style="background-color: #16a085; width: 170px;">Thao Tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hrMembersTable">
+                        <tr><td colspan="4" class="empty-row">Đang tải dữ liệu...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div> <!-- Đóng mainApp -->
 
     <!-- CÁC MODAL ĐƯỢC CHUYỂN RA NGOÀI ĐỂ KHÔNG BỊ CHẶN BỞI TABS -->
@@ -835,6 +869,21 @@
         }
 
         // ================= CÁC CHỨC NĂNG DÀNH CHO ADMIN =================
+        function getActiveShiftText(info) {
+            const todayStr = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+            if (info.tempShifts) {
+                for (const shift of Object.values(info.tempShifts)) {
+                    if (todayStr >= shift.s_from && todayStr <= shift.s_to) {
+                        return `${shift.s_name} (${shift.s_start} - ${shift.s_end}) [Ca phụ]`;
+                    }
+                }
+            }
+            const pId = info.p_id || 'HC';
+            const pName = shiftsData[pId]?.name || (pId === 'HC' ? 'Giờ hành chính' : 'Ca chính');
+            const pStart = info.p_start || shiftsData[pId]?.start || '07:00';
+            const pEnd = info.p_end || shiftsData[pId]?.end || '17:00';
+            return `${pName} (${pStart} - ${pEnd})`;
+        }
         function startAdminListeners() {
             onValue(ref(db, 'Members'), (snapshot) => {
                 const data = snapshot.val();
@@ -859,10 +908,14 @@
 
                         const isInside = (info.lastStatus === "Vào");
                         const statusClass = isInside ? "status-in" : "status-out";
+                        const activeShiftTxt = getActiveShiftText(info);
                         statusGrid.innerHTML += `
                             <div class="member-card ${statusClass}" onclick="openMemberModal('${uid}', 'view')">
                                 <div class="card-title">${info.name || 'Chưa có tên'}</div>
                                 <div class="card-id">ID: ${info.id || 'N/A'}</div>
+                                <div style="font-size: 13px; color: #2980b9; background: #ebf5fb; padding: 6px 8px; border-radius: 6px; margin-top: 8px; font-weight: 500;">
+                                    ⏱️ ${activeShiftTxt}
+                                </div>
                                 <div class="card-status" style="color: ${isInside ? '#27ae60' : '#e74c3c'}">${isInside ? "🟢 Vào" : "🔴 Ra"}</div>
                             </div>
                         `;
@@ -1805,15 +1858,72 @@ window.rejectOvertime = function(reqKey, uid, attKey) {
     }
 };
         // === CHUYỂN GIAO DIỆN QUẢN LÝ NHÂN SỰ (HR) ===
+// === GIAO DIỆN QUẢN LÝ NHÂN SỰ (HR) RIÊNG BIỆT ===
+let hrListenerStarted = false;
+
 window.switchToHRView = function() {
     document.getElementById('userControls').style.display = 'none';
-    document.getElementById('adminControls').style.display = 'block';
-    // HR chỉ được dùng tab Trạng thái & Danh sách (Thêm/Xóa/Đổi ca)
-    document.getElementById('btnHistory').style.display = 'none';
-    document.getElementById('btnDevices').style.display = 'none';
-    document.getElementById('btnSettings').style.display = 'none';
-    startAdminListeners();
-    switchTab('members');
+    document.getElementById('hrControls').style.display = 'block';
+    if (!hrListenerStarted) {
+        hrListenerStarted = true;
+        startAdminListeners(); // Đồng bộ membersData, shiftsData và Command/new_uid
+    }
+    renderHRTable();
+};
+
+window.exitHRView = function() {
+    document.getElementById('hrControls').style.display = 'none';
+    document.getElementById('userControls').style.display = 'block';
+};
+
+window.renderHRTable = function() {
+    const tbody = document.getElementById('hrMembersTable');
+    if (!tbody) return;
+    const kw = (document.getElementById('hrSearchInput')?.value || '').trim().toLowerCase();
+    tbody.innerHTML = '';
+    let count = 0;
+
+    for (const [uid, info] of Object.entries(membersData)) {
+        const name = (info.name || 'N/A');
+        const id = (info.id || 'N/A');
+        if (kw && !name.toLowerCase().includes(kw) && !id.toLowerCase().includes(kw) && !uid.toLowerCase().includes(kw)) continue;
+        count++;
+        const activeShift = getActiveShiftText(info);
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>${name}</strong><div style="font-size:11px; color:#7f8c8d;">UID: ${uid}</div></td>
+                <td>${id}</td>
+                <td><span style="background:#eafaf1; color:#16a085; padding:4px 8px; border-radius:4px; font-size:12px; font-weight:bold;">${activeShift}</span></td>
+                <td>
+                    <button class="btn btn-active" style="padding:6px 10px; font-size:12px; background:#2980b9;" onclick="openMemberModal('${uid}', 'edit')">✏️ Sửa / Ca</button>
+                    <button class="btn btn-cancel" style="display:inline-block; padding:6px 10px; font-size:12px; margin:0 0 0 4px;" onclick="hrDeleteMember('${uid}', '${name.replace(/'/g, "\\'")}')">🗑️</button>
+                </td>
+            </tr>`;
+    }
+    if (count === 0) tbody.innerHTML = '<tr><td colspan="4" class="empty-row">Không tìm thấy thành viên nào</td></tr>';
+};
+
+window.hrStartAddMember = function() {
+    changingUid = null;
+    set(ref(db, 'Command/mode'), 1);
+    set(ref(db, 'Command/new_uid'), "");
+    document.getElementById('hrAddStatus').style.display = 'block';
+    document.getElementById('hrBtnAdd').style.display = 'none';
+    document.getElementById('hrBtnCancelAdd').style.display = 'inline-block';
+};
+
+window.hrCancelAddMember = function() {
+    set(ref(db, 'Command/mode'), 0);
+    set(ref(db, 'Command/new_uid'), "");
+    document.getElementById('hrAddStatus').style.display = 'none';
+    document.getElementById('hrBtnAdd').style.display = 'inline-block';
+    document.getElementById('hrBtnCancelAdd').style.display = 'none';
+};
+
+window.hrDeleteMember = function(uid, name) {
+    if (confirm(`Xóa thành viên "${name}" (${uid})?`)) {
+        remove(ref(db, 'Members/' + uid));
+    }
 };
 
 // === ĐĂNG KÝ CA LÀM VIỆC (CHỦ NHẬT -> TỰ ĐỘNG, NGÀY THƯỜNG -> CHỜ DUYỆT) ===
@@ -1878,30 +1988,62 @@ window.submitUserShiftReg = function() {
 };
 
 // === HỖ TRỢ VÀO CA (HIỆU LỰC 15 PHÚT NGAY LẬP TỨC) ===
+let supportMembersCache = {};
+
 window.openSupportModal = function() {
     get(ref(db, 'Members')).then(snap => {
-        const data = snap.val() || {};
-        const sel = document.getElementById('supMemberSelect');
-        sel.innerHTML = '';
-        for (const [uid, info] of Object.entries(data)) {
-            sel.innerHTML += `<option value="${uid}">${info.name || uid} (${info.id || uid})</option>`;
-        }
+        supportMembersCache = snap.val() || {};
+        document.getElementById('supSearchInput').value = '';
+        document.getElementById('supSelectedUid').value = '';
+        document.getElementById('supSelectedDisplay').innerText = 'Chưa chọn thành viên nào';
         document.getElementById('supReason').value = '';
+        filterSupportMembers();
         document.getElementById('supportModal').style.display = 'block';
     });
 };
+
+window.filterSupportMembers = function() {
+    const kw = (document.getElementById('supSearchInput').value || '').trim().toLowerCase();
+    const tbody = document.getElementById('supMemberTableBody');
+    const selectedUid = document.getElementById('supSelectedUid').value;
+    tbody.innerHTML = '';
+    let count = 0;
+
+    for (const [uid, info] of Object.entries(supportMembersCache)) {
+        const name = info.name || uid;
+        const id = info.id || '';
+        if (kw && !name.toLowerCase().includes(kw) && !id.toLowerCase().includes(kw) && !uid.toLowerCase().includes(kw)) continue;
+        count++;
+        const isSel = (uid === selectedUid);
+        tbody.innerHTML += `
+            <tr style="cursor:pointer; background:${isSel ? '#fdebd0' : ''};" onclick="selectSupportMember('${uid}', '${name.replace(/'/g, "\\'")}', '${id.replace(/'/g, "\\'")}')">
+                <td style="padding:8px;"><strong>${name}</strong></td>
+                <td style="padding:8px;">${id || 'N/A'}</td>
+                <td style="padding:8px; text-align:center;">${isSel ? '✅' : '<span style="color:#2980b9; font-weight:bold;">Chọn</span>'}</td>
+            </tr>`;
+    }
+    if (count === 0) tbody.innerHTML = '<tr><td colspan="3" class="empty-row" style="padding:10px;">Không tìm thấy thành viên</td></tr>';
+};
+
+window.selectSupportMember = function(uid, name, id) {
+    document.getElementById('supSelectedUid').value = uid;
+    document.getElementById('supSelectedDisplay').innerText = `✅ Đang chọn: ${name} (ID: ${id || 'N/A'} | UID: ${uid})`;
+    filterSupportMembers();
+};
+
 window.closeSupportModal = function() { document.getElementById('supportModal').style.display = 'none'; };
 
 window.submitSupportOverride = function() {
-    const targetUid = document.getElementById('supMemberSelect').value;
+    const targetUid = document.getElementById('supSelectedUid').value;
     const type = document.getElementById('supTypeSelect').value;
     const reason = document.getElementById('supReason').value.trim();
+    if (!targetUid) return alert("Vui lòng chọn thành viên cần hỗ trợ từ bảng!");
     if (!reason) return alert("Vui lòng nhập lý do hỗ trợ!");
 
     const nowSec = Math.floor(Date.now() / 1000);
     set(ref(db, `Members/${targetUid}/supportOverride`), {
         type: type,
-        expiresAt: nowSec + 900, // Hiệu lực 15 phút (900 giây)
+        expiresAt: nowSec + 900,
         used: false,
         by: currentUser.name,
         reason: reason
@@ -2039,25 +2181,48 @@ window.rejectShiftReq = function(reqKey) {
     </div>
 
     <!-- Modal Hỗ Trợ Vào Ca (Dành cho người có quyền Hỗ trợ vào) -->
+    <!-- Modal Hỗ Trợ Vào Ca (Giao diện mới có tìm kiếm & bảng chọn) -->
     <div id="supportModal" class="modal">
-        <div class="modal-content" style="max-width: 440px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
-                <h2 style="margin: 0; color: #d35400;">⚡ Hỗ Trợ Vào Ca (15 Phút)</h2>
-                <span class="close" onclick="closeSupportModal()">&times;</span>
+        <div class="modal-content" style="max-width: 520px; padding: 0; overflow: hidden;">
+            <div style="background: linear-gradient(135deg, #d35400, #e67e22); color: white; padding: 15px 22px; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0; color: white; border: none; padding: 0; font-size: 18px;">⚡ Hỗ Trợ Vào Ca (Hiệu Lực 15 Phút)</h2>
+                <span class="close" onclick="closeSupportModal()" style="color: white; margin-top: 0;">&times;</span>
             </div>
-            <label>Chọn Thành Viên Cần Hỗ Trợ:</label>
-            <select id="supMemberSelect" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; margin-top:5px;"></select>
 
-            <label>Loại Hỗ Trợ:</label>
-            <select id="supTypeSelect" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; margin-top:5px;">
-                <option value="early">Vào sớm (Không cần đăng ký trước 1 ngày)</option>
-                <option value="late">Vào trễ quá 30 phút</option>
-                <option value="return">Vào lại ca (Quên tích quay lại khi ra sớm)</option>
-            </select>
+            <div style="padding: 20px; overflow-y: auto; max-height: 78vh;">
+                <label style="margin-top: 0;">1. Tìm & Chọn Thành Viên:</label>
+                <input type="text" id="supSearchInput" placeholder="🔍 Nhập Tên hoặc Mã số (ID) để lọc nhanh..." oninput="filterSupportMembers()" style="margin-bottom: 8px; border: 1px solid #e67e22;">
+                
+                <div style="max-height: 150px; overflow-y: auto; border: 1px solid #ddd; border-radius: 6px; background: #fafafa;">
+                    <table style="margin-top: 0; font-size: 13px;">
+                        <thead style="position: sticky; top: 0; background: #34495e;">
+                            <tr>
+                                <th style="padding: 8px; background: #34495e;">Họ và Tên</th>
+                                <th style="padding: 8px; background: #34495e; width: 100px;">Mã Số</th>
+                                <th style="padding: 8px; background: #34495e; width: 65px; text-align:center;">Chọn</th>
+                            </tr>
+                        </thead>
+                        <tbody id="supMemberTableBody"></tbody>
+                    </table>
+                </div>
 
-            <label>Lý do hỗ trợ:</label>
-            <input type="text" id="supReason" placeholder="Nhập lý do...">
-            <button type="button" class="btn btn-active" style="width:100%; background:#d35400; margin-top:15px;" onclick="submitSupportOverride()">Cấp Quyền Quét Ngay (15 Phút)</button>
+                <input type="hidden" id="supSelectedUid">
+                <div id="supSelectedDisplay" style="margin-top: 10px; padding: 10px 12px; background: #fef5e7; border: 1px dashed #e67e22; border-radius: 6px; font-size: 13px; color: #d35400; font-weight: bold;">
+                    Chưa chọn thành viên nào
+                </div>
+
+                <label>2. Loại Hỗ Trợ:</label>
+                <select id="supTypeSelect" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; margin-top:5px; font-size:14px;">
+                    <option value="early">🕒 Vào sớm (Không cần đăng ký trước 1 ngày)</option>
+                    <option value="late">⏰ Vào trễ quá 30 phút</option>
+                    <option value="return">🔄 Vào lại ca (Quên tích quay lại khi ra sớm)</option>
+                </select>
+
+                <label>3. Lý Do Hỗ Trợ:</label>
+                <input type="text" id="supReason" placeholder="Nhập lý do cụ thể..." style="margin-bottom: 15px;">
+
+                <button type="button" class="btn btn-active" style="width:100%; background:#d35400; padding: 12px; font-size: 15px;" onclick="submitSupportOverride()">⚡ Cấp Quyền Quét Ngay (15 Phút)</button>
+            </div>
         </div>
     </div>
 </body>
