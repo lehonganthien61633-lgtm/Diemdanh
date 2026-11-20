@@ -265,7 +265,10 @@
                     <input type="email" id="uViewEmail" readonly style="width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; background-color: #f9f9f9;">
                     
                     <button type="button" id="btnEarlyExit" class="btn btn-add" style="width: 100%; margin-top: 15px;" onclick="openEarlyExitModal()">🚪 Đăng Ký Ra Sớm (Về Sớm)</button>
-<button type="button" id="btnEarlyEntry" class="btn btn-active" style="width: 100%; margin-top: 10px; background-color:#8e44ad;" onclick="openEarlyEntryModal()">🕒 Đăng Ký Vào Sớm</button>
+                    <button type="button" id="btnEarlyEntry" class="btn btn-active" style="width: 100%; margin-top: 10px; background-color:#8e44ad;" onclick="openEarlyEntryModal()">🕒 Đăng Ký Vào Sớm</button>
+                    <button type="button" id="btnRegShift" class="btn btn-active" style="width: 100%; margin-top: 10px; background-color:#2980b9;" onclick="openRegShiftModal()">📅 Đăng Ký Ca Làm Việc</button>
+                    <button type="button" id="btnSupportEntry" class="btn btn-active" style="width: 100%; margin-top: 10px; background-color:#d35400; display:none;" onclick="openSupportModal()">⚡ Hỗ Trợ Vào Ca (Hiệu lực 15p)</button>
+                    <button type="button" id="btnOpenHR" class="btn btn-active" style="width: 100%; margin-top: 10px; background-color:#16a085; display:none;" onclick="switchToHRView()">👥 Quản Lý Nhân Sự</button>
                     <div style="border-top: 1px dashed #ccc; margin-top: 15px; padding-top: 15px;">
                         <label style="color:#2980b9; font-weight: bold; font-size: 14px;">▼ Phân Ca Làm Việc</label>
                         <div style="margin-top:10px; background:#f9f9f9; padding:10px; border-radius:6px; border:1px solid #eee;">
@@ -406,8 +409,25 @@
                             </div>
                         </div>
                     </div>
-
+                    <!-- BỔ NHIỆM QUYỀN (CHỈ ADMIN THẤY) -->
+                    <div id="adminPermBox" style="border-top: 1px dashed #ccc; margin-top: 15px; padding-top: 12px;">
+                        <label style="color:#8e44ad; margin:0 0 8px 0;">🛡️ Bổ Nhiệm Chức Năng:</label>
+                        <div style="display:flex; flex-direction:column; gap:8px; background:#f8f9fa; padding:10px; border-radius:6px; border:1px solid #ddd;">
+                            <label style="margin:0; display:flex; align-items:center; gap:8px; cursor:pointer;">
+                                <input type="checkbox" id="permEntrySupport" style="width:auto; margin:0; transform:scale(1.2);" onchange="checkChanges()">
+                                <span>Hỗ trợ vào (Vào sớm / Trễ >30p / Vào lại ca - 15 phút)</span>
+                            </label>
+                            <label style="margin:0; display:flex; align-items:center; gap:8px; cursor:pointer;">
+                                <input type="checkbox" id="permHR" style="width:auto; margin:0; transform:scale(1.2);" onchange="checkChanges()">
+                                <span>Quản lý nhân sự (Thêm/Xóa/Đổi ca & Duyệt ca đột xuất)</span>
+                            </label>
+                        </div>
+                    </div>
                     <button type="button" id="btnSaveInfo" class="btn btn-active" style="width:100%; margin-top: 25px; margin-bottom: 10px; display: none; flex-shrink: 0;" onclick="saveMemberInfo()">💾 Lưu Thông Tin</button>
+                    if (currentUser && currentUser.role === 'admin') {
+                    updates['Members/' + uid + '/perms/entrySupport'] = document.getElementById('permEntrySupport').checked;
+                    updates['Members/' + uid + '/perms/hr'] = document.getElementById('permHR').checked;
+                    }
                 </div>
 
                 <div id="historyPanel" class="right-panel">
@@ -728,7 +748,11 @@
                 onValue(ref(db, 'Members/' + uid), (snapshot) => {
                     const info = snapshot.val();
                     if(!info) return;
-                    
+                    currentUser.perms = info.perms || {};
+                    currentUser.tempShifts = info.tempShifts || {};
+                    document.getElementById('btnSupportEntry').style.display = currentUser.perms.entrySupport ? 'block' : 'none';
+                    document.getElementById('btnOpenHR').style.display = currentUser.perms.hr ? 'block' : 'none';
+                    if (currentUser.perms.hr) listenForApprovals();
                     document.getElementById('uViewUid').value = uid;
                     document.getElementById('uViewName').value = info.name || 'N/A';
                     document.getElementById('uViewId').value = info.id || 'N/A';
@@ -1025,7 +1049,7 @@
         window.openMemberModal = function(uid, mode) {
             currentModalMode = mode;
             const info = membersData[uid] || {};
-            originalMemberInfo = { name: info.name || '', id: info.id || '', dob: info.dob || '', email: info.email || '', p_id: info.p_id || 'HC', tempShifts: info.tempShifts || {} };
+            originalMemberInfo = { name: info.name || '', id: info.id || '', dob: info.dob || '', email: info.email || '', p_id: info.p_id || 'HC', tempShifts: info.tempShifts || {},permEntrySupport: info.perms?.entrySupport || false, permHR: info.perms?.hr || false };
             
             document.getElementById('editOldUid').value = uid; document.getElementById('editUid').value = uid;
             document.getElementById('editName').value = originalMemberInfo.name; document.getElementById('editId').value = originalMemberInfo.id;
@@ -1035,6 +1059,9 @@
             document.getElementById('shiftPanelWrapper').style.display = 'none';
             document.getElementById('tempShiftFormContainer').style.display = 'none';
             document.getElementById('btnShowTempShift').style.display = 'block';
+            document.getElementById('permEntrySupport').checked = originalMemberInfo.permEntrySupport;
+            document.getElementById('permHR').checked = originalMemberInfo.permHR;
+            document.getElementById('adminPermBox').style.display = (currentUser && currentUser.role === 'admin') ? 'block' : 'none';
             
             // Vẽ danh sách Ca phụ
             renderTempShiftsList();
@@ -1775,6 +1802,168 @@ window.rejectOvertime = function(reqKey, uid, attKey) {
         });
     }
 };
+        // === CHUYỂN GIAO DIỆN QUẢN LÝ NHÂN SỰ (HR) ===
+window.switchToHRView = function() {
+    document.getElementById('userControls').style.display = 'none';
+    document.getElementById('adminControls').style.display = 'block';
+    // HR chỉ được dùng tab Trạng thái & Danh sách (Thêm/Xóa/Đổi ca)
+    document.getElementById('btnHistory').style.display = 'none';
+    document.getElementById('btnDevices').style.display = 'none';
+    document.getElementById('btnSettings').style.display = 'none';
+    startAdminListeners();
+    switchTab('members');
+};
+
+// === ĐĂNG KÝ CA LÀM VIỆC (CHỦ NHẬT -> TỰ ĐỘNG, NGÀY THƯỜNG -> CHỜ DUYỆT) ===
+window.openRegShiftModal = function() {
+    get(ref(db, 'Settings/Shifts')).then(snap => {
+        const sData = snap.val() || { HC: { name: "Giờ hành chính", start: "07:00", end: "17:00" } };
+        const sel = document.getElementById('userRegShiftSelect');
+        sel.innerHTML = '';
+        for (const [id, s] of Object.entries(sData)) {
+            sel.innerHTML += `<option value="${id}" data-name="${s.name}" data-start="${s.start}" data-end="${s.end}">${s.name} (${s.start} - ${s.end})</option>`;
+        }
+        const isSunday = (new Date().getDay() === 0);
+        const notice = document.getElementById('regShiftNotice');
+        if (isSunday) {
+            notice.innerText = "✅ Hôm nay là Chủ Nhật: Bạn có thể đăng ký trực tiếp ca cho tuần tới (Không cần duyệt).";
+            notice.style.background = "#eafaf1"; notice.style.color = "#27ae60";
+        } else {
+            notice.innerText = "⚠️ Hôm nay không phải Chủ Nhật: Đăng ký ca đột xuất sẽ gửi yêu cầu chờ Admin / Quản lý nhân sự duyệt.";
+            notice.style.background = "#fef5e7"; notice.style.color = "#d35400";
+        }
+        const todayStr = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+        document.getElementById('userRegFrom').min = todayStr;
+        document.getElementById('userRegTo').min = todayStr;
+        document.getElementById('userRegFrom').value = todayStr;
+        document.getElementById('userRegTo').value = todayStr;
+        document.getElementById('userRegReason').value = '';
+        document.getElementById('regShiftModal').style.display = 'block';
+    });
+};
+window.closeRegShiftModal = function() { document.getElementById('regShiftModal').style.display = 'none'; };
+
+window.submitUserShiftReg = function() {
+    const sel = document.getElementById('userRegShiftSelect');
+    const opt = sel.options[sel.selectedIndex];
+    const sFrom = document.getElementById('userRegFrom').value;
+    const sTo = document.getElementById('userRegTo').value;
+    const reason = document.getElementById('userRegReason').value.trim();
+    const isSunday = (new Date().getDay() === 0);
+
+    if (!sFrom || !sTo || sFrom > sTo) return alert("Ngày áp dụng không hợp lệ!");
+    if (!isSunday && !reason) return alert("Đăng ký đột xuất trong tuần bắt buộc phải nhập lý do!");
+
+    const ts = Date.now();
+    const shiftPayload = {
+        s_id: sel.value, s_name: opt.dataset.name, s_start: opt.dataset.start, s_end: opt.dataset.end,
+        s_from: sFrom, s_to: sTo
+    };
+
+    if (isSunday) {
+        update(ref(db, `Members/${currentUser.uid}/tempShifts/${ts}`), shiftPayload).then(() => {
+            alert("Đã đăng ký ca cho tuần tới thành công!");
+            closeRegShiftModal();
+        });
+    } else {
+        set(ref(db, `ShiftRequests/${currentUser.uid}_${ts}`), {
+            uid: currentUser.uid, name: currentUser.name, ...shiftPayload, reason: reason, status: "pending"
+        }).then(() => {
+            alert("Đã gửi yêu cầu đăng ký ca đột xuất! Vui lòng chờ Admin hoặc Quản lý nhân sự duyệt.");
+            closeRegShiftModal();
+        });
+    }
+};
+
+// === HỖ TRỢ VÀO CA (HIỆU LỰC 15 PHÚT NGAY LẬP TỨC) ===
+window.openSupportModal = function() {
+    get(ref(db, 'Members')).then(snap => {
+        const data = snap.val() || {};
+        const sel = document.getElementById('supMemberSelect');
+        sel.innerHTML = '';
+        for (const [uid, info] of Object.entries(data)) {
+            sel.innerHTML += `<option value="${uid}">${info.name || uid} (${info.id || uid})</option>`;
+        }
+        document.getElementById('supReason').value = '';
+        document.getElementById('supportModal').style.display = 'block';
+    });
+};
+window.closeSupportModal = function() { document.getElementById('supportModal').style.display = 'none'; };
+
+window.submitSupportOverride = function() {
+    const targetUid = document.getElementById('supMemberSelect').value;
+    const type = document.getElementById('supTypeSelect').value;
+    const reason = document.getElementById('supReason').value.trim();
+    if (!reason) return alert("Vui lòng nhập lý do hỗ trợ!");
+
+    const nowSec = Math.floor(Date.now() / 1000);
+    set(ref(db, `Members/${targetUid}/supportOverride`), {
+        type: type,
+        expiresAt: nowSec + 900, // Hiệu lực 15 phút (900 giây)
+        used: false,
+        by: currentUser.name,
+        reason: reason
+    }).then(() => {
+        alert("Đã cấp quyền hỗ trợ vào ca! Thành viên có 15 phút để quét thẻ ngay.");
+        closeSupportModal();
+    });
+};
+
+// === LẮNG NGHE & DUYỆT YÊU CẦU CA ĐỘT XUẤT (ADMIN + HR) ===
+let pendingShiftReqs = {};
+onValue(ref(db, 'ShiftRequests'), (snapshot) => {
+    pendingShiftReqs = {};
+    snapshot.forEach((childSnap) => {
+        const info = childSnap.val();
+        if (info && info.status === "pending") pendingShiftReqs[childSnap.key] = info;
+    });
+    if (currentUser && (currentUser.role === 'admin' || currentUser.perms?.hr)) {
+        const notiBtn = document.getElementById('btnAdminNoti');
+        const badge = document.getElementById('notiBadge');
+        const total = Object.keys(pendingApprovals).length + Object.keys(pendingOvertimes).length + Object.keys(pendingShiftReqs).length;
+        notiBtn.style.display = 'inline-block';
+        badge.innerText = total;
+        badge.style.display = total > 0 ? 'inline-block' : 'none';
+        if (document.getElementById('approvalModal').style.display === 'block') renderShiftReqTable();
+    }
+});
+
+function renderShiftReqTable() {
+    const tbody = document.getElementById('shiftReqTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (Object.keys(pendingShiftReqs).length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="empty-row">Không có yêu cầu ca đột xuất</td></tr>';
+        return;
+    }
+    for (const [key, d] of Object.entries(pendingShiftReqs)) {
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>${d.name}</strong><br><span style="font-size:11px;color:#7f8c8d;">${d.uid}</span></td>
+                <td><strong>${d.s_name}</strong> (${d.s_start}-${d.s_end})<br>${d.s_from} → ${d.s_to}<br><em>Lý do: ${d.reason}</em></td>
+                <td>
+                    <button class="btn btn-active" style="background:#27ae60; padding:5px 8px; font-size:12px;" onclick="approveShiftReq('${key}')">✅ Duyệt</button>
+                    <button class="btn btn-cancel" style="display:inline-block; padding:5px 8px; font-size:12px; margin:0;" onclick="rejectShiftReq('${key}')">❌ Từ chối</button>
+                </td>
+            </tr>`;
+    }
+}
+
+// Gọi thêm renderShiftReqTable() bên trong window.openApprovalModal()
+window.approveShiftReq = function(reqKey) {
+    const d = pendingShiftReqs[reqKey];
+    if (!d) return;
+    const updates = {};
+    updates[`ShiftRequests/${reqKey}/status`] = "approved";
+    updates[`Members/${d.uid}/tempShifts/${Date.now()}`] = {
+        s_id: d.s_id, s_name: d.s_name, s_start: d.s_start, s_end: d.s_end, s_from: d.s_from, s_to: d.s_to
+    };
+    update(ref(db), updates).then(() => alert("Đã duyệt ca đột xuất!"));
+};
+
+window.rejectShiftReq = function(reqKey) {
+    update(ref(db, `ShiftRequests/${reqKey}`), { status: "rejected" }).then(() => alert("Đã từ chối yêu cầu ca!"));
+};
     </script>
 <!-- Modal Chờ Duyệt (Dành cho Admin) -->
     <div id="approvalModal" class="modal">
@@ -1811,7 +2000,62 @@ window.rejectOvertime = function(reqKey, uid, attKey) {
                         <tr><td colspan="3" class="empty-row">Không có yêu cầu tăng ca nào</td></tr>
                     </tbody>
                 </table>
+                <h3 style="margin: 15px 0 8px 0; color: #2c3e50; font-size: 16px;">📅 Yêu Cầu Đổi / Đăng Ký Ca Đột Xuất</h3>
+                <table style="margin-top:0;">
+                    <thead style="background-color: #2980b9;">
+                        <tr>
+                            <th style="color:white;">Họ Tên (UID)</th>
+                            <th style="color:white;">Ca & Thời gian</th>
+                            <th style="color:white; width: 140px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="shiftReqTableBody">
+                        <tr><td colspan="3" class="empty-row">Không có yêu cầu ca đột xuất</td></tr>
+                    </tbody>
+                </table>
             </div>
+        </div>
+    </div>
+<!-- Modal Đăng Ký Ca Làm Việc (User) -->
+    <div id="regShiftModal" class="modal">
+        <div class="modal-content" style="max-width: 440px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
+                <h2 style="margin: 0; color: #2980b9;">📅 Đăng Ký Ca Làm Việc</h2>
+                <span class="close" onclick="closeRegShiftModal()">&times;</span>
+            </div>
+            <p id="regShiftNotice" style="font-size:13px; padding:8px; border-radius:6px; margin-top:0;"></p>
+            <label>Chọn Ca Làm Việc:</label>
+            <select id="userRegShiftSelect" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; margin-top:5px;"></select>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <div style="flex:1;"><label>Từ ngày:</label><input type="date" id="userRegFrom"></div>
+                <div style="flex:1;"><label>Đến ngày:</label><input type="date" id="userRegTo"></div>
+            </div>
+            <label>Lý do (Bắt buộc nếu đăng ký đột xuất trong tuần):</label>
+            <input type="text" id="userRegReason" placeholder="Nhập lý do...">
+            <button type="button" class="btn btn-active" style="width:100%; background:#2980b9; margin-top:15px;" onclick="submitUserShiftReg()">Xác Nhận Đăng Ký</button>
+        </div>
+    </div>
+
+    <!-- Modal Hỗ Trợ Vào Ca (Dành cho người có quyền Hỗ trợ vào) -->
+    <div id="supportModal" class="modal">
+        <div class="modal-content" style="max-width: 440px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
+                <h2 style="margin: 0; color: #d35400;">⚡ Hỗ Trợ Vào Ca (15 Phút)</h2>
+                <span class="close" onclick="closeSupportModal()">&times;</span>
+            </div>
+            <label>Chọn Thành Viên Cần Hỗ Trợ:</label>
+            <select id="supMemberSelect" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; margin-top:5px;"></select>
+
+            <label>Loại Hỗ Trợ:</label>
+            <select id="supTypeSelect" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; margin-top:5px;">
+                <option value="early">Vào sớm (Không cần đăng ký trước 1 ngày)</option>
+                <option value="late">Vào trễ quá 30 phút</option>
+                <option value="return">Vào lại ca (Quên tích quay lại khi ra sớm)</option>
+            </select>
+
+            <label>Lý do hỗ trợ:</label>
+            <input type="text" id="supReason" placeholder="Nhập lý do...">
+            <button type="button" class="btn btn-active" style="width:100%; background:#d35400; margin-top:15px;" onclick="submitSupportOverride()">Cấp Quyền Quét Ngay (15 Phút)</button>
         </div>
     </div>
 </body>
