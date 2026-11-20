@@ -424,10 +424,6 @@
                         </div>
                     </div>
                     <button type="button" id="btnSaveInfo" class="btn btn-active" style="width:100%; margin-top: 25px; margin-bottom: 10px; display: none; flex-shrink: 0;" onclick="saveMemberInfo()">💾 Lưu Thông Tin</button>
-                    if (currentUser && currentUser.role === 'admin') {
-                    updates['Members/' + uid + '/perms/entrySupport'] = document.getElementById('permEntrySupport').checked;
-                    updates['Members/' + uid + '/perms/hr'] = document.getElementById('permHR').checked;
-                    }
                 </div>
 
                 <div id="historyPanel" class="right-panel">
@@ -1041,7 +1037,9 @@
                 document.getElementById('editId').value !== originalMemberInfo.id ||
                 document.getElementById('editDob').value !== originalMemberInfo.dob ||
                 document.getElementById('editEmail').value !== originalMemberInfo.email ||
-                document.getElementById('editPrimaryShift').value !== originalMemberInfo.p_id
+                document.getElementById('editPrimaryShift').value !== originalMemberInfo.p_id ||
+                document.getElementById('permEntrySupport').checked !== originalMemberInfo.permEntrySupport ||
+                document.getElementById('permHR').checked !== originalMemberInfo.permHR
             );
             document.getElementById('btnSaveInfo').style.display = hasChanged ? 'block' : 'none';
         };
@@ -1142,7 +1140,10 @@
             const tsStr = new Date().toLocaleString();
             let shiftChanges = false; let histLog = "";
             if (pShiftId !== originalMemberInfo.p_id) { shiftChanges = true; histLog += `Đổi ca chính thành ${shiftsData[pShiftId]?shiftsData[pShiftId].name:"HC"}. `; }
-
+            if (currentUser && currentUser.role === 'admin') {
+                updates['Members/' + uid + '/perms/entrySupport'] = document.getElementById('permEntrySupport').checked;
+                updates['Members/' + uid + '/perms/hr'] = document.getElementById('permHR').checked;
+            }
             update(ref(db), updates).then(() => {
                 if (shiftChanges && currentModalMode !== 'add') set(ref(db, `Members/${uid}/ShiftHistory/${Date.now()}`), { time: tsStr, action: histLog });
                 alert('Đã lưu thông tin cơ bản!');
@@ -1755,6 +1756,7 @@ function renderApprovalTables() {
 
 window.openApprovalModal = function() {
     renderApprovalTables();
+    renderShiftReqTable();
     document.getElementById('approvalModal').style.display = 'block';
 };
 
