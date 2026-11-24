@@ -276,6 +276,8 @@
                             <button type="button" id="btnEarlyExit" class="btn btn-add" style="margin:0; padding:9px; font-size:13px;" onclick="openEarlyExitModal()">🚪 Đăng Ký Ra Sớm</button>
                             <button type="button" id="btnEarlyEntry" class="btn btn-active" style="margin:0; padding:9px; font-size:13px; background-color:#8e44ad;" onclick="openEarlyEntryModal()">🕒 Đăng Ký Vào Sớm</button>
                             <button type="button" id="btnRegShift" class="btn btn-active" style="grid-column: span 2; margin:0; padding:9px; font-size:13px; background-color:#2980b9;" onclick="openRegShiftModal()">📅 Đăng Ký Ca Làm Việc</button>
+                            <button type="button" id="btnRegOT" class="btn btn-active" style="grid-column: span 2; margin:0; padding:9px; font-size:13px; background-color:#e67e22;" onclick="openRegOTModal()">⏰ Đăng Ký Tăng Ca</button>
+                            <button type="button" id="btnReviewOT" class="btn btn-active" style="grid-column: span 2; margin:0; padding:9px; font-size:13px; background-color:#c0392b; display:none;" onclick="openReviewModal()">⚠️ Xem Xét Tăng Ca (<span id="reviewCountBadge">0</span>)</button>
                         </div>
 
                         <!-- Nút chức năng bổ nhiệm (Tự hiện khi có quyền) -->
@@ -821,6 +823,7 @@
                     const pShiftText = `${pShiftObj.name} (${pShiftObj.start} - ${pShiftObj.end})`;
                     currentUser.primaryShiftText = pShiftText;
                     renderShiftSummaryUI('u', info, pShiftText);
+                    checkAndRenderUserReviews(uid, info, sData);
                     const isInside = (info.lastStatus === "Vào");
                     const tag = document.getElementById('uViewStatusTag');
                     if(isInside) { tag.innerText = "🟢 Đang ở trong"; tag.style.backgroundColor = "#eafaf1"; tag.style.color = "#27ae60"; tag.style.borderColor = "#2ecc71"; }
@@ -1849,8 +1852,9 @@ function renderApprovalTables() {
             const isSelf = (currentUser && currentUser.uid === data.uid);
             const actionHtml = isSelf
                 ? `<span style="color:#e74c3c; font-size:12px; font-style:italic;">Không thể tự duyệt</span>`
-                : `<button class="btn btn-active" style="background:#27ae60; padding:5px 8px; font-size:12px; margin-bottom:4px;" onclick="approveOvertime('${key}', '${data.uid}', '${data.attKey}', '${data.otHours}')">✅ Xác nhận</button>
-                   <button class="btn btn-cancel" style="display:inline-block; padding:5px 8px; font-size:12px; margin:0;" onclick="rejectOvertime('${key}', '${data.uid}', '${data.attKey}')">❌ Từ chối</button>`;
+                : `<button class="btn btn-active" style="background:#27ae60; padding:4px 7px; font-size:11px; margin-bottom:4px;" onclick="approveOvertime('${key}', '${data.uid}', '${data.attKey}', '${data.otHours}', false)">✅ Chấp nhận</button>
+                   <button class="btn btn-active" style="background:#2980b9; padding:4px 7px; font-size:11px; margin-bottom:4px;" onclick="approveOvertime('${key}', '${data.uid}', '${data.attKey}', '${data.otHours}', true)">✏️ Tùy chỉnh</button>
+                   <button class="btn btn-cancel" style="display:inline-block; padding:4px 7px; font-size:11px; margin:0;" onclick="rejectOvertime('${key}', '${data.uid}', '${data.attKey}')">❌ Từ chối</button>`;
             otBody.innerHTML += `
                 <tr>
                     <td><strong>${data.name}</strong><br><span style="font-size:11px;color:#7f8c8d;">${data.uid}</span></td>
@@ -1903,18 +1907,25 @@ window.approveEarlyEntry = function(uid, timestamp) {
     }
 };
 
-window.approveOvertime = function(reqKey, uid, attKey, defaultHours) {
-    const confirmedHours = prompt("Xác nhận số giờ tăng ca cho nhân viên này (giờ):", defaultHours);
-    if (confirmedHours !== null && confirmedHours.trim() !== "") {
-        const updates = {};
-        updates[`OvertimeRequests/${reqKey}/status`] = "approved";
-        updates[`OvertimeRequests/${reqKey}/confirmedHours`] = confirmedHours.trim();
-        updates[`Members/${uid}/Attendance/${attKey}/status`] = `Ra (Tăng ca: ${confirmedHours.trim()}h)`;
-
-        update(ref(db), updates).then(() => {
-            alert(`Đã xác nhận tăng ca ${confirmedHours.trim()} giờ!`);
-        });
+window.approveOvertime = function(reqKey, uid, attKey, defaultHours, isCustom = false) {
+    let finalHours = defaultHours;
+    if (isCustom) {
+        const input = prompt("Nhập số giờ tăng ca tùy chỉnh cho nhân viên (giờ):", defaultHours);
+        if (input === null || input.trim() === "") return;
+        finalHours = input.trim();
+    } else {
+        if (!confirm(`Chấp nhận giờ tăng ca yêu cầu (${defaultHours} giờ)?`)) return;
     }
+
+    const updates = {};
+    updates[`OvertimeRequests/${reqKey}/status`] = "approved";
+    updates[`OvertimeRequests/${reqKey}/confirmedHours`] = finalHours;
+    if (attKey && attKey !== "none") {
+        updates[`Members/${uid}/Attendance/${attKey}/status`] = `Ra (Tăng ca: ${finalHours}h)`;
+    }
+    update(ref(db), updates).then(() => {
+        alert(`Đã duyệt tăng ca ${finalHours} giờ!`);
+    });
 };
 
 window.rejectOvertime = function(reqKey, uid, attKey) {
@@ -2241,6 +2252,212 @@ window.openTempShiftHistoryModal = function(source) {
 window.closeTempShiftHistoryModal = function() {
     document.getElementById('tempShiftHistoryModal').style.display = 'none';
 };
+        // === ĐĂNG KÝ TĂNG CA (TRƯỚC 2 TIẾNG TAN CA; T7/CN HẠN CHÓT THỨ 6) ===
+function getShiftEndForDate(info, dateStr, sData) {
+    if (info.tempShifts) {
+        for (const s of Object.values(info.tempShifts)) {
+            if (dateStr >= s.s_from && dateStr <= s.s_to) return s.s_end;
+        }
+    }
+    return info.p_end || sData?.[info.p_id]?.end || "17:00";
+}
+
+window.openRegOTModal = function() {
+    if (!currentUser || !currentUser.uid) return alert("Vui lòng đăng nhập!");
+    const todayStr = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    const dateEl = document.getElementById('otRegDate');
+    dateEl.min = todayStr;
+    dateEl.value = todayStr;
+    document.getElementById('otRegHours').value = '';
+    document.getElementById('otRegReason').value = '';
+    updateShiftDisplay('otRegDate', 'otRegShift');
+    document.getElementById('otRegModal').style.display = 'block';
+};
+window.closeRegOTModal = function() { document.getElementById('otRegModal').style.display = 'none'; };
+
+window.submitOTRegistration = function() {
+    const regDate = document.getElementById('otRegDate').value;
+    const hours = document.getElementById('otRegHours').value.trim();
+    const reason = document.getElementById('otRegReason').value.trim();
+    const shiftStr = document.getElementById('otRegShift').value;
+
+    if (!regDate || !hours || !reason) return alert("Vui lòng nhập đầy đủ Ngày, Số giờ và Lý do!");
+
+    const now = new Date();
+    const todayStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    const targetObj = new Date(regDate + "T00:00:00");
+    const targetDay = targetObj.getDay(); // 0: CN, 6: T7
+
+    // 1. Kiểm tra hạn chót Thứ 6 cho Thứ 7 / Chủ Nhật
+    if (targetDay === 6 || targetDay === 0) {
+        const diffToFriday = (targetDay === 6) ? 1 : 2;
+        const fridayObj = new Date(targetObj.getTime() - diffToFriday * 86400000);
+        const fridayStr = new Date(fridayObj.getTime() - fridayObj.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+        if (todayStr > fridayStr) {
+            return alert("Tăng ca Thứ 7 / Chủ Nhật bắt buộc phải đăng ký hạn chót vào Thứ 6!");
+        }
+    }
+    // 2. Ngày thường: Nếu đăng ký cho hôm nay -> Phải trước giờ tan ca ít nhất 2 tiếng
+    else if (regDate === todayStr) {
+        const match = shiftStr.match(/-\s*(\d{2}:\d{2})/);
+        const endHHMM = match ? match[1] : "17:00";
+        const [eh, em] = endHHMM.split(':').map(Number);
+        const endMin = eh * 60 + em;
+        const curMin = now.getHours() * 60 + now.getMinutes();
+        if (curMin > endMin - 120) {
+            return alert(`Đã quá hạn! Phải đăng ký tăng ca trước giờ tan ca (${endHHMM}) ít nhất 2 tiếng.`);
+        }
+    }
+
+    const ts = Math.floor(Date.now() / 1000);
+    set(ref(db, `Members/${currentUser.uid}/otRegistrations/${regDate}`), {
+        date: regDate, hours: hours, reason: reason, timestamp: ts
+    }).then(() => {
+        set(ref(db, `Members/${currentUser.uid}/earlyEntryHistory/${ts}`), {
+            timestamp: ts, reason: `[Đăng ký Tăng ca ${regDate} - ${hours}h] ${reason}`, approved: true
+        });
+        alert(`Đã đăng ký tăng ca ngày ${regDate} (${hours} giờ) thành công!`);
+        closeRegOTModal();
+    });
+};
+
+// === KIỂM TRA QUÊN QUÉT RA (>8H) & XEM XÉT (HẠN 3 NGÀY) ===
+let activeUserReviews = {};
+
+function checkAndRenderUserReviews(uid, info, sData) {
+    const nowSec = Math.floor(Date.now() / 1000);
+    const THREE_DAYS = 3 * 86400;
+
+    // 1. Nếu đang ở trạng thái "Vào" và đã quá (giờ tan ca + 8 tiếng) -> Tự tạo mục Xem xét & chốt ra tạm lúc tan ca
+    if (info.lastStatus === "Vào" && info.Attendance) {
+        const latestEntry = Object.entries(info.Attendance).sort((a, b) => b[0] - a[0])[0];
+        if (latestEntry && (latestEntry[1].status || '').startsWith("Vào")) {
+            const checkInDate = latestEntry[1].time.substring(0, 10);
+            const shiftEnd = getShiftEndForDate(info, checkInDate, sData);
+            const shiftEndEpoch = Math.floor(new Date(`${checkInDate}T${shiftEnd}:00`).getTime() / 1000);
+
+            if (nowSec > shiftEndEpoch + 8 * 3600 && (!info.pendingReviews || !info.pendingReviews[checkInDate])) {
+                const updates = {};
+                const autoAttKey = String(shiftEndEpoch);
+                updates[`Members/${uid}/lastStatus`] = "Ra";
+                updates[`Members/${uid}/lastShiftDate`] = checkInDate;
+                updates[`Members/${uid}/Attendance/${autoAttKey}`] = {
+                    time: `${checkInDate} ${shiftEnd}:00`,
+                    status: "Ra (Hết ca - Chờ xem xét)"
+                };
+                updates[`Members/${uid}/pendingReviews/${checkInDate}`] = {
+                    date: checkInDate,
+                    shiftEnd: shiftEnd,
+                    attKey: autoAttKey,
+                    createdAt: shiftEndEpoch,
+                    status: "pending"
+                };
+                update(ref(db), updates);
+                return;
+            }
+        }
+    }
+
+    // 2. Lọc các mục Xem xét còn hạn 3 ngày; mục quá 3 ngày tự chốt mặc định lúc tan ca
+    activeUserReviews = {};
+    if (info.pendingReviews) {
+        for (const [dateKey, rev] of Object.entries(info.pendingReviews)) {
+            if (rev.status !== "pending") continue;
+            if (nowSec - rev.createdAt > THREE_DAYS) {
+                const expUpdates = {};
+                expUpdates[`Members/${uid}/pendingReviews/${dateKey}/status`] = "expired";
+                if (rev.attKey) expUpdates[`Members/${uid}/Attendance/${rev.attKey}/status`] = "Ra (Đúng giờ - Quá hạn xem xét)";
+                update(ref(db), expUpdates);
+            } else {
+                activeUserReviews[dateKey] = rev;
+            }
+        }
+    }
+
+    const count = Object.keys(activeUserReviews).length;
+    const btn = document.getElementById('btnReviewOT');
+    const badge = document.getElementById('reviewCountBadge');
+    if (btn && badge) {
+        badge.innerText = count;
+        btn.style.display = count > 0 ? 'block' : 'none';
+    }
+}
+
+window.openReviewModal = function() {
+    const container = document.getElementById('reviewListContainer');
+    container.innerHTML = '';
+    const keys = Object.keys(activeUserReviews);
+    if (keys.length === 0) {
+        container.innerHTML = '<p style="text-align:center; color:#7f8c8d;">Không có ca nào cần xem xét.</p>';
+    } else {
+        for (const [dateKey, rev] of Object.entries(activeUserReviews)) {
+            const daysLeft = Math.max(1, Math.ceil((rev.createdAt + 3 * 86400 - Math.floor(Date.now() / 1000)) / 86400));
+            container.innerHTML += `
+                <div style="background:#f8f9fa; border:1px solid #ddd; border-radius:8px; padding:14px; margin-bottom:14px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <strong style="color:#c0392b;">📅 Ngày: ${rev.date} (Tan ca: ${rev.shiftEnd})</strong>
+                        <span style="font-size:11px; background:#fadbd8; color:#c0392b; padding:2px 6px; border-radius:4px;">Còn ${daysLeft} ngày</span>
+                    </div>
+                    <label style="font-size:13px; margin-top:4px;">Lựa chọn xử lý:</label>
+                    <select id="revChoice_${dateKey}" onchange="toggleRevOTBox('${dateKey}')" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:5px; margin-top:4px;">
+                        <option value="no_ot">Không tính tăng ca (Mặc định về lúc ${rev.shiftEnd})</option>
+                        <option value="ot">Tăng ca (Gửi yêu cầu Admin / HR duyệt)</option>
+                    </select>
+                    <div id="revOTBox_${dateKey}" style="display:none; margin-top:10px; background:#fff; padding:10px; border:1px dashed #e67e22; border-radius:6px;">
+                        <label style="font-size:12px; margin-top:0;">Ngày tăng ca:</label>
+                        <input type="date" id="revDate_${dateKey}" value="${rev.date}" readonly style="padding:7px; background:#ecf0f1; margin-bottom:6px;">
+                        <label style="font-size:12px; margin-top:0;">Số giờ tăng ca:</label>
+                        <input type="number" id="revHours_${dateKey}" min="0.5" max="8" step="0.5" placeholder="Nhập số giờ..." style="padding:7px; margin-bottom:0;">
+                    </div>
+                    <button type="button" class="btn btn-active" style="width:100%; margin-top:10px; padding:9px; font-size:13px; background:#2980b9;" onclick="submitReviewChoice('${dateKey}')">Gửi Xác Nhận</button>
+                </div>`;
+        }
+    }
+    document.getElementById('reviewModal').style.display = 'block';
+};
+
+window.toggleRevOTBox = function(dateKey) {
+    const val = document.getElementById(`revChoice_${dateKey}`).value;
+    document.getElementById(`revOTBox_${dateKey}`).style.display = (val === 'ot') ? 'block' : 'none';
+};
+
+window.closeReviewModal = function() { document.getElementById('reviewModal').style.display = 'none'; };
+
+window.submitReviewChoice = function(dateKey) {
+    const rev = activeUserReviews[dateKey];
+    if (!rev) return;
+    const choice = document.getElementById(`revChoice_${dateKey}`).value;
+    const uid = currentUser.uid;
+    const updates = {};
+
+    if (choice === 'no_ot') {
+        updates[`Members/${uid}/pendingReviews/${dateKey}/status`] = "resolved_no_ot";
+        if (rev.attKey) updates[`Members/${uid}/Attendance/${rev.attKey}/status`] = "Ra (Đúng giờ - Không tăng ca)";
+        update(ref(db), updates).then(() => {
+            alert(`Đã xác nhận không tính tăng ca (kết thúc lúc ${rev.shiftEnd}).`);
+            closeReviewModal();
+        });
+    } else {
+        const otHours = document.getElementById(`revHours_${dateKey}`).value.trim();
+        if (!otHours || parseFloat(otHours) <= 0) return alert("Vui lòng nhập số giờ tăng ca hợp lệ!");
+        const reqKey = `${uid}_${Date.now()}`;
+        updates[`Members/${uid}/pendingReviews/${dateKey}/status`] = "resolved_ot_sent";
+        if (rev.attKey) updates[`Members/${uid}/Attendance/${rev.attKey}/status`] = `Ra (Tăng ca ${otHours}h - Chờ duyệt)`;
+        updates[`OvertimeRequests/${reqKey}`] = {
+            uid: uid,
+            name: currentUser.name,
+            time: `${rev.date} (Xem xét)`,
+            shiftEnd: rev.shiftEnd,
+            otHours: otHours,
+            attKey: rev.attKey || "none",
+            status: "pending"
+        };
+        update(ref(db), updates).then(() => {
+            alert("Đã gửi yêu cầu tăng ca tới Admin / Quản lý nhân sự để duyệt!");
+            closeReviewModal();
+        });
+    }
+};
     </script>
 <!-- Modal Chờ Duyệt (Dành cho Admin) -->
     <!-- Modal Chờ Duyệt (Dạng Tab có cảnh báo số lượng) -->
@@ -2408,6 +2625,43 @@ window.closeTempShiftHistoryModal = function() {
                     <tbody id="tempShiftHistoryTableBody"></tbody>
                 </table>
             </div>
+        </div>
+    </div>
+    <!-- Modal Đăng Ký Tăng Ca (Trước 2-3h tan ca; T7/CN hạn chót Thứ 6) -->
+    <div id="otRegModal" class="modal">
+        <div class="modal-content" style="max-width: 440px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
+                <h2 style="margin: 0; color: #e67e22;">⏰ Đăng Ký Tăng Ca</h2>
+                <span class="close" onclick="closeRegOTModal()">&times;</span>
+            </div>
+            <p style="font-size:12px; background:#fef5e7; color:#d35400; padding:8px; border-radius:6px; margin-top:0;">
+                • Ngày thường: Đăng ký trước giờ tan ca ít nhất <b>2 tiếng</b>.<br>
+                • Thứ 7 / Chủ Nhật: Hạn chót đăng ký là <b>Thứ 6</b>.
+            </p>
+            <label>Ngày tăng ca:</label>
+            <input type="date" id="otRegDate" onchange="updateShiftDisplay('otRegDate', 'otRegShift')">
+
+            <label>Ca làm việc ngày hôm đó:</label>
+            <input type="text" id="otRegShift" readonly style="background-color: #ecf0f1; font-weight: bold;">
+
+            <label>Số giờ dự kiến tăng ca:</label>
+            <input type="number" id="otRegHours" min="0.5" max="8" step="0.5" placeholder="VD: 2, 2.5, 3...">
+
+            <label>Lý do / Công việc:</label>
+            <input type="text" id="otRegReason" placeholder="Nhập lý do tăng ca...">
+
+            <button type="button" class="btn btn-active" style="width:100%; background:#e67e22; margin-top:15px;" onclick="submitOTRegistration()">Xác Nhận Đăng Ký</button>
+        </div>
+    </div>
+
+    <!-- Modal Xem Xét (Hiệu lực 3 ngày) -->
+    <div id="reviewModal" class="modal">
+        <div class="modal-content" style="max-width: 520px; padding: 0; overflow: hidden;">
+            <div style="background: #c0392b; color: white; padding: 15px 22px; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0; color: white; border: none; padding: 0; font-size: 18px;">⚠️ Xem Xét Ca Làm Việc (Hạn 3 Ngày)</h2>
+                <span class="close" onclick="closeReviewModal()" style="color: white; margin-top: 0;">&times;</span>
+            </div>
+            <div id="reviewListContainer" style="padding: 20px; max-height: 70vh; overflow-y: auto;"></div>
         </div>
     </div>
 </body>
