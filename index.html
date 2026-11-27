@@ -1623,7 +1623,6 @@ tbody.innerHTML += `<tr><td>${att.time || att.timeString}</td><td style="color:$
                             <td><strong style="color: #2c3e50;">${devInfo.name || devId}</strong><div style="font-size:11px; color:#7f8c8d;">IP: ${devInfo.ip || 'Trống'}</div></td>
                             <td>${statusHtml}</td>
                             <td>
-                                <button class="btn btn-active" style="padding: 6px 12px; font-size: 13px; background-color:#8e44ad; margin-bottom: 5px;" onclick="viewCamera('${devInfo.ip}')">📹 Xem Cam</button><br>
                                 <button class="btn btn-active" style="padding: 6px 12px; font-size: 13px;" onclick="openDeviceModal('${devId}')">⚙️ Cấu Hình</button>
                                 <button class="btn btn-delete" style="padding: 6px 12px; font-size: 13px; margin: 0 0 0 5px; display: inline-block;" onclick="deleteDevice('${devId}')">🗑️ Xóa</button>
                             </td>
