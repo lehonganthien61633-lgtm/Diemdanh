@@ -381,6 +381,7 @@
             <div style="font-size:11px; color:#27ae60;">Lương kỳ này</div>
             <div id="uStatSalary" style="font-size:14px; font-weight:bold; color:#1e8449;">0đ</div>
         </div>
+        <div class="filter-container" style="padding: 10px; margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; flex-shrink: 0;">
     </div>
                             <div>
                                 <select id="uViewRows" onchange="changeUViewRows()">
@@ -599,6 +600,7 @@
             <div style="font-size:11px; color:#27ae60;">Lương kỳ này</div>
             <div id="aStatSalary" style="font-size:14px; font-weight:bold; color:#1e8449;">0đ</div>
         </div>
+        <div class="filter-container" style="padding: 10px; margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; flex-shrink: 0;">
     </div>
                             <div><select id="personalRows" onchange="changePersonalRows()"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
                             <div style="display:flex; gap: 5px; align-items: center;">
@@ -1552,7 +1554,7 @@
             renderTempShiftsList();
             const pObj = shiftsData[originalMemberInfo.p_id] || { name: "Giờ hành chính", start: info.p_start || "07:00", end: info.p_end || "17:00" };
             renderShiftSummaryUI('a', info, `${pObj.name} (${pObj.start} - ${pObj.end})`);
-            const isView = (mode === 'view'); const isAdd = (mode === 'add');
+            
             document.getElementById('aShiftSummaryBox').style.display = isAdd ? 'none' : 'block';
             document.getElementById('aTempShiftSection').style.display = isAdd ? 'none' : 'block';
             document.getElementById('btnViewShiftHist').style.display = isAdd ? 'none' : 'inline-block';
