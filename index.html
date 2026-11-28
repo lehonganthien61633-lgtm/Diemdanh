@@ -419,6 +419,7 @@
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <button type="button" id="hrBtnAdd" class="btn btn-add" style="margin: 0;" onclick="hrStartAddMember()">➕ Thêm Thành Viên</button>
                         <button type="button" id="hrBtnCancelAdd" class="btn btn-cancel" style="margin: 0;" onclick="hrCancelAddMember()">❌ Hủy thêm</button>
+                        <button type="button" class="btn btn-active" style="margin: 0; background-color: #e67e22;" onclick="openHROTModal()">⏰ Đăng Ký Tăng Ca (HR)</button>
                     </div>
                     <input type="text" id="hrSearchInput" placeholder="🔍 Tìm theo Tên, Mã số (ID) hoặc UID..." oninput="renderHRTable()" style="padding: 10px 14px; border: 1px solid #bdc3c7; border-radius: 6px; width: 280px; font-size: 14px;">
                 </div>
@@ -2239,13 +2240,18 @@ window.approveEarlyEntry = function(uid, timestamp) {
 };
 
 window.approveOvertime = function(reqKey, uid, attKey, defaultHours, isCustom = false) {
-    let finalHours = defaultHours;
+    const maxSuggested = parseFloat(defaultHours) || 0;
+    let finalHours = maxSuggested;
+
     if (isCustom) {
-        const input = prompt("Nhập số giờ tăng ca tùy chỉnh cho nhân viên (giờ):", defaultHours);
+        const input = prompt(`Nhập số giờ tăng ca tùy chỉnh (Tối đa không vượt quá ${maxSuggested} giờ gợi ý):`, maxSuggested);
         if (input === null || input.trim() === "") return;
-        finalHours = input.trim();
+        const parsed = parseFloat(input.trim());
+        if (isNaN(parsed) || parsed <= 0) return alert("Số giờ không hợp lệ!");
+        if (parsed > maxSuggested) return alert(`Số giờ phê duyệt (${parsed}h) không được lớn hơn số giờ gợi ý (${maxSuggested}h)!`);
+        finalHours = parsed;
     } else {
-        if (!confirm(`Chấp nhận giờ tăng ca yêu cầu (${defaultHours} giờ)?`)) return;
+        if (!confirm(`Chấp nhận giờ tăng ca yêu cầu (${maxSuggested} giờ)?`)) return;
     }
 
     const updates = {};
@@ -2334,6 +2340,94 @@ window.hrCancelAddMember = function() {
 };
 
 window.hrDeleteMember = function(uid, name) {
+    window.openHROTModal = function() {
+    const sel = document.getElementById('hrOtMemberSelect');
+    sel.innerHTML = '';
+    for (const [uid, info] of Object.entries(membersData)) {
+        sel.innerHTML += `<option value="${uid}">${info.name || uid} (${info.id || 'N/A'})</option>`;
+    }
+    const todayStr = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    const dateEl = document.getElementById('hrOtDate');
+    dateEl.min = todayStr;
+    dateEl.value = todayStr;
+    document.getElementById('hrOtHours').value = '';
+    document.getElementById('hrOtReason').value = '';
+    updateHROTShift();
+    document.getElementById('hrOtModal').style.display = 'block';
+};
+
+window.closeHROTModal = function() {
+    document.getElementById('hrOtModal').style.display = 'none';
+};
+
+window.updateHROTShift = function() {
+    const uid = document.getElementById('hrOtMemberSelect').value;
+    const dateStr = document.getElementById('hrOtDate').value;
+    const shiftInput = document.getElementById('hrOtShift');
+    const info = membersData[uid];
+    if (!info || !dateStr) { shiftInput.value = ''; return; }
+
+    if (info.tempShifts) {
+        for (const s of Object.values(info.tempShifts)) {
+            if (dateStr >= s.s_from && dateStr <= s.s_to) {
+                shiftInput.value = `${s.s_name} (${s.s_start} - ${s.s_end})`;
+                return;
+            }
+        }
+    }
+    const pId = info.p_id || 'HC';
+    const pName = shiftsData[pId]?.name || 'Giờ hành chính';
+    const pStart = info.p_start || shiftsData[pId]?.start || '07:00';
+    const pEnd = info.p_end || shiftsData[pId]?.end || '17:00';
+    shiftInput.value = `${pName} (${pStart} - ${pEnd})`;
+};
+
+window.submitHROTRegistration = function() {
+    const uid = document.getElementById('hrOtMemberSelect').value;
+    const regDate = document.getElementById('hrOtDate').value;
+    const hoursStr = document.getElementById('hrOtHours').value.trim();
+    const reason = document.getElementById('hrOtReason').value.trim();
+    const shiftStr = document.getElementById('hrOtShift').value;
+    const info = membersData[uid];
+
+    if (!uid || !info || !regDate || !hoursStr || !reason) {
+        return alert("Vui lòng chọn thành viên và điền đầy đủ thông tin!");
+    }
+
+    // Kiểm tra thời gian: Nếu đăng ký cho hôm nay -> Phải trước giờ kết thúc ca hôm đó (không giới hạn Thứ 6 cho T7/CN)
+    const now = new Date();
+    const todayStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    if (regDate === todayStr) {
+        const match = shiftStr.match(/-\s*(\d{2}:\d{2})/);
+        const endHHMM = match ? match[1] : "17:00";
+        const [eh, em] = endHHMM.split(':').map(Number);
+        const endMin = eh * 60 + em;
+        const curMin = now.getHours() * 60 + now.getMinutes();
+        if (curMin >= endMin) {
+            return alert(`Đã quá giờ kết thúc ca hôm nay (${endHHMM})! Không thể đăng ký tăng ca.`);
+        }
+    }
+
+    // Kiểm tra giới hạn số giờ (tối đa 4h/ngày và không vượt hạn mức Tuần/Tháng/Năm)
+    let reqHours = parseFloat(hoursStr);
+    if (isNaN(reqHours) || reqHours <= 0) return alert("Số giờ tăng ca không hợp lệ!");
+    const maxSuggested = getMaxSuggestedOT(info, regDate);
+    if (maxSuggested <= 0) return alert(`Thành viên ${info.name} đã đạt giới hạn giờ tăng ca quy định!`);
+    if (reqHours > maxSuggested) {
+        return alert(`Số giờ đăng ký (${reqHours}h) vượt quá giới hạn tối đa cho phép (${maxSuggested}h)!`);
+    }
+
+    const ts = Math.floor(Date.now() / 1000);
+    set(ref(db, `Members/${uid}/otRegistrations/${regDate}`), {
+        date: regDate, hours: reqHours, reason: `[HR: ${currentUser.name}] ${reason}`, timestamp: ts
+    }).then(() => {
+        set(ref(db, `Members/${uid}/earlyEntryHistory/${ts}`), {
+            timestamp: ts, reason: `[HR ĐK Tăng ca ${regDate} - ${reqHours}h] ${reason}`, approved: true
+        });
+        alert(`Đã đăng ký tăng ca cho ${info.name} ngày ${regDate} (${reqHours} giờ) thành công!`);
+        closeHROTModal();
+    });
+};
     if (confirm(`Xóa thành viên "${name}" (${uid})?`)) {
         remove(ref(db, 'Members/' + uid));
     }
@@ -2809,6 +2903,15 @@ function checkAndRenderUserReviews(uid, info, sData) {
     }
 }
 
+function getMaxSuggestedOT(info, dateStr) {
+    const st = calcUserOTStats(info, dateStr);
+    let maxH = 4; // Tối đa 4h/ngày
+    if (otLimits.week > 0) maxH = Math.min(maxH, otLimits.week - st.weekH);
+    if (otLimits.month > 0) maxH = Math.min(maxH, otLimits.month - st.monthH);
+    if (otLimits.year > 0) maxH = Math.min(maxH, otLimits.year - st.yearH);
+    return Math.max(0, parseFloat(maxH.toFixed(2)));
+}
+
 window.openReviewModal = function() {
     const container = document.getElementById('reviewListContainer');
     container.innerHTML = '';
@@ -2818,6 +2921,7 @@ window.openReviewModal = function() {
     } else {
         for (const [dateKey, rev] of Object.entries(activeUserReviews)) {
             const daysLeft = Math.max(1, Math.ceil((rev.createdAt + 3 * 86400 - Math.floor(Date.now() / 1000)) / 86400));
+            const maxSuggested = getMaxSuggestedOT(currentUser.rawInfo, rev.date);
             container.innerHTML += `
                 <div style="background:#f8f9fa; border:1px solid #ddd; border-radius:8px; padding:14px; margin-bottom:14px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -2830,10 +2934,11 @@ window.openReviewModal = function() {
                         <option value="ot">Tăng ca (Gửi yêu cầu Admin / HR duyệt)</option>
                     </select>
                     <div id="revOTBox_${dateKey}" style="display:none; margin-top:10px; background:#fff; padding:10px; border:1px dashed #e67e22; border-radius:6px;">
+                        <div style="font-size:12px; color:#d35400; font-weight:bold; margin-bottom:6px;">💡 Số giờ tăng ca gợi ý tối đa: ${maxSuggested} giờ</div>
                         <label style="font-size:12px; margin-top:0;">Ngày tăng ca:</label>
                         <input type="date" id="revDate_${dateKey}" value="${rev.date}" readonly style="padding:7px; background:#ecf0f1; margin-bottom:6px;">
-                        <label style="font-size:12px; margin-top:0;">Số giờ tăng ca:</label>
-                        <input type="number" id="revHours_${dateKey}" min="0.5" max="8" step="0.5" placeholder="Nhập số giờ..." style="padding:7px; margin-bottom:0;">
+                        <label style="font-size:12px; margin-top:0;">Số giờ tăng ca (≤ ${maxSuggested}h):</label>
+                        <input type="number" id="revHours_${dateKey}" min="0.5" max="${maxSuggested}" step="0.5" placeholder="Nhập số giờ..." style="padding:7px; margin-bottom:0;">
                     </div>
                     <button type="button" class="btn btn-active" style="width:100%; margin-top:10px; padding:9px; font-size:13px; background:#2980b9;" onclick="submitReviewChoice('${dateKey}')">Gửi Xác Nhận</button>
                 </div>`;
@@ -2864,17 +2969,20 @@ window.submitReviewChoice = function(dateKey) {
             closeReviewModal();
         });
     } else {
-        const otHours = document.getElementById(`revHours_${dateKey}`).value.trim();
-        if (!otHours || parseFloat(otHours) <= 0) return alert("Vui lòng nhập số giờ tăng ca hợp lệ!");
+        const otVal = parseFloat(document.getElementById(`revHours_${dateKey}`).value.trim());
+        const maxSuggested = getMaxSuggestedOT(currentUser.rawInfo, rev.date);
+        if (isNaN(otVal) || otVal <= 0) return alert("Vui lòng nhập số giờ tăng ca hợp lệ!");
+        if (otVal > maxSuggested) return alert(`Số giờ yêu cầu (${otVal}h) không được lớn hơn số giờ gợi ý tối đa (${maxSuggested}h)!`);
+
         const reqKey = `${uid}_${Date.now()}`;
         updates[`Members/${uid}/pendingReviews/${dateKey}/status`] = "resolved_ot_sent";
-        if (rev.attKey) updates[`Members/${uid}/Attendance/${rev.attKey}/status`] = `Ra (Tăng ca ${otHours}h - Chờ duyệt)`;
+        if (rev.attKey) updates[`Members/${uid}/Attendance/${rev.attKey}/status`] = `Ra (Tăng ca ${otVal}h - Chờ duyệt)`;
         updates[`OvertimeRequests/${reqKey}`] = {
             uid: uid,
             name: currentUser.name,
             time: `${rev.date} (Xem xét)`,
             shiftEnd: rev.shiftEnd,
-            otHours: otHours,
+            otHours: otVal,
             attKey: rev.attKey || "none",
             status: "pending"
         };
@@ -3109,6 +3217,35 @@ window.submitReviewChoice = function(dateKey) {
                     <tbody id="dayDetailTableBody"></tbody>
                 </table>
             </div>
+        </div>
+    </div>
+    <!-- Modal Đăng Ký Tăng Ca Trực Tiếp (Dành cho HR) -->
+    <div id="hrOtModal" class="modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
+                <h2 style="margin: 0; color: #e67e22;">⏰ HR Đăng Ký Tăng Ca</h2>
+                <span class="close" onclick="closeHROTModal()">&times;</span>
+            </div>
+            <p style="font-size:12px; background:#fef5e7; color:#d35400; padding:8px; border-radius:6px; margin-top:0;">
+                • Đăng ký trực tiếp cho thành viên trước giờ kết thúc ca hôm đó.<br>
+                • Được phép đăng ký cả Thứ 7, Chủ Nhật (không giới hạn Thứ 6).
+            </p>
+            <label>Chọn Thành Viên:</label>
+            <select id="hrOtMemberSelect" onchange="updateHROTShift()" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:4px; margin-top:5px;"></select>
+
+            <label>Ngày tăng ca:</label>
+            <input type="date" id="hrOtDate" onchange="updateHROTShift()">
+
+            <label>Ca làm việc ngày hôm đó:</label>
+            <input type="text" id="hrOtShift" readonly style="background-color: #ecf0f1; font-weight: bold;">
+
+            <label>Số giờ tăng ca (Tối đa 4h/ngày):</label>
+            <input type="number" id="hrOtHours" min="0.5" max="4" step="0.5" placeholder="VD: 2, 2.5, 4...">
+
+            <label>Lý do / Công việc:</label>
+            <input type="text" id="hrOtReason" placeholder="Nhập lý do tăng ca...">
+
+            <button type="button" class="btn btn-active" style="width:100%; background:#e67e22; margin-top:15px;" onclick="submitHROTRegistration()">Xác Nhận Đăng Ký Cho Thành Viên</button>
         </div>
     </div>
 </body>
