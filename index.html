@@ -233,7 +233,26 @@
                             <input type="number" id="otLimitYear" min="0" step="0.5" placeholder="VD: 200" onchange="saveOTLimits()" style="width:100%; padding:9px; margin:5px 0 8px 0; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
                             <div id="otLimitStatus" style="font-size:12px; color:#27ae60; font-weight:bold; text-align:center; min-height:18px;"></div>
                         </div>
-                        
+                        <!-- 4. Thiết lập tính lương (Tự động lưu) -->
+                        <div class="settings-card" style="flex: 1; min-width: 280px; text-align:left;">
+                            <h3 style="color:#16a085; margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px; text-align:center;">💰 Thiết Lập Tính Lương</h3>
+                            <label style="font-weight:bold; font-size:13px; color:#2c3e50;">Ngày chốt lương hàng tháng (1 - 31):</label>
+                            <input type="number" id="payrollClosingDay" min="1" max="31" value="25" onchange="savePayrollSettings()" style="width:100%; padding:9px; margin:5px 0 10px 0; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
+                            
+                            <label style="font-weight:bold; font-size:13px; color:#2c3e50;">Chế độ làm việc chuẩn:</label>
+                            <select id="payrollWorkDays" onchange="savePayrollSettings()" style="margin-bottom:10px; padding:9px;">
+                                <option value="6">6 ngày/tuần (T2 - T7, 48h/tuần, nghỉ CN)</option>
+                                <option value="5">5 ngày/tuần (T2 - T6, 40h/tuần, nghỉ T7 & CN)</option>
+                            </select>
+
+                            <label style="font-weight:bold; font-size:13px; color:#2c3e50;">Ngày lễ/Tết (cách nhau dấu phẩy, VD: 01-01, 30-04, 01-05, 02-09):</label>
+                            <input type="text" id="payrollHolidays" placeholder="01-01, 30-04, 01-05, 02-09" onchange="savePayrollSettings()" style="width:100%; padding:9px; margin:5px 0 8px 0; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
+                            <div style="font-size:11px; color:#7f8c8d; line-height:1.4;">
+                                • TC ngày thường: <b>150%</b> | Ngày nghỉ tuần: <b>200%</b><br>
+                                • TC ngày lễ/Tết: <b>300%</b> | Ban đêm (22h-6h): <b>+30%</b>
+                            </div>
+                            <div id="payrollStatus" style="font-size:12px; color:#27ae60; font-weight:bold; text-align:center; min-height:18px; margin-top:4px;"></div>
+                        </div>
                         <!-- 3. Thiết lập ca làm việc (Nút Lưu HC tự ẩn nếu không đổi) -->
                         <div class="settings-card" style="flex: 1.2; min-width: 320px;">
                             <h3 style="color:#27ae60; margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">⏱️ Thiết Lập Điểm Danh (Ca Làm Việc)</h3>
@@ -341,25 +360,28 @@
                     
                     <!-- TAB LỊCH SỬ ĐIỂM DANH -->
                     <div id="uTabHistory" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
-                        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:10px; flex-shrink:0;">
-                            <div style="background:#ebf5fb; border:1px solid #3498db; border-radius:6px; padding:8px; text-align:center;">
-                                <div style="font-size:11px; color:#2980b9;">Làm tháng này</div>
-                                <div id="uStatMonthWork" style="font-size:15px; font-weight:bold; color:#2c3e50;">0h</div>
-                            </div>
-                            <div style="background:#fef5e7; border:1px solid #e67e22; border-radius:6px; padding:8px; text-align:center;">
-                                <div style="font-size:11px; color:#d35400;">TC Tuần</div>
-                                <div id="uStatWeekOT" style="font-size:15px; font-weight:bold; color:#d35400;">0h</div>
-                            </div>
-                            <div style="background:#fef5e7; border:1px solid #e67e22; border-radius:6px; padding:8px; text-align:center;">
-                                <div style="font-size:11px; color:#d35400;">TC Tháng</div>
-                                <div id="uStatMonthOT" style="font-size:15px; font-weight:bold; color:#d35400;">0h</div>
-                            </div>
-                            <div style="background:#fef5e7; border:1px solid #e67e22; border-radius:6px; padding:8px; text-align:center;">
-                                <div style="font-size:11px; color:#d35400;">TC Năm</div>
-                                <div id="uStatYearOT" style="font-size:15px; font-weight:bold; color:#d35400;">0h</div>
-                            </div>
-                        </div>
-                        <div class="filter-container" style="padding: 10px; margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; flex-shrink: 0;">
+    <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:10px; flex-shrink:0;">
+        <div style="background:#ebf5fb; border:1px solid #3498db; border-radius:6px; padding:8px; text-align:center;">
+            <div style="font-size:11px; color:#2980b9;">Làm tháng này</div>
+            <div id="uStatMonthWork" style="font-size:15px; font-weight:bold; color:#2c3e50;">0h</div>
+        </div>
+        <div style="background:#fef5e7; border:1px solid #e67e22; border-radius:6px; padding:8px; text-align:center;">
+            <div style="font-size:11px; color:#d35400;">TC Tuần</div>
+            <div id="uStatWeekOT" style="font-size:15px; font-weight:bold; color:#d35400;">0h</div>
+        </div>
+        <div style="background:#fef5e7; border:1px solid #e67e22; border-radius:6px; padding:8px; text-align:center;">
+            <div style="font-size:11px; color:#d35400;">TC Tháng</div>
+            <div id="uStatMonthOT" style="font-size:15px; font-weight:bold; color:#d35400;">0h</div>
+        </div>
+        <div style="background:#fef5e7; border:1px solid #e67e22; border-radius:6px; padding:8px; text-align:center;">
+            <div style="font-size:11px; color:#d35400;">TC Năm</div>
+            <div id="uStatYearOT" style="font-size:15px; font-weight:bold; color:#d35400;">0h</div>
+        </div>
+        <div style="background:#eafaf1; border:1px solid #27ae60; border-radius:6px; padding:8px; text-align:center;">
+            <div style="font-size:11px; color:#27ae60;">Lương kỳ này</div>
+            <div id="uStatSalary" style="font-size:14px; font-weight:bold; color:#1e8449;">0đ</div>
+        </div>
+    </div>
                             <div>
                                 <select id="uViewRows" onchange="changeUViewRows()">
                                     <option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option>
@@ -478,7 +500,16 @@
                     
                     <label>Email (Tài khoản Đăng nhập):</label>
                     <input type="email" id="editEmail" placeholder="example@email.com" oninput="checkChanges()">
-                    
+                    <div style="display:flex; gap:15px;">
+                        <div style="flex:1;">
+                            <label>Lương Cơ Bản / Tháng (VNĐ):</label>
+                            <input type="number" id="editBaseSalary" min="0" step="100000" placeholder="VD: 10000000" oninput="checkChanges()">
+                        </div>
+                        <div style="flex:1;">
+                            <label>Ngày Bắt Đầu Làm:</label>
+                            <input type="date" id="editJoinDate" oninput="checkChanges()">
+                        </div>
+                    </div>
                     <!-- QUẢN LÝ CA LÀM VIỆC -->
                     <div style="border-top: 1px dashed #ccc; margin-top: 15px; padding-top: 15px;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -547,25 +578,28 @@
 
                     <!-- TAB LỊCH SỬ ĐIỂM DANH -->
                     <div id="aTabHistory" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
-                        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:10px; flex-shrink:0;">
-                            <div style="background:#ebf5fb; border:1px solid #3498db; border-radius:6px; padding:8px; text-align:center;">
-                                <div style="font-size:11px; color:#2980b9;">Làm tháng này</div>
-                                <div id="aStatMonthWork" style="font-size:15px; font-weight:bold; color:#2c3e50;">0h</div>
-                            </div>
-                            <div style="background:#fef5e7; border:1px solid #e67e22; border-radius:6px; padding:8px; text-align:center;">
-                                <div style="font-size:11px; color:#d35400;">TC Tuần</div>
-                                <div id="aStatWeekOT" style="font-size:15px; font-weight:bold; color:#d35400;">0h</div>
-                            </div>
-                            <div style="background:#fef5e7; border:1px solid #e67e22; border-radius:6px; padding:8px; text-align:center;">
-                                <div style="font-size:11px; color:#d35400;">TC Tháng</div>
-                                <div id="aStatMonthOT" style="font-size:15px; font-weight:bold; color:#d35400;">0h</div>
-                            </div>
-                            <div style="background:#fef5e7; border:1px solid #e67e22; border-radius:6px; padding:8px; text-align:center;">
-                                <div style="font-size:11px; color:#d35400;">TC Năm</div>
-                                <div id="aStatYearOT" style="font-size:15px; font-weight:bold; color:#d35400;">0h</div>
-                            </div>
-                        </div>
-                        <div class="filter-container" style="padding: 10px; margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; flex-shrink: 0;">
+    <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:10px; flex-shrink:0;">
+        <div style="background:#ebf5fb; border:1px solid #3498db; border-radius:6px; padding:8px; text-align:center;">
+            <div style="font-size:11px; color:#2980b9;">Làm tháng này</div>
+            <div id="aStatMonthWork" style="font-size:15px; font-weight:bold; color:#2c3e50;">0h</div>
+        </div>
+        <div style="background:#fef5e7; border:1px solid #e67e22; border-radius:6px; padding:8px; text-align:center;">
+            <div style="font-size:11px; color:#d35400;">TC Tuần</div>
+            <div id="aStatWeekOT" style="font-size:15px; font-weight:bold; color:#d35400;">0h</div>
+        </div>
+        <div style="background:#fef5e7; border:1px solid #e67e22; border-radius:6px; padding:8px; text-align:center;">
+            <div style="font-size:11px; color:#d35400;">TC Tháng</div>
+            <div id="aStatMonthOT" style="font-size:15px; font-weight:bold; color:#d35400;">0h</div>
+        </div>
+        <div style="background:#fef5e7; border:1px solid #e67e22; border-radius:6px; padding:8px; text-align:center;">
+            <div style="font-size:11px; color:#d35400;">TC Năm</div>
+            <div id="aStatYearOT" style="font-size:15px; font-weight:bold; color:#d35400;">0h</div>
+        </div>
+        <div style="background:#eafaf1; border:1px solid #27ae60; border-radius:6px; padding:8px; text-align:center;">
+            <div style="font-size:11px; color:#27ae60;">Lương kỳ này</div>
+            <div id="aStatSalary" style="font-size:14px; font-weight:bold; color:#1e8449;">0đ</div>
+        </div>
+    </div>
                             <div><select id="personalRows" onchange="changePersonalRows()"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
                             <div style="display:flex; gap: 5px; align-items: center;">
                                 <input type="date" id="personalStartDate"> - <input type="date" id="personalEndDate">
@@ -844,6 +878,25 @@
                 if (st) { st.innerText = "✓ Đã tự động lưu"; setTimeout(() => st.innerText = "", 2000); }
             });
         };
+        let payrollSettings = { closingDay: 25, workDaysPerWeek: 6, holidays: "01-01, 30-04, 01-05, 02-09" };
+        onValue(ref(db, 'Settings/Payroll'), (snap) => {
+            payrollSettings = snap.val() || { closingDay: 25, workDaysPerWeek: 6, holidays: "01-01, 30-04, 01-05, 02-09" };
+            if (document.getElementById('payrollClosingDay')) {
+                document.getElementById('payrollClosingDay').value = payrollSettings.closingDay || 25;
+                document.getElementById('payrollWorkDays').value = payrollSettings.workDaysPerWeek || 6;
+                document.getElementById('payrollHolidays').value = payrollSettings.holidays || "";
+            }
+        });
+
+        window.savePayrollSettings = function() {
+            const cDay = Math.min(31, Math.max(1, parseInt(document.getElementById('payrollClosingDay').value) || 25));
+            const wDays = parseInt(document.getElementById('payrollWorkDays').value) || 6;
+            const hols = document.getElementById('payrollHolidays').value.trim();
+            set(ref(db, 'Settings/Payroll'), { closingDay: cDay, workDaysPerWeek: wDays, holidays: hols }).then(() => {
+                const st = document.getElementById('payrollStatus');
+                if (st) { st.innerText = "✓ Đã tự động lưu"; setTimeout(() => st.innerText = "", 2000); }
+            });
+        };
         window.toggleSupportSearch = function() {
     const w = document.getElementById('supSearchWrapper');
     w.style.display = (w.style.display === 'none') ? 'block' : 'none';
@@ -1034,7 +1087,75 @@
                 };
             });
         }
+        function calcNightHours(inHHMM, outHHMM) {
+            if (!inHHMM || !outHHMM || inHHMM === "-" || outHHMM === "-") return 0;
+            const [h1, m1] = inHHMM.split(':').map(Number);
+            const [h2, m2] = outHHMM.split(':').map(Number);
+            let s = h1 * 60 + m1, e = h2 * 60 + m2;
+            if (e <= s) e += 1440;
+            // Khung ban đêm: 22:00 (1320) -> 06:00 hôm sau (1800) và 00:00 -> 06:00 (0 -> 360)
+            const overlap = (a1, a2, b1, b2) => Math.max(0, Math.min(a2, b2) - Math.max(a1, b1));
+            const nightMin = overlap(s, e, 0, 360) + overlap(s, e, 1320, 1800);
+            return nightMin / 60;
+        }
 
+        function calcCycleSalary(daysList, memberInfo) {
+            const baseSalary = parseFloat(memberInfo?.baseSalary) || 0;
+            if (baseSalary <= 0) return 0;
+
+            const closingDay = parseInt(payrollSettings.closingDay) || 25;
+            const workDaysPerWeek = parseInt(payrollSettings.workDaysPerWeek) || 6;
+            const holidayList = (payrollSettings.holidays || "").split(',').map(s => s.trim()).filter(Boolean);
+
+            // Xác định kỳ lương hiện tại: từ (ngày chốt tháng trước + 1) đến (ngày chốt tháng này)
+            const now = new Date();
+            let cycleEnd = new Date(now.getFullYear(), now.getMonth(), closingDay);
+            let cycleStart = new Date(now.getFullYear(), now.getMonth() - 1, closingDay + 1);
+            if (now.getDate() > closingDay) {
+                cycleStart = new Date(now.getFullYear(), now.getMonth(), closingDay + 1);
+                cycleEnd = new Date(now.getFullYear(), now.getMonth() + 1, closingDay);
+            }
+
+            // Đếm tổng số ngày công chuẩn trong kỳ (để tính đơn giá 1 giờ chuẩn = Lương / (số ngày chuẩn * 8h))
+            let stdWorkDays = 0;
+            for (let d = new Date(cycleStart); d <= cycleEnd; d.setDate(d.getDate() + 1)) {
+                const dow = d.getDay();
+                if (workDaysPerWeek === 6 && dow !== 0) stdWorkDays++;
+                else if (workDaysPerWeek === 5 && dow !== 0 && dow !== 6) stdWorkDays++;
+            }
+            const hourlyRate = baseSalary / Math.max(1, stdWorkDays * 8);
+
+            // Nếu là tháng đầu tiên mới vào làm -> giới hạn ngày bắt đầu từ joinDate
+            const joinDateStr = memberInfo?.joinDate || "";
+            const toYMD = (dt) => new Date(dt.getTime() - dt.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+            let startStr = toYMD(cycleStart);
+            const endStr = toYMD(cycleEnd);
+            if (joinDateStr && joinDateStr > startStr && joinDateStr <= endStr) startStr = joinDateStr;
+
+            let totalSalary = 0;
+            daysList.forEach(d => {
+                if (d.date < startStr || d.date > endStr) return;
+                const dtObj = new Date(d.date + "T00:00:00");
+                const dow = dtObj.getDay();
+                const mmdd = d.date.substring(5, 10);
+                const isHoliday = holidayList.includes(mmdd) || holidayList.includes(d.date);
+                const isWeeklyOff = (workDaysPerWeek === 6) ? (dow === 0) : (dow === 0 || dow === 6);
+
+                const regHours = Math.max(0, d.workedHours - d.otHours);
+                const nightHours = calcNightHours(d.firstIn, d.lastOut || new Date().toTimeString().substring(0, 5));
+
+                if (isHoliday) {
+                    totalSalary += d.workedHours * hourlyRate * 3.0; // Lễ/Tết 300%
+                } else if (isWeeklyOff) {
+                    totalSalary += d.workedHours * hourlyRate * 2.0; // Ngày nghỉ tuần 200%
+                } else {
+                    totalSalary += (regHours * hourlyRate) + (d.otHours * hourlyRate * 1.5); // Thường 100% + TC 150%
+                }
+                totalSalary += nightHours * hourlyRate * 0.3; // Phụ cấp ban đêm +30%
+            });
+
+            return Math.round(totalSalary);
+        }
         function updateWorkSummaryBoxes(prefix, allAttList, memberInfo) {
             const days = groupAttendanceByDay(allAttList, memberInfo);
             const nowStr = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
@@ -1060,6 +1181,8 @@
             if (elOTM) elOTM.innerText = monthOT.toFixed(1) + "h";
             const elOTY = document.getElementById(prefix + 'StatYearOT');
             if (elOTY) elOTY.innerText = yearOT.toFixed(1) + "h";
+            const elSal = document.getElementById(prefix + 'StatSalary');
+            if (elSal) elSal.innerText = calcCycleSalary(days, memberInfo).toLocaleString('vi-VN') + "đ";
         }
         window.openDayDetailModal = function(dateStr, source) {
             const list = (source === 'user') ? groupedUserDays : groupedAdminDays;
@@ -1369,24 +1492,34 @@
             document.getElementById('aBtnReg').style.backgroundColor = tab === 'register' ? '#2c3e50' : '#7f8c8d';
         };
         window.checkChanges = function() {
-            if (currentModalMode === 'add') { document.getElementById('btnSaveInfo').style.display = 'block'; return; }
-            const hasChanged = (
-                document.getElementById('editName').value !== originalMemberInfo.name ||
-                document.getElementById('editId').value !== originalMemberInfo.id ||
-                document.getElementById('editDob').value !== originalMemberInfo.dob ||
-                document.getElementById('editEmail').value !== originalMemberInfo.email ||
-                document.getElementById('editPrimaryShift').value !== originalMemberInfo.p_id ||
-                document.getElementById('permEntrySupport').checked !== originalMemberInfo.permEntrySupport ||
-                document.getElementById('permHR').checked !== originalMemberInfo.permHR
-            );
-            document.getElementById('btnSaveInfo').style.display = hasChanged ? 'block' : 'none';
-        };
+    if (currentModalMode === 'add') {
+        document.getElementById('btnSaveInfo').style.display = 'block';
+        return;
+    }
+    const hasChanged = (
+        document.getElementById('editName').value !== originalMemberInfo.name ||
+        document.getElementById('editId').value !== originalMemberInfo.id ||
+        document.getElementById('editDob').value !== originalMemberInfo.dob ||
+        document.getElementById('editEmail').value !== originalMemberInfo.email ||
+        document.getElementById('editPrimaryShift').value !== originalMemberInfo.p_id ||
+        document.getElementById('permEntrySupport').checked !== originalMemberInfo.permEntrySupport ||
+        document.getElementById('permHR').checked !== originalMemberInfo.permHR ||
+        (parseFloat(document.getElementById('editBaseSalary').value) || 0) !== (originalMemberInfo.baseSalary || 0) ||
+        document.getElementById('editJoinDate').value !== originalMemberInfo.joinDate
+    );
+    document.getElementById('btnSaveInfo').style.display = hasChanged ? 'block' : 'none';
+};
 
         window.openMemberModal = function(uid, mode) {
             currentModalMode = mode;
             const info = membersData[uid] || {};
             originalMemberInfo = { name: info.name || '', id: info.id || '', dob: info.dob || '', email: info.email || '', p_id: info.p_id || 'HC', tempShifts: info.tempShifts || {},permEntrySupport: info.perms?.entrySupport || false, permHR: info.perms?.hr || false };
-            
+            baseSalary: info.baseSalary || 0,
+joinDate: info.joinDate || new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0],
+                document.getElementById('editBaseSalary').value = originalMemberInfo.baseSalary || '';
+document.getElementById('editJoinDate').value = originalMemberInfo.joinDate;
+document.getElementById('editBaseSalary').readOnly = isView;
+document.getElementById('editJoinDate').readOnly = isView;
             document.getElementById('editOldUid').value = uid; document.getElementById('editUid').value = uid;
             document.getElementById('editName').value = originalMemberInfo.name; document.getElementById('editId').value = originalMemberInfo.id;
             document.getElementById('editDob').value = originalMemberInfo.dob; document.getElementById('editEmail').value = originalMemberInfo.email;
@@ -1496,7 +1629,8 @@
             updates['Members/' + uid + '/p_id'] = pShiftId;
             updates['Members/' + uid + '/p_start'] = shiftsData[pShiftId] ? shiftsData[pShiftId].start : "07:00";
             updates['Members/' + uid + '/p_end'] = shiftsData[pShiftId] ? shiftsData[pShiftId].end : "17:00";
-
+            updates['Members/' + uid + '/baseSalary'] = parseFloat(document.getElementById('editBaseSalary').value) || 0;
+            updates['Members/' + uid + '/joinDate'] = document.getElementById('editJoinDate').value || new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
             const tsStr = new Date().toLocaleString();
             let shiftChanges = false; let histLog = "";
             if (pShiftId !== originalMemberInfo.p_id) { shiftChanges = true; histLog += `Đổi ca chính thành ${shiftsData[pShiftId]?shiftsData[pShiftId].name:"HC"}. `; }
@@ -1509,6 +1643,7 @@
                 alert('Đã lưu thông tin cơ bản!');
                 if (currentModalMode === 'add') closeModal();
                 else { originalMemberInfo.name = nameVal; originalMemberInfo.id = idVal; originalMemberInfo.dob = dobVal; originalMemberInfo.email = emailVal; originalMemberInfo.p_id = pShiftId; window.checkChanges(); }
+            originalMemberInfo.baseSalary = parseFloat(document.getElementById('editBaseSalary').value) || 0; originalMemberInfo.joinDate = document.getElementById('editJoinDate').value;
             });
         };
 
@@ -2340,6 +2475,10 @@ window.hrCancelAddMember = function() {
 };
 
 window.hrDeleteMember = function(uid, name) {
+    if (confirm(`Xóa thành viên "${name}" (${uid})?`)) {
+        remove(ref(db, 'Members/' + uid));
+    }
+};
     window.openHROTModal = function() {
     const sel = document.getElementById('hrOtMemberSelect');
     sel.innerHTML = '';
