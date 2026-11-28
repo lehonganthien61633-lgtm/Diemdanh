@@ -1060,7 +1060,31 @@
             const elOTY = document.getElementById(prefix + 'StatYearOT');
             if (elOTY) elOTY.innerText = yearOT.toFixed(1) + "h";
         }
+        window.openDayDetailModal = function(dateStr, source) {
+            const list = (source === 'user') ? groupedUserDays : groupedAdminDays;
+            const day = list.find(d => d.date === dateStr);
+            if (!day) return;
 
+            document.getElementById('dayDetailTitle').innerText = `🕒 Lịch Sử Cá Nhân - ${dateStr}`;
+            const tbody = document.getElementById('dayDetailTableBody');
+            tbody.innerHTML = '';
+            day.logs.forEach(att => {
+                let action = att.status, cond = "Đúng giờ";
+                if (att.status.includes('(')) {
+                    let parts = att.status.split('(');
+                    action = parts[0].trim();
+                    cond = parts[1].replace(')', '').trim();
+                }
+                const color = action === "Vào" ? "green" : "red";
+                const condColor = (cond.includes("trễ") || cond.includes("sớm")) ? "red" : (cond.includes("Tăng ca") ? "#e67e22" : "green");
+                tbody.innerHTML += `<tr><td>${att.time}</td><td style="color:${color};font-weight:bold;">${action}</td><td style="color:${condColor};font-weight:bold;">${cond}</td></tr>`;
+            });
+            document.getElementById('dayDetailModal').style.display = 'block';
+        };
+
+        window.closeDayDetailModal = function() {
+            document.getElementById('dayDetailModal').style.display = 'none';
+        };
         function renderUViewTable() {
             const tbody = document.getElementById('uViewHistoryTable'); tbody.innerHTML = '';
             groupedUserDays = groupAttendanceByDay(filteredUserAtt, currentUser?.rawInfo);
@@ -1148,18 +1172,36 @@
                     membersData = data; 
                     runAutoDelete(); 
 
-                    const sortedShifts = Object.entries(shiftsData).sort(([a], [b]) => (a === 'HC' ? -1 : b === 'HC' ? 1 : 0));
-                for (const [id, shift] of sortedShifts) {
-                    let actionBtns = id === 'HC' ? '<span style="font-size:11px; color:#bdc3c7;">(Mặc định)</span>' : `
-                        <button type="button" class="btn btn-active" style="padding: 2px 6px; font-size: 11px; margin: 0 5px;" onclick="editShift('${id}')">✏️ Sửa</button>
-                        <button type="button" class="btn btn-delete" style="padding: 2px 6px; font-size: 11px; margin: 0;" onclick="deleteShift('${id}')">🗑️ Xóa</button>
-                    `;
-                    const breakTxt = (shift.breakStart && shift.breakEnd) ? ` | Nghỉ: ${shift.breakStart}-${shift.breakEnd}` : '';
-                    html += `<div style="border-bottom: 1px solid #ccc; padding: 8px 0; display: flex; justify-content: space-between; align-items: center;">
-                                <div><strong>${shift.name}</strong> <span style="color:#7f8c8d; font-size:12px;">(${shift.start} - ${shift.end}${breakTxt})</span></div>
-                                <div>${actionBtns}</div>
-                             </div>`;
-                }
+                    for (const [uid, info] of Object.entries(data)) {
+                        tbodyMembers.innerHTML += `
+                            <tr>
+                                <td class="delete-col ${isDeleteMode ? '' : 'hide-col'}"><input type="checkbox" class="checkbox-del" value="${uid}"></td>
+                                <td class="link-name" onclick="openMemberModal('${uid}', 'edit')">${info.name || 'N/A'}</td>
+                                <td>${info.id || 'N/A'}</td>
+                                <td>${uid}</td>
+                            </tr>
+                        `;
+
+                        const isInside = (info.lastStatus === "Vào");
+                        const statusClass = isInside ? "status-in" : "status-out";
+                        const activeShiftTxt = getActiveShiftText(info);
+                        statusGrid.innerHTML += `
+                            <div class="member-card ${statusClass}" onclick="openMemberModal('${uid}', 'view')">
+                                <div class="card-title">${info.name || 'Chưa có tên'}</div>
+                                <div class="card-id">ID: ${info.id || 'N/A'}</div>
+                                <div style="font-size: 13px; color: #2980b9; background: #ebf5fb; padding: 6px 8px; border-radius: 6px; margin-top: 8px; font-weight: 500;">
+                                    ⏱️ ${activeShiftTxt}
+                                </div>
+                                <div class="card-status" style="color: ${isInside ? '#27ae60' : '#e74c3c'}">${isInside ? "🟢 Vào" : "🔴 Ra"}</div>
+                            </div>
+                        `;
+
+                        if (info.Attendance) {
+                            for (const [timestamp, att] of Object.entries(info.Attendance)) {
+                                globalAttData.push({ timeKey: parseInt(timestamp), timeString: att.time, name: info.name, uid: uid, status: att.status || 'Vào', reason: att.reason || '' });
+                            }
+                        }
+                    }
                     globalAttData.sort((a, b) => b.timeKey - a.timeKey);
                     applyGlobalFilter();
                 } else {
@@ -1247,13 +1289,15 @@
                 document.getElementById('hcBreakStart').value = shiftsData['HC'].breakStart || '';
                 document.getElementById('hcBreakEnd').value = shiftsData['HC'].breakEnd || '';
                 const sList = document.getElementById('shiftList'); let html = '';
-                for (const [id, shift] of Object.entries(shiftsData)) {
+                const sortedShifts = Object.entries(shiftsData).sort(([a], [b]) => (a === 'HC' ? -1 : b === 'HC' ? 1 : 0));
+                for (const [id, shift] of sortedShifts) {
                     let actionBtns = id === 'HC' ? '<span style="font-size:11px; color:#bdc3c7;">(Mặc định)</span>' : `
                         <button type="button" class="btn btn-active" style="padding: 2px 6px; font-size: 11px; margin: 0 5px;" onclick="editShift('${id}')">✏️ Sửa</button>
                         <button type="button" class="btn btn-delete" style="padding: 2px 6px; font-size: 11px; margin: 0;" onclick="deleteShift('${id}')">🗑️ Xóa</button>
                     `;
+                    const breakTxt = (shift.breakStart && shift.breakEnd) ? ` | Nghỉ: ${shift.breakStart}-${shift.breakEnd}` : '';
                     html += `<div style="border-bottom: 1px solid #ccc; padding: 8px 0; display: flex; justify-content: space-between; align-items: center;">
-                                <div><strong>${shift.name}</strong> <span style="color:#7f8c8d; font-size:12px;">(${shift.start} - ${shift.end})</span></div>
+                                <div><strong>${shift.name}</strong> <span style="color:#7f8c8d; font-size:12px;">(${shift.start} - ${shift.end}${breakTxt})</span></div>
                                 <div>${actionBtns}</div>
                              </div>`;
                 }
