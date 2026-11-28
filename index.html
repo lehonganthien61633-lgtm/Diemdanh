@@ -1513,16 +1513,32 @@
         window.openMemberModal = function(uid, mode) {
             currentModalMode = mode;
             const info = membersData[uid] || {};
-            originalMemberInfo = { name: info.name || '', id: info.id || '', dob: info.dob || '', email: info.email || '', p_id: info.p_id || 'HC', tempShifts: info.tempShifts || {},permEntrySupport: info.perms?.entrySupport || false, permHR: info.perms?.hr || false };
-            baseSalary: info.baseSalary || 0,
-joinDate: info.joinDate || new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0],
-                document.getElementById('editBaseSalary').value = originalMemberInfo.baseSalary || '';
-document.getElementById('editJoinDate').value = originalMemberInfo.joinDate;
-document.getElementById('editBaseSalary').readOnly = isView;
-document.getElementById('editJoinDate').readOnly = isView;
-            document.getElementById('editOldUid').value = uid; document.getElementById('editUid').value = uid;
-            document.getElementById('editName').value = originalMemberInfo.name; document.getElementById('editId').value = originalMemberInfo.id;
-            document.getElementById('editDob').value = originalMemberInfo.dob; document.getElementById('editEmail').value = originalMemberInfo.email;
+            originalMemberInfo = {
+                name: info.name || '',
+                id: info.id || '',
+                dob: info.dob || '',
+                email: info.email || '',
+                p_id: info.p_id || 'HC',
+                tempShifts: info.tempShifts || {},
+                permEntrySupport: info.perms?.entrySupport || false,
+                permHR: info.perms?.hr || false,
+                baseSalary: info.baseSalary || 0,
+                joinDate: info.joinDate || new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0]
+            };
+
+            const isView = (mode === 'view');
+            const isAdd = (mode === 'add');
+
+            document.getElementById('editOldUid').value = uid;
+            document.getElementById('editUid').value = uid;
+            document.getElementById('editName').value = originalMemberInfo.name;
+            document.getElementById('editId').value = originalMemberInfo.id;
+            document.getElementById('editDob').value = originalMemberInfo.dob;
+            document.getElementById('editEmail').value = originalMemberInfo.email;
+            document.getElementById('editBaseSalary').value = originalMemberInfo.baseSalary || '';
+            document.getElementById('editJoinDate').value = originalMemberInfo.joinDate;
+            document.getElementById('editBaseSalary').readOnly = isView;
+            document.getElementById('editJoinDate').readOnly = isView;
             document.getElementById('editPrimaryShift').value = originalMemberInfo.p_id;
             
             document.getElementById('shiftPanelWrapper').style.display = 'none';
@@ -2567,11 +2583,6 @@ window.submitHROTRegistration = function() {
         closeHROTModal();
     });
 };
-    if (confirm(`Xóa thành viên "${name}" (${uid})?`)) {
-        remove(ref(db, 'Members/' + uid));
-    }
-};
-
 // === ĐĂNG KÝ CA LÀM VIỆC (CHỦ NHẬT -> TỰ ĐỘNG, NGÀY THƯỜNG -> CHỜ DUYỆT) ===
 window.openRegShiftModal = function() {
     get(ref(db, 'Settings/Shifts')).then(snap => {
