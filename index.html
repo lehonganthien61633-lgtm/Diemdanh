@@ -209,32 +209,32 @@
                 <div id="tab-settings" class="box tab-content">
                     <h2>⚙️ Thiết Lập Hệ Thống</h2>
                     <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start;">
-                        <!-- 1. Thiết lập dữ liệu -->
+                        <!-- 1. Thiết lập dữ liệu (Tự động lưu) -->
                         <div class="settings-card" style="flex: 1; min-width: 280px;">
                             <h3 style="color:#d35400; margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">📦 Thiết Lập Dữ Liệu</h3>
                             <label style="font-weight: bold; display: block; margin-bottom: 10px; color: #2c3e50;">🗑️ Tự động xóa lịch sử cũ sau:</label>
-                            <select id="autoDeleteSelect">
+                            <select id="autoDeleteSelect" onchange="saveSettings()" style="margin-bottom: 10px;">
                                 <option value="0">Không bao giờ xóa (Giữ vĩnh viễn)</option>
                                 <option value="30">30 ngày</option><option value="60">60 ngày</option><option value="90">90 ngày</option>
                                 <option value="365">1 năm</option><option value="730">2 năm</option>
                             </select>
-                            <button type="button" class="btn btn-active" style="width: 100%; font-size: 16px; padding: 12px;" onclick="saveSettings()">💾 Lưu Cài Đặt Dữ Liệu</button>
+                            <div id="autoDelStatus" style="font-size:12px; color:#27ae60; font-weight:bold; min-height:18px;"></div>
                         </div>
 
-                        <!-- 2. Thiết lập thời gian tăng ca -->
+                        <!-- 2. Thiết lập thời gian tăng ca (Tự động lưu) -->
                         <div class="settings-card" style="flex: 1; min-width: 280px; text-align:left;">
                             <h3 style="color:#8e44ad; margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px; text-align:center;">⏰ Giới Hạn Tăng Ca</h3>
                             <p style="font-size:12px; color:#7f8c8d; margin-top:0;">• Tối đa <b>4 giờ / ngày</b> (Cố định). Nhập <b>0</b> nếu không giới hạn.</p>
                             <label style="font-weight:bold; font-size:13px; color:#2c3e50;">Theo Tuần (giờ):</label>
-                            <input type="number" id="otLimitWeek" min="0" step="0.5" placeholder="VD: 12" style="width:100%; padding:9px; margin:5px 0 10px 0; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
+                            <input type="number" id="otLimitWeek" min="0" step="0.5" placeholder="VD: 12" onchange="saveOTLimits()" style="width:100%; padding:9px; margin:5px 0 10px 0; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
                             <label style="font-weight:bold; font-size:13px; color:#2c3e50;">Theo Tháng (giờ):</label>
-                            <input type="number" id="otLimitMonth" min="0" step="0.5" placeholder="VD: 40" style="width:100%; padding:9px; margin:5px 0 10px 0; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
+                            <input type="number" id="otLimitMonth" min="0" step="0.5" placeholder="VD: 40" onchange="saveOTLimits()" style="width:100%; padding:9px; margin:5px 0 10px 0; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
                             <label style="font-weight:bold; font-size:13px; color:#2c3e50;">Theo Năm (giờ):</label>
-                            <input type="number" id="otLimitYear" min="0" step="0.5" placeholder="VD: 200" style="width:100%; padding:9px; margin:5px 0 15px 0; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
-                            <button type="button" class="btn btn-active" style="width:100%; background:#8e44ad; font-size:15px; padding:11px;" onclick="saveOTLimits()">💾 Lưu Giới Hạn Tăng Ca</button>
+                            <input type="number" id="otLimitYear" min="0" step="0.5" placeholder="VD: 200" onchange="saveOTLimits()" style="width:100%; padding:9px; margin:5px 0 8px 0; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
+                            <div id="otLimitStatus" style="font-size:12px; color:#27ae60; font-weight:bold; text-align:center; min-height:18px;"></div>
                         </div>
                         
-                        <!-- 3. Thiết lập ca làm việc -->
+                        <!-- 3. Thiết lập ca làm việc (Nút Lưu HC tự ẩn nếu không đổi) -->
                         <div class="settings-card" style="flex: 1.2; min-width: 320px;">
                             <h3 style="color:#27ae60; margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">⏱️ Thiết Lập Điểm Danh (Ca Làm Việc)</h3>
                             <label style="font-weight: bold; display: block; margin-bottom: 6px; color: #2c3e50; text-align:left;">Giờ hành chính (Tối đa 8h làm + 1h nghỉ = 9h):</label>
@@ -248,7 +248,7 @@
                                 <input type="time" id="hcBreakStart" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;" oninput="validateHCInline()">
                                 <span>-</span>
                                 <input type="time" id="hcBreakEnd" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;" oninput="validateHCInline()">
-                                <button type="button" class="btn btn-active" style="margin:0; padding:8px 14px;" onclick="saveHC()">Lưu</button>
+                                <button type="button" id="btnSaveHC" class="btn btn-active" style="margin:0; padding:8px 14px; display:none;" onclick="saveHC()">Lưu</button>
                             </div>
                             <div id="hcErrorMsg" style="display:none; color:#e74c3c; background:#fdecea; border:1px solid #e74c3c; padding:8px; border-radius:6px; font-size:12px; margin-bottom:12px; text-align:left; font-weight:bold;"></div>
 
@@ -333,7 +333,7 @@
                 <div class="right-panel" style="flex: 1.5; display: flex; flex-direction: column; border-left: 2px solid #ecf0f1; padding: 20px; overflow: hidden; min-height: 0;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px;">
                         <div style="display:flex; gap:10px;">
-                            <button id="uBtnHist" class="btn btn-active" style="padding: 8px 12px; font-size: 14px; margin: 0;" onclick="switchUserRightTab('history')">🕒 Lịch sử cá nhân</button>
+                            <button id="uBtnHist" class="btn btn-active" style="padding: 8px 12px; font-size: 14px; margin: 0;" onclick="switchUserRightTab('history')">📓 Nhật ký công việc</button>
                             <button id="uBtnReg" class="btn" style="padding: 8px 12px; font-size: 14px; margin: 0; background-color: #7f8c8d;" onclick="switchUserRightTab('register')">📋 Lịch sử đăng ký</button>
                         </div>
                         <div id="uViewStatusTag" style="padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; border: 1px solid #ddd;"></div>
@@ -356,7 +356,13 @@
                         <div class="history-container" style="flex: 1; overflow-y: auto; border: 1px solid #bdc3c7; border-top: none; min-height: 0;">
                             <table style="margin-top: 0; border-top: none;">
                                 <thead style="position:sticky; top:0; z-index:1; background-color: #3498db;">
-                                    <tr><th style="color:white; border-top:none;">Thời gian</th><th style="color:white; border-top:none;">Hoạt động</th><th style="color:white; border-top:none;">Tình trạng</th></tr>
+                                    <tr>
+                                        <th style="color:white; border-top:none;">Ngày làm việc</th>
+                                        <th style="color:white; border-top:none;">Giờ vào</th>
+                                        <th style="color:white; border-top:none;">Giờ ra</th>
+                                        <th style="color:white; border-top:none;">Tăng ca</th>
+                                        <th style="color:white; border-top:none;">Giờ đã làm</th>
+                                    </tr>
                                 </thead>
                                 <tbody id="uViewHistoryTable"></tbody>
                             </table>
@@ -515,7 +521,7 @@
                 <div id="historyPanel" class="right-panel">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px;">
                         <div style="display:flex; gap:10px;">
-                            <button id="aBtnHist" class="btn btn-active" style="padding: 8px 12px; font-size: 14px; margin: 0;" onclick="switchAdminRightTab('history')">🕒 Lịch sử cá nhân</button>
+                            <button id="aBtnHist" class="btn btn-active" style="padding: 8px 12px; font-size: 14px; margin: 0;" onclick="switchAdminRightTab('history')">📓 Nhật ký công việc</button>
                             <button id="aBtnReg" class="btn" style="padding: 8px 12px; font-size: 14px; margin: 0; background-color: #7f8c8d;" onclick="switchAdminRightTab('register')">📋 Lịch sử đăng ký</button>
                         </div>
                     </div>
@@ -533,7 +539,13 @@
                         <div class="history-container" style="flex: 1; overflow-y: auto; border: 1px solid #bdc3c7; border-top: none; min-height: 0;">
                             <table style="margin-top: 0; border-top: none;">
                                 <thead style="position:sticky; top:0; z-index:1; background-color: #3498db;">
-                                    <tr><th style="color:white; border-top:none;">Thời gian</th><th style="color:white; border-top:none;">Hoạt động</th><th style="color:white; border-top:none;">Tình trạng</th></tr>
+                                    <tr>
+                                        <th style="color:white; border-top:none;">Ngày làm việc</th>
+                                        <th style="color:white; border-top:none;">Giờ vào</th>
+                                        <th style="color:white; border-top:none;">Giờ ra</th>
+                                        <th style="color:white; border-top:none;">Tăng ca</th>
+                                        <th style="color:white; border-top:none;">Giờ đã làm</th>
+                                    </tr>
                                 </thead>
                                 <tbody id="personalHistoryTable"></tbody>
                             </table>
@@ -790,8 +802,10 @@
             const w = parseFloat(document.getElementById('otLimitWeek').value) || 0;
             const m = parseFloat(document.getElementById('otLimitMonth').value) || 0;
             const y = parseFloat(document.getElementById('otLimitYear').value) || 0;
-            set(ref(db, 'Settings/OTLimits'), { week: w, month: m, year: y })
-                .then(() => alert("Đã lưu giới hạn thời gian tăng ca!"));
+            set(ref(db, 'Settings/OTLimits'), { week: w, month: m, year: y }).then(() => {
+                const st = document.getElementById('otLimitStatus');
+                if (st) { st.innerText = "✓ Đã tự động lưu"; setTimeout(() => st.innerText = "", 2000); }
+            });
         };
         window.toggleSupportSearch = function() {
     const w = document.getElementById('supSearchWrapper');
@@ -914,20 +928,122 @@
         window.clearUViewFilter = function() { document.getElementById('uViewStartDate').value = ''; document.getElementById('uViewEndDate').value = ''; filteredUserAtt = [...userAttData]; uViewPage = 1; renderUViewTable(); };
         window.goToUViewPage = function(p) { uViewPage = p; renderUViewTable(); };
         
-        function renderUViewTable() {
-            const tbody = document.getElementById('uViewHistoryTable'); tbody.innerHTML = '';
-            if (filteredUserAtt.length === 0) { tbody.innerHTML = '<tr><td colspan="3" class="empty-row">Không có dữ liệu</td></tr>'; document.getElementById('uViewPagination').innerHTML = ''; return; }
-            const start = (uViewPage - 1) * uViewRows;
-            filteredUserAtt.slice(start, start + uViewRows).forEach(att => {
-                let action = att.status; let cond = "Đúng giờ";
-                if(att.status.includes('(')) {
-                    let parts = att.status.split('('); action = parts[0].trim(); cond = parts[1].replace(')', '').trim();
+        let groupedUserDays = [];
+        let groupedAdminDays = [];
+
+        function groupAttendanceByDay(attList) {
+            const map = {};
+            attList.forEach(att => {
+                const tStr = att.time || att.timeString || '';
+                if (tStr.length < 10) return;
+                const dKey = tStr.substring(0, 10);
+                if (!map[dKey]) map[dKey] = { date: dKey, logs: [] };
+                map[dKey].logs.push({ time: tStr, status: att.status || 'Vào', reason: att.reason || '' });
+            });
+
+            // Sắp xếp ngày mới nhất lên trên cùng
+            return Object.values(map).sort((a, b) => b.date.localeCompare(a.date)).map(day => {
+                // Sắp xếp lịch sử chi tiết trong ngày: mới nhất lên trên cùng
+                day.logs.sort((a, b) => b.time.localeCompare(a.time));
+
+                let firstIn = null, lastOut = null, otHours = 0;
+                // Duyệt theo thứ tự thời gian tăng dần để tìm giờ vào đầu & giờ ra cuối
+                [...day.logs].reverse().forEach(l => {
+                    const hhmmss = l.time.substring(11, 19);
+                    if (l.status.startsWith("Vào") && !firstIn) firstIn = hhmmss;
+                    if (l.status.startsWith("Ra")) lastOut = hhmmss;
+                    const m = l.status.match(/Tăng ca:\s*([\d.]+)h/i);
+                    if (m) otHours += parseFloat(m[1]) || 0;
+                });
+
+                let workedStr = "-";
+                if (firstIn && lastOut) {
+                    const [h1, m1] = firstIn.split(':').map(Number);
+                    const [h2, m2] = lastOut.split(':').map(Number);
+                    let diffMin = (h2 * 60 + m2) - (h1 * 60 + m1);
+                    if (diffMin < 0) diffMin += 1440;
+                    workedStr = (diffMin / 60).toFixed(1) + "h";
+                }
+
+                return {
+                    date: day.date,
+                    firstIn: firstIn || "-",
+                    lastOut: lastOut || "-",
+                    otStr: otHours > 0 ? (otHours.toFixed(1) + "h") : "0h",
+                    workedStr: workedStr,
+                    logs: day.logs
+                };
+            });
+        }
+
+        window.openDayDetailModal = function(dateStr, source) {
+            const list = (source === 'user') ? groupedUserDays : groupedAdminDays;
+            const day = list.find(d => d.date === dateStr);
+            if (!day) return;
+
+            document.getElementById('dayDetailTitle').innerText = `🕒 Lịch Sử Cá Nhân - ${dateStr}`;
+            const tbody = document.getElementById('dayDetailTableBody');
+            tbody.innerHTML = '';
+            day.logs.forEach(att => {
+                let action = att.status, cond = "Đúng giờ";
+                if (att.status.includes('(')) {
+                    let parts = att.status.split('(');
+                    action = parts[0].trim();
+                    cond = parts[1].replace(')', '').trim();
                 }
                 const color = action === "Vào" ? "green" : "red";
-                const condColor = (cond === "Đi trễ" || cond === "Về sớm") ? "red" : (cond === "Tăng ca" ? "#e67e22" : "green");
-                tbody.innerHTML += `<tr><td>${att.time}</td><td style="color:${color};font-weight:bold">${action}</td><td style="color:${condColor};font-weight:bold">${cond}</td></tr>`;
+                const condColor = (cond.includes("trễ") || cond.includes("sớm")) ? "red" : (cond.includes("Tăng ca") ? "#e67e22" : "green");
+                tbody.innerHTML += `<tr><td>${att.time}</td><td style="color:${color};font-weight:bold;">${action}</td><td style="color:${condColor};font-weight:bold;">${cond}</td></tr>`;
             });
-            renderPaginationControls(filteredUserAtt.length, uViewRows, uViewPage, 'uViewPagination', 'goToUViewPage');
+            document.getElementById('dayDetailModal').style.display = 'block';
+        };
+
+        window.closeDayDetailModal = function() {
+            document.getElementById('dayDetailModal').style.display = 'none';
+        };
+
+        function renderUViewTable() {
+            const tbody = document.getElementById('uViewHistoryTable'); tbody.innerHTML = '';
+            groupedUserDays = groupAttendanceByDay(filteredUserAtt);
+            if (groupedUserDays.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="empty-row">Không có dữ liệu</td></tr>';
+                document.getElementById('uViewPagination').innerHTML = '';
+                return;
+            }
+            const start = (uViewPage - 1) * uViewRows;
+            groupedUserDays.slice(start, start + uViewRows).forEach(d => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="link-name" onclick="openDayDetailModal('${d.date}', 'user')">📅 ${d.date}</td>
+                        <td style="color:green;font-weight:bold;">${d.firstIn}</td>
+                        <td style="color:red;font-weight:bold;">${d.lastOut}</td>
+                        <td style="color:#e67e22;font-weight:bold;">${d.otStr}</td>
+                        <td style="font-weight:bold;color:#2c3e50;">${d.workedStr}</td>
+                    </tr>`;
+            });
+            renderPaginationControls(groupedUserDays.length, uViewRows, uViewPage, 'uViewPagination', 'goToUViewPage');
+        }
+
+        function updatePersonalTable() {
+            const tbody = document.getElementById('personalHistoryTable'); tbody.innerHTML = '';
+            groupedAdminDays = groupAttendanceByDay(filteredPersonalAtt);
+            if (groupedAdminDays.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="empty-row">Không có dữ liệu</td></tr>';
+                document.getElementById('personalPagination').innerHTML = '';
+                return;
+            }
+            const start = (personalPage - 1) * personalRows;
+            groupedAdminDays.slice(start, start + personalRows).forEach(d => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="link-name" onclick="openDayDetailModal('${d.date}', 'admin')">📅 ${d.date}</td>
+                        <td style="color:green;font-weight:bold;">${d.firstIn}</td>
+                        <td style="color:red;font-weight:bold;">${d.lastOut}</td>
+                        <td style="color:#e67e22;font-weight:bold;">${d.otStr}</td>
+                        <td style="font-weight:bold;color:#2c3e50;">${d.workedStr}</td>
+                    </tr>`;
+            });
+            renderPaginationControls(groupedAdminDays.length, personalRows, personalPage, 'personalPagination', 'goToPersonalPage');
         }
 
         // ================= CÁC CHỨC NĂNG DÀNH CHO ADMIN =================
@@ -1433,23 +1549,26 @@
             if (workMin <= 0) return "Vi phạm: Thời gian nghỉ không thể lớn hơn hoặc bằng thời gian ca!";
             return null; // Hợp lệ
         }
+            window.validateHCInline = function() {
+            const s = document.getElementById('hcStart').value;
+            const e = document.getElementById('hcEnd').value;
+            const bs = document.getElementById('hcBreakStart').value;
+            const be = document.getElementById('hcBreakEnd').value;
 
-        window.validateHCInline = function() {
-            const err = checkShiftRule(
-                document.getElementById('hcStart').value,
-                document.getElementById('hcEnd').value,
-                document.getElementById('hcBreakStart').value,
-                document.getElementById('hcBreakEnd').value
-            );
+            const err = checkShiftRule(s, e, bs, be);
             const box = document.getElementById('hcErrorMsg');
             ['hcStart','hcEnd','hcBreakStart','hcBreakEnd'].forEach(id => {
                 document.getElementById(id).style.borderColor = err ? '#e74c3c' : '#ccc';
             });
             if (err) { box.innerText = "⚠️ " + err; box.style.display = 'block'; }
             else { box.style.display = 'none'; }
+
+            const orig = shiftsData['HC'] || { start: "07:00", end: "17:00", breakStart: "", breakEnd: "" };
+            const changed = (s !== (orig.start || '') || e !== (orig.end || '') || bs !== (orig.breakStart || '') || be !== (orig.breakEnd || ''));
+            const btn = document.getElementById('btnSaveHC');
+            if (btn) btn.style.display = (changed && !err) ? 'inline-block' : 'none';
             return !err;
         };
-
         window.validateShiftModal = function() {
             const err = checkShiftRule(
                 document.getElementById('newShiftStart').value,
@@ -1474,7 +1593,10 @@
                 end: document.getElementById('hcEnd').value,
                 breakStart: document.getElementById('hcBreakStart').value || "",
                 breakEnd: document.getElementById('hcBreakEnd').value || ""
-            }).then(() => alert("Đã lưu Giờ Hành Chính!"));
+            }).then(() => {
+                document.getElementById('btnSaveHC').style.display = 'none';
+                alert("Đã lưu Giờ Hành Chính!");
+            });
         };
 
         window.openShiftModal = function() {
@@ -1558,19 +1680,11 @@
         });
 
         window.saveSettings = function() {
-            set(ref(db, 'Settings/retentionDays'), parseInt(document.getElementById('autoDeleteSelect').value)).then(() => alert("Đã lưu!"));
+            set(ref(db, 'Settings/retentionDays'), parseInt(document.getElementById('autoDeleteSelect').value)).then(() => {
+                const st = document.getElementById('autoDelStatus');
+                if (st) { st.innerText = "✓ Đã tự động lưu"; setTimeout(() => st.innerText = "", 2000); }
+            });
         };
-        function runAutoDelete() {
-            if(retentionDays <= 0 || !membersData) return;
-            const threshold = Math.floor(Date.now() / 1000) - (retentionDays * 86400);
-            for (const [uid, info] of Object.entries(membersData)) {
-                if(info.Attendance) {
-                    for (const [timestamp, att] of Object.entries(info.Attendance)) {
-                        if (parseInt(timestamp) < threshold) remove(ref(db, `Members/${uid}/Attendance/${timestamp}`));
-                    }
-                }
-            }
-        }
 
         window.changeGlobalRows = function() { globalRows = parseInt(document.getElementById('globalRows').value); globalPage = 1; updateGlobalTable(); };
         window.applyGlobalFilter = function() { filteredGlobalAtt = filterByDate(globalAttData, document.getElementById('globalStartDate').value, document.getElementById('globalEndDate').value); globalPage = 1; updateGlobalTable(); };
@@ -1596,32 +1710,6 @@
         window.applyPersonalFilter = function() { filteredPersonalAtt = filterByDate(personalAttData, document.getElementById('personalStartDate').value, document.getElementById('personalEndDate').value); personalPage = 1; updatePersonalTable(); };
         window.clearPersonalFilter = function() { document.getElementById('personalStartDate').value = ''; document.getElementById('personalEndDate').value = ''; filteredPersonalAtt = [...personalAttData]; personalPage = 1; updatePersonalTable(); };
         window.goToPersonalPage = function(p) { personalPage = p; updatePersonalTable(); };
-        function updatePersonalTable() {
-            const tbody = document.getElementById('personalHistoryTable'); tbody.innerHTML = '';
-            if (filteredPersonalAtt.length === 0) { tbody.innerHTML = '<tr><td colspan="3" class="empty-row">Không có dữ liệu</td></tr>'; document.getElementById('personalPagination').innerHTML = ''; return; }
-            const start = (personalPage - 1) * personalRows;
-            filteredPersonalAtt.slice(start, start + personalRows).forEach(att => {
-                let action = att.status; let cond = "Đúng giờ";
-                if(att.status.includes('(')) {
-                    let parts = att.status.split('('); action = parts[0].trim(); cond = parts[1].replace(')', '').trim();
-                }
-                const color = action === "Vào" ? "green" : "red";
-const condColor = (cond === "Đi trễ" || cond === "Về sớm") ? "red" : (cond === "Tăng ca" ? "#e67e22" : "green");
-
-let condHtml = cond;
-if (cond === "Về sớm") {
-    const safeReason = (att.reason || "Không có lý do").replace(/'/g, "\\'");
-    condHtml = `<span style="color:${condColor};font-weight:bold; cursor:pointer; text-decoration:underline;" onclick="showReason('${safeReason}')">Về sớm ℹ️</span>`;
-} else {
-    condHtml = `<span style="color:${condColor};font-weight:bold;">${cond}</span>`;
-}
-
-// Lưu ý với hàm updateGlobalTable() chuỗi này sẽ dài hơn vì có thêm name và uid:
-tbody.innerHTML += `<tr><td>${att.time || att.timeString}</td><td style="color:${color};font-weight:bold">${action}</td><td>${condHtml}</td></tr>`;
-            });
-            renderPaginationControls(filteredPersonalAtt.length, personalRows, personalPage, 'personalPagination', 'goToPersonalPage');
-        }
-
         window.switchDevTab = function(tabId) {
             document.querySelectorAll('.dev-tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.dev-tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -2890,6 +2978,27 @@ window.submitReviewChoice = function(dateKey) {
                 <span class="close" onclick="closeReviewModal()" style="color: white; margin-top: 0;">&times;</span>
             </div>
             <div id="reviewListContainer" style="padding: 20px; max-height: 70vh; overflow-y: auto;"></div>
+        </div>
+    </div>
+    <!-- Modal Lịch Sử Cá Nhân Chi Tiết Theo Ngày -->
+    <div id="dayDetailModal" class="modal">
+        <div class="modal-content" style="max-width: 580px; padding: 0; overflow: hidden;">
+            <div style="background: #2980b9; color: white; padding: 15px 22px; display: flex; justify-content: space-between; align-items: center;">
+                <h2 id="dayDetailTitle" style="margin: 0; color: white; border: none; padding: 0; font-size: 18px;">🕒 Lịch Sử Cá Nhân</h2>
+                <span class="close" onclick="closeDayDetailModal()" style="color: white; margin-top: 0;">&times;</span>
+            </div>
+            <div style="padding: 18px; max-height: 65vh; overflow-y: auto;">
+                <table style="margin-top: 0;">
+                    <thead style="position: sticky; top: 0; background: #34495e;">
+                        <tr>
+                            <th style="background:#34495e; color:white;">Thời gian</th>
+                            <th style="background:#34495e; color:white;">Hoạt động</th>
+                            <th style="background:#34495e; color:white;">Tình trạng</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dayDetailTableBody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 </body>
