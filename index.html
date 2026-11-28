@@ -341,6 +341,24 @@
                     
                     <!-- TAB LỊCH SỬ ĐIỂM DANH -->
                     <div id="uTabHistory" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+                        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:10px; flex-shrink:0;">
+                            <div style="background:#ebf5fb; border:1px solid #3498db; border-radius:6px; padding:8px; text-align:center;">
+                                <div style="font-size:11px; color:#2980b9;">Làm tháng này</div>
+                                <div id="uStatMonthWork" style="font-size:15px; font-weight:bold; color:#2c3e50;">0h</div>
+                            </div>
+                            <div style="background:#fef5e7; border:1px solid #e67e22; border-radius:6px; padding:8px; text-align:center;">
+                                <div style="font-size:11px; color:#d35400;">TC Tuần</div>
+                                <div id="uStatWeekOT" style="font-size:15px; font-weight:bold; color:#d35400;">0h</div>
+                            </div>
+                            <div style="background:#fef5e7; border:1px solid #e67e22; border-radius:6px; padding:8px; text-align:center;">
+                                <div style="font-size:11px; color:#d35400;">TC Tháng</div>
+                                <div id="uStatMonthOT" style="font-size:15px; font-weight:bold; color:#d35400;">0h</div>
+                            </div>
+                            <div style="background:#fef5e7; border:1px solid #e67e22; border-radius:6px; padding:8px; text-align:center;">
+                                <div style="font-size:11px; color:#d35400;">TC Năm</div>
+                                <div id="uStatYearOT" style="font-size:15px; font-weight:bold; color:#d35400;">0h</div>
+                            </div>
+                        </div>
                         <div class="filter-container" style="padding: 10px; margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; flex-shrink: 0;">
                             <div>
                                 <select id="uViewRows" onchange="changeUViewRows()">
@@ -528,6 +546,24 @@
 
                     <!-- TAB LỊCH SỬ ĐIỂM DANH -->
                     <div id="aTabHistory" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+                        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:10px; flex-shrink:0;">
+                            <div style="background:#ebf5fb; border:1px solid #3498db; border-radius:6px; padding:8px; text-align:center;">
+                                <div style="font-size:11px; color:#2980b9;">Làm tháng này</div>
+                                <div id="aStatMonthWork" style="font-size:15px; font-weight:bold; color:#2c3e50;">0h</div>
+                            </div>
+                            <div style="background:#fef5e7; border:1px solid #e67e22; border-radius:6px; padding:8px; text-align:center;">
+                                <div style="font-size:11px; color:#d35400;">TC Tuần</div>
+                                <div id="aStatWeekOT" style="font-size:15px; font-weight:bold; color:#d35400;">0h</div>
+                            </div>
+                            <div style="background:#fef5e7; border:1px solid #e67e22; border-radius:6px; padding:8px; text-align:center;">
+                                <div style="font-size:11px; color:#d35400;">TC Tháng</div>
+                                <div id="aStatMonthOT" style="font-size:15px; font-weight:bold; color:#d35400;">0h</div>
+                            </div>
+                            <div style="background:#fef5e7; border:1px solid #e67e22; border-radius:6px; padding:8px; text-align:center;">
+                                <div style="font-size:11px; color:#d35400;">TC Năm</div>
+                                <div id="aStatYearOT" style="font-size:15px; font-weight:bold; color:#d35400;">0h</div>
+                            </div>
+                        </div>
                         <div class="filter-container" style="padding: 10px; margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; flex-shrink: 0;">
                             <div><select id="personalRows" onchange="changePersonalRows()"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
                             <div style="display:flex; gap: 5px; align-items: center;">
@@ -931,7 +967,7 @@
         let groupedUserDays = [];
         let groupedAdminDays = [];
 
-        function groupAttendanceByDay(attList) {
+        function groupAttendanceByDay(attList, memberInfo = null) {
             const map = {};
             attList.forEach(att => {
                 const tStr = att.time || att.timeString || '';
@@ -941,13 +977,16 @@
                 map[dKey].logs.push({ time: tStr, status: att.status || 'Vào', reason: att.reason || '' });
             });
 
-            // Sắp xếp ngày mới nhất lên trên cùng
+            const now = new Date();
+            const todayStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+            const nowMin = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+
             return Object.values(map).sort((a, b) => b.date.localeCompare(a.date)).map(day => {
-                // Sắp xếp lịch sử chi tiết trong ngày: mới nhất lên trên cùng
-                day.logs.sort((a, b) => b.time.localeCompare(a.time));
+                day.logs.sort((a, b) => b.time.localeCompare(a.time)); // Mới nhất lên trên
+                const latestLog = day.logs[0];
+                const isStillInToday = (day.date === todayStr && latestLog && latestLog.status.startsWith("Vào"));
 
                 let firstIn = null, lastOut = null, otHours = 0;
-                // Duyệt theo thứ tự thời gian tăng dần để tìm giờ vào đầu & giờ ra cuối
                 [...day.logs].reverse().forEach(l => {
                     const hhmmss = l.time.substring(11, 19);
                     if (l.status.startsWith("Vào") && !firstIn) firstIn = hhmmss;
@@ -956,55 +995,76 @@
                     if (m) otHours += parseFloat(m[1]) || 0;
                 });
 
-                let workedStr = "-";
-                if (firstIn && lastOut) {
+                let workedHours = 0;
+                if (isStillInToday && firstIn) {
+                    // Đang ở trong công ty -> Không hiện giờ ra, tính giờ làm & tăng ca theo thời gian thực
+                    lastOut = null;
+                    const [h1, m1, s1] = firstIn.split(':').map(Number);
+                    let diffMin = nowMin - (h1 * 60 + m1 + (s1 || 0) / 60);
+                    if (diffMin < 0) diffMin += 1440;
+                    workedHours = diffMin / 60;
+
+                    if (memberInfo) {
+                        const endHHMM = getShiftEndForDate(memberInfo, day.date, shiftsData);
+                        const [eh, em] = endHHMM.split(':').map(Number);
+                        const endMin = eh * 60 + em;
+                        if (nowMin > endMin) {
+                            otHours = Math.min(4, (nowMin - endMin) / 60);
+                        }
+                    }
+                } else if (firstIn && lastOut) {
                     const [h1, m1] = firstIn.split(':').map(Number);
                     const [h2, m2] = lastOut.split(':').map(Number);
                     let diffMin = (h2 * 60 + m2) - (h1 * 60 + m1);
                     if (diffMin < 0) diffMin += 1440;
-                    workedStr = (diffMin / 60).toFixed(1) + "h";
+                    workedHours = diffMin / 60;
                 }
 
                 return {
                     date: day.date,
                     firstIn: firstIn || "-",
-                    lastOut: lastOut || "-",
-                    otStr: otHours > 0 ? (otHours.toFixed(1) + "h") : "0h",
-                    workedStr: workedStr,
+                    lastOut: isStillInToday ? "" : (lastOut || "-"),
+                    isLive: isStillInToday,
+                    otHours: otHours,
+                    otStr: otHours > 0 ? (otHours.toFixed(2) + "h") : "0h",
+                    workedHours: workedHours,
+                    workedStr: workedHours > 0 ? (workedHours.toFixed(2) + "h") : "-",
                     logs: day.logs
                 };
             });
         }
 
-        window.openDayDetailModal = function(dateStr, source) {
-            const list = (source === 'user') ? groupedUserDays : groupedAdminDays;
-            const day = list.find(d => d.date === dateStr);
-            if (!day) return;
+        function updateWorkSummaryBoxes(prefix, allAttList, memberInfo) {
+            const days = groupAttendanceByDay(allAttList, memberInfo);
+            const nowStr = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+            const curWeek = getISOWeekKey(nowStr);
+            const curMonth = nowStr.substring(0, 7);
+            const curYear = nowStr.substring(0, 4);
 
-            document.getElementById('dayDetailTitle').innerText = `🕒 Lịch Sử Cá Nhân - ${dateStr}`;
-            const tbody = document.getElementById('dayDetailTableBody');
-            tbody.innerHTML = '';
-            day.logs.forEach(att => {
-                let action = att.status, cond = "Đúng giờ";
-                if (att.status.includes('(')) {
-                    let parts = att.status.split('(');
-                    action = parts[0].trim();
-                    cond = parts[1].replace(')', '').trim();
+            let monthWork = 0, weekOT = 0, monthOT = 0, yearOT = 0;
+            days.forEach(d => {
+                if (d.date.substring(0, 7) === curMonth) {
+                    monthWork += d.workedHours;
+                    monthOT += d.otHours;
                 }
-                const color = action === "Vào" ? "green" : "red";
-                const condColor = (cond.includes("trễ") || cond.includes("sớm")) ? "red" : (cond.includes("Tăng ca") ? "#e67e22" : "green");
-                tbody.innerHTML += `<tr><td>${att.time}</td><td style="color:${color};font-weight:bold;">${action}</td><td style="color:${condColor};font-weight:bold;">${cond}</td></tr>`;
+                if (getISOWeekKey(d.date) === curWeek) weekOT += d.otHours;
+                if (d.date.substring(0, 4) === curYear) yearOT += d.otHours;
             });
-            document.getElementById('dayDetailModal').style.display = 'block';
-        };
 
-        window.closeDayDetailModal = function() {
-            document.getElementById('dayDetailModal').style.display = 'none';
-        };
+            const elW = document.getElementById(prefix + 'StatMonthWork');
+            if (elW) elW.innerText = monthWork.toFixed(1) + "h";
+            const elOTW = document.getElementById(prefix + 'StatWeekOT');
+            if (elOTW) elOTW.innerText = weekOT.toFixed(1) + "h";
+            const elOTM = document.getElementById(prefix + 'StatMonthOT');
+            if (elOTM) elOTM.innerText = monthOT.toFixed(1) + "h";
+            const elOTY = document.getElementById(prefix + 'StatYearOT');
+            if (elOTY) elOTY.innerText = yearOT.toFixed(1) + "h";
+        }
 
         function renderUViewTable() {
             const tbody = document.getElementById('uViewHistoryTable'); tbody.innerHTML = '';
-            groupedUserDays = groupAttendanceByDay(filteredUserAtt);
+            groupedUserDays = groupAttendanceByDay(filteredUserAtt, currentUser?.rawInfo);
+            updateWorkSummaryBoxes('u', userAttData, currentUser?.rawInfo);
             if (groupedUserDays.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" class="empty-row">Không có dữ liệu</td></tr>';
                 document.getElementById('uViewPagination').innerHTML = '';
@@ -1012,13 +1072,14 @@
             }
             const start = (uViewPage - 1) * uViewRows;
             groupedUserDays.slice(start, start + uViewRows).forEach(d => {
+                const liveTag = d.isLive ? ' <span style="font-size:10px;color:#27ae60;">(Live)</span>' : '';
                 tbody.innerHTML += `
                     <tr>
                         <td class="link-name" onclick="openDayDetailModal('${d.date}', 'user')">📅 ${d.date}</td>
                         <td style="color:green;font-weight:bold;">${d.firstIn}</td>
                         <td style="color:red;font-weight:bold;">${d.lastOut}</td>
-                        <td style="color:#e67e22;font-weight:bold;">${d.otStr}</td>
-                        <td style="font-weight:bold;color:#2c3e50;">${d.workedStr}</td>
+                        <td style="color:#e67e22;font-weight:bold;">${d.otStr}${d.isLive && d.otHours > 0 ? liveTag : ''}</td>
+                        <td style="font-weight:bold;color:#2c3e50;">${d.workedStr}${liveTag}</td>
                     </tr>`;
             });
             renderPaginationControls(groupedUserDays.length, uViewRows, uViewPage, 'uViewPagination', 'goToUViewPage');
@@ -1026,7 +1087,10 @@
 
         function updatePersonalTable() {
             const tbody = document.getElementById('personalHistoryTable'); tbody.innerHTML = '';
-            groupedAdminDays = groupAttendanceByDay(filteredPersonalAtt);
+            const uid = document.getElementById('editOldUid')?.value;
+            const mInfo = membersData[uid] || null;
+            groupedAdminDays = groupAttendanceByDay(filteredPersonalAtt, mInfo);
+            updateWorkSummaryBoxes('a', personalAttData, mInfo);
             if (groupedAdminDays.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" class="empty-row">Không có dữ liệu</td></tr>';
                 document.getElementById('personalPagination').innerHTML = '';
@@ -1034,17 +1098,27 @@
             }
             const start = (personalPage - 1) * personalRows;
             groupedAdminDays.slice(start, start + personalRows).forEach(d => {
+                const liveTag = d.isLive ? ' <span style="font-size:10px;color:#27ae60;">(Live)</span>' : '';
                 tbody.innerHTML += `
                     <tr>
                         <td class="link-name" onclick="openDayDetailModal('${d.date}', 'admin')">📅 ${d.date}</td>
                         <td style="color:green;font-weight:bold;">${d.firstIn}</td>
                         <td style="color:red;font-weight:bold;">${d.lastOut}</td>
-                        <td style="color:#e67e22;font-weight:bold;">${d.otStr}</td>
-                        <td style="font-weight:bold;color:#2c3e50;">${d.workedStr}</td>
+                        <td style="color:#e67e22;font-weight:bold;">${d.otStr}${d.isLive && d.otHours > 0 ? liveTag : ''}</td>
+                        <td style="font-weight:bold;color:#2c3e50;">${d.workedStr}${liveTag}</td>
                     </tr>`;
             });
             renderPaginationControls(groupedAdminDays.length, personalRows, personalPage, 'personalPagination', 'goToPersonalPage');
         }
+
+        // Tự động làm mới giờ làm & tăng ca theo thời gian thực mỗi 10 giây
+        setInterval(() => {
+            if (currentUser?.role === 'user' && document.getElementById('userControls').style.display === 'block') {
+                renderUViewTable();
+            } else if (document.getElementById('memberModal').style.display === 'block' && currentModalMode === 'view') {
+                updatePersonalTable();
+            }
+        }, 10000);
 
         // ================= CÁC CHỨC NĂNG DÀNH CHO ADMIN =================
         function getActiveShiftText(info) {
@@ -1074,36 +1148,18 @@
                     membersData = data; 
                     runAutoDelete(); 
 
-                    for (const [uid, info] of Object.entries(data)) {
-                        tbodyMembers.innerHTML += `
-                            <tr>
-                                <td class="delete-col ${isDeleteMode ? '' : 'hide-col'}"><input type="checkbox" class="checkbox-del" value="${uid}"></td>
-                                <td class="link-name" onclick="openMemberModal('${uid}', 'edit')">${info.name || 'N/A'}</td>
-                                <td>${info.id || 'N/A'}</td>
-                                <td>${uid}</td>
-                            </tr>
-                        `;
-
-                        const isInside = (info.lastStatus === "Vào");
-                        const statusClass = isInside ? "status-in" : "status-out";
-                        const activeShiftTxt = getActiveShiftText(info);
-                        statusGrid.innerHTML += `
-                            <div class="member-card ${statusClass}" onclick="openMemberModal('${uid}', 'view')">
-                                <div class="card-title">${info.name || 'Chưa có tên'}</div>
-                                <div class="card-id">ID: ${info.id || 'N/A'}</div>
-                                <div style="font-size: 13px; color: #2980b9; background: #ebf5fb; padding: 6px 8px; border-radius: 6px; margin-top: 8px; font-weight: 500;">
-                                    ⏱️ ${activeShiftTxt}
-                                </div>
-                                <div class="card-status" style="color: ${isInside ? '#27ae60' : '#e74c3c'}">${isInside ? "🟢 Vào" : "🔴 Ra"}</div>
-                            </div>
-                        `;
-
-                        if(info.Attendance) {
-                            for (const [timestamp, att] of Object.entries(info.Attendance)) {
-                                globalAttData.push({ timeKey: parseInt(timestamp), timeString: att.time, name: info.name, uid: uid, status: att.status || 'Vào', reason: att.reason || '' });
-                            }
-                        }
-                    }
+                    const sortedShifts = Object.entries(shiftsData).sort(([a], [b]) => (a === 'HC' ? -1 : b === 'HC' ? 1 : 0));
+                for (const [id, shift] of sortedShifts) {
+                    let actionBtns = id === 'HC' ? '<span style="font-size:11px; color:#bdc3c7;">(Mặc định)</span>' : `
+                        <button type="button" class="btn btn-active" style="padding: 2px 6px; font-size: 11px; margin: 0 5px;" onclick="editShift('${id}')">✏️ Sửa</button>
+                        <button type="button" class="btn btn-delete" style="padding: 2px 6px; font-size: 11px; margin: 0;" onclick="deleteShift('${id}')">🗑️ Xóa</button>
+                    `;
+                    const breakTxt = (shift.breakStart && shift.breakEnd) ? ` | Nghỉ: ${shift.breakStart}-${shift.breakEnd}` : '';
+                    html += `<div style="border-bottom: 1px solid #ccc; padding: 8px 0; display: flex; justify-content: space-between; align-items: center;">
+                                <div><strong>${shift.name}</strong> <span style="color:#7f8c8d; font-size:12px;">(${shift.start} - ${shift.end}${breakTxt})</span></div>
+                                <div>${actionBtns}</div>
+                             </div>`;
+                }
                     globalAttData.sort((a, b) => b.timeKey - a.timeKey);
                     applyGlobalFilter();
                 } else {
@@ -1685,7 +1741,17 @@
                 if (st) { st.innerText = "✓ Đã tự động lưu"; setTimeout(() => st.innerText = "", 2000); }
             });
         };
-
+        function runAutoDelete() {
+            if (retentionDays <= 0 || !membersData) return;
+            const threshold = Math.floor(Date.now() / 1000) - (retentionDays * 86400);
+            for (const [uid, info] of Object.entries(membersData)) {
+                if (info.Attendance) {
+                    for (const [timestamp] of Object.entries(info.Attendance)) {
+                        if (parseInt(timestamp) < threshold) remove(ref(db, `Members/${uid}/Attendance/${timestamp}`));
+                    }
+                }
+            }
+        }
         window.changeGlobalRows = function() { globalRows = parseInt(document.getElementById('globalRows').value); globalPage = 1; updateGlobalTable(); };
         window.applyGlobalFilter = function() { filteredGlobalAtt = filterByDate(globalAttData, document.getElementById('globalStartDate').value, document.getElementById('globalEndDate').value); globalPage = 1; updateGlobalTable(); };
         window.clearGlobalFilter = function() { document.getElementById('globalStartDate').value = ''; document.getElementById('globalEndDate').value = ''; filteredGlobalAtt = [...globalAttData]; globalPage = 1; updateGlobalTable(); };
