@@ -209,7 +209,8 @@
                 <div id="tab-settings" class="box tab-content">
                     <h2>⚙️ Thiết Lập Hệ Thống</h2>
                     <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start;">
-                        <div class="settings-card" style="flex: 1; min-width: 300px;">
+                        <!-- 1. Thiết lập dữ liệu -->
+                        <div class="settings-card" style="flex: 1; min-width: 280px;">
                             <h3 style="color:#d35400; margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">📦 Thiết Lập Dữ Liệu</h3>
                             <label style="font-weight: bold; display: block; margin-bottom: 10px; color: #2c3e50;">🗑️ Tự động xóa lịch sử cũ sau:</label>
                             <select id="autoDeleteSelect">
@@ -219,20 +220,44 @@
                             </select>
                             <button type="button" class="btn btn-active" style="width: 100%; font-size: 16px; padding: 12px;" onclick="saveSettings()">💾 Lưu Cài Đặt Dữ Liệu</button>
                         </div>
+
+                        <!-- 2. Thiết lập thời gian tăng ca -->
+                        <div class="settings-card" style="flex: 1; min-width: 280px; text-align:left;">
+                            <h3 style="color:#8e44ad; margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px; text-align:center;">⏰ Giới Hạn Tăng Ca</h3>
+                            <p style="font-size:12px; color:#7f8c8d; margin-top:0;">• Tối đa <b>4 giờ / ngày</b> (Cố định). Nhập <b>0</b> nếu không giới hạn.</p>
+                            <label style="font-weight:bold; font-size:13px; color:#2c3e50;">Theo Tuần (giờ):</label>
+                            <input type="number" id="otLimitWeek" min="0" step="0.5" placeholder="VD: 12" style="width:100%; padding:9px; margin:5px 0 10px 0; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
+                            <label style="font-weight:bold; font-size:13px; color:#2c3e50;">Theo Tháng (giờ):</label>
+                            <input type="number" id="otLimitMonth" min="0" step="0.5" placeholder="VD: 40" style="width:100%; padding:9px; margin:5px 0 10px 0; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
+                            <label style="font-weight:bold; font-size:13px; color:#2c3e50;">Theo Năm (giờ):</label>
+                            <input type="number" id="otLimitYear" min="0" step="0.5" placeholder="VD: 200" style="width:100%; padding:9px; margin:5px 0 15px 0; border:1px solid #ccc; border-radius:6px; box-sizing:border-box;">
+                            <button type="button" class="btn btn-active" style="width:100%; background:#8e44ad; font-size:15px; padding:11px;" onclick="saveOTLimits()">💾 Lưu Giới Hạn Tăng Ca</button>
+                        </div>
                         
-                        <div class="settings-card" style="flex: 1; min-width: 300px;">
+                        <!-- 3. Thiết lập ca làm việc -->
+                        <div class="settings-card" style="flex: 1.2; min-width: 320px;">
                             <h3 style="color:#27ae60; margin-top:0; border-bottom:1px solid #eee; padding-bottom:10px;">⏱️ Thiết Lập Điểm Danh (Ca Làm Việc)</h3>
-                            <label style="font-weight: bold; display: block; margin-bottom: 10px; color: #2c3e50; text-align:left;">Giờ hành chính (Mặc định):</label>
-                            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                                <input type="time" id="hcStart" style="flex:1;"> <span style="line-height:40px;">-</span> <input type="time" id="hcEnd" style="flex:1;">
-                                <button type="button" class="btn btn-active" style="margin:0; padding:10px;" onclick="saveHC()">Lưu</button>
+                            <label style="font-weight: bold; display: block; margin-bottom: 6px; color: #2c3e50; text-align:left;">Giờ hành chính (Tối đa 8h làm + 1h nghỉ = 9h):</label>
+                            <div style="display: flex; gap: 8px; margin-bottom: 8px; align-items:center;">
+                                <input type="time" id="hcStart" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;" oninput="validateHCInline()">
+                                <span>-</span>
+                                <input type="time" id="hcEnd" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;" oninput="validateHCInline()">
                             </div>
+                            <label style="font-size: 12px; font-weight:bold; color:#7f8c8d; display:block; text-align:left; margin-bottom:4px;">Khung giờ nghỉ ngơi (HC):</label>
+                            <div style="display: flex; gap: 8px; margin-bottom: 10px; align-items:center;">
+                                <input type="time" id="hcBreakStart" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;" oninput="validateHCInline()">
+                                <span>-</span>
+                                <input type="time" id="hcBreakEnd" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;" oninput="validateHCInline()">
+                                <button type="button" class="btn btn-active" style="margin:0; padding:8px 14px;" onclick="saveHC()">Lưu</button>
+                            </div>
+                            <div id="hcErrorMsg" style="display:none; color:#e74c3c; background:#fdecea; border:1px solid #e74c3c; padding:8px; border-radius:6px; font-size:12px; margin-bottom:12px; text-align:left; font-weight:bold;"></div>
+
                             <label style="font-weight: bold; display: block; margin-bottom: 10px; color: #2c3e50; border-top:1px dashed #ccc; padding-top:15px; text-align:left;">Danh Sách Ca Làm Việc:</label>
-                            <div id="shiftList" style="text-align:left; background:#f4f7f6; padding:10px; border-radius:6px; max-height: 150px; overflow-y:auto; margin-bottom:15px; border: 1px solid #ddd;"></div>
+                            <div id="shiftList" style="text-align:left; background:#f4f7f6; padding:10px; border-radius:6px; max-height: 180px; overflow-y:auto; margin-bottom:15px; border: 1px solid #ddd;"></div>
                             <button type="button" class="btn btn-add" style="width: 100%; margin:0;" onclick="openShiftModal()">➕ Thêm Ca Mới</button>
                         </div>
                     </div>
-                </div> <!-- Đóng Bảng Thiết Lập Hệ Thống -->
+                </div>
             </div> <!-- Đóng container của ADMIN VIEW -->
         </div> <!-- Đóng adminControls -->
 
@@ -277,6 +302,7 @@
                             <button type="button" id="btnEarlyEntry" class="btn btn-active" style="margin:0; padding:9px; font-size:13px; background-color:#8e44ad;" onclick="openEarlyEntryModal()">🕒 Đăng Ký Vào Sớm</button>
                             <button type="button" id="btnRegShift" class="btn btn-active" style="grid-column: span 2; margin:0; padding:9px; font-size:13px; background-color:#2980b9;" onclick="openRegShiftModal()">📅 Đăng Ký Ca Làm Việc</button>
                             <button type="button" id="btnRegOT" class="btn btn-active" style="grid-column: span 2; margin:0; padding:9px; font-size:13px; background-color:#e67e22;" onclick="openRegOTModal()">⏰ Đăng Ký Tăng Ca</button>
+                            <div id="userOTWarningBox" style="grid-column: span 2; display:none; padding:8px 10px; border-radius:6px; font-size:12px; font-weight:bold; line-height:1.4;"></div>
                             <button type="button" id="btnReviewOT" class="btn btn-active" style="grid-column: span 2; margin:0; padding:9px; font-size:13px; background-color:#c0392b; display:none;" onclick="openReviewModal()">⚠️ Xem Xét Tăng Ca (<span id="reviewCountBadge">0</span>)</button>
                         </div>
 
@@ -535,7 +561,7 @@
 
     <!-- Shift Modal (Thêm/Sửa Ca Làm Việc) -->
     <div id="shiftModal" class="modal">
-        <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-content" style="max-width: 430px;">
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 15px;">
                 <h2 id="shiftModalTitle" style="margin: 0; color: #2c3e50;">Thêm Ca Làm Việc</h2>
                 <span class="close" onclick="closeShiftModal()" title="Đóng bảng">&times;</span>
@@ -543,11 +569,16 @@
             <input type="hidden" id="editingShiftId">
             <label>Tên Ca:</label>
             <input type="text" id="newShiftName" placeholder="VD: Ca Sáng, Ca Đêm...">
-            <div style="display:flex; gap:15px; margin-top:10px;">
-                <div style="flex:1;"><label>Bắt đầu:</label><input type="time" id="newShiftStart"></div>
-                <div style="flex:1;"><label>Kết thúc:</label><input type="time" id="newShiftEnd"></div>
+            <div style="display:flex; gap:15px; margin-top:5px;">
+                <div style="flex:1;"><label>Bắt đầu ca:</label><input type="time" id="newShiftStart" oninput="validateShiftModal()"></div>
+                <div style="flex:1;"><label>Kết thúc ca:</label><input type="time" id="newShiftEnd" oninput="validateShiftModal()"></div>
             </div>
-            <button type="button" class="btn btn-primary" style="margin-top:20px; background-color:#3498db; width: 100%; border:none; padding:12px; color:white; border-radius:5px; font-weight:bold; cursor:pointer;" onclick="saveNewShift()">Lưu Ca Làm Việc</button>
+            <div style="display:flex; gap:15px; margin-top:5px;">
+                <div style="flex:1;"><label>Bắt đầu nghỉ:</label><input type="time" id="newShiftBreakStart" oninput="validateShiftModal()"></div>
+                <div style="flex:1;"><label>Kết thúc nghỉ:</label><input type="time" id="newShiftBreakEnd" oninput="validateShiftModal()"></div>
+            </div>
+            <div id="shiftErrorMsg" style="display:none; color:#e74c3c; background:#fdecea; border:1px solid #e74c3c; padding:10px; border-radius:6px; font-size:13px; margin-top:10px; font-weight:bold;"></div>
+            <button type="button" id="btnSaveShift" class="btn btn-primary" style="margin-top:15px; background-color:#3498db; width: 100%; border:none; padding:12px; color:white; border-radius:5px; font-weight:bold; cursor:pointer;" onclick="saveNewShift()">Lưu Ca Làm Việc</button>
         </div>
     </div>
 
@@ -742,6 +773,26 @@
         let originalMemberInfo = {};
         let savedWifiList = {};
         let shiftsData = {};
+        let otLimits = { week: 0, month: 0, year: 0 };
+        onValue(ref(db, 'Settings/OTLimits'), (snap) => {
+            otLimits = snap.val() || { week: 0, month: 0, year: 0 };
+            if (document.getElementById('otLimitWeek')) {
+                document.getElementById('otLimitWeek').value = otLimits.week || 0;
+                document.getElementById('otLimitMonth').value = otLimits.month || 0;
+                document.getElementById('otLimitYear').value = otLimits.year || 0;
+            }
+            if (currentUser && currentUser.role === 'user' && currentUser.rawInfo) {
+                updateUserOTLimitUI(currentUser.rawInfo);
+            }
+        });
+
+        window.saveOTLimits = function() {
+            const w = parseFloat(document.getElementById('otLimitWeek').value) || 0;
+            const m = parseFloat(document.getElementById('otLimitMonth').value) || 0;
+            const y = parseFloat(document.getElementById('otLimitYear').value) || 0;
+            set(ref(db, 'Settings/OTLimits'), { week: w, month: m, year: y })
+                .then(() => alert("Đã lưu giới hạn thời gian tăng ca!"));
+        };
         window.toggleSupportSearch = function() {
     const w = document.getElementById('supSearchWrapper');
     w.style.display = (w.style.display === 'none') ? 'block' : 'none';
@@ -810,6 +861,8 @@
                     if(!info) return;
                     currentUser.perms = info.perms || {};
                     currentUser.tempShifts = info.tempShifts || {};
+                    currentUser.rawInfo = info;
+                    updateUserOTLimitUI(info);
                     document.getElementById('btnSupportEntry').style.display = currentUser.perms.entrySupport ? 'block' : 'none';
                     document.getElementById('btnOpenHR').style.display = currentUser.perms.hr ? 'block' : 'none';
                     if (currentUser.perms.hr) listenForApprovals();
@@ -1019,6 +1072,8 @@
                 
                 document.getElementById('hcStart').value = shiftsData['HC'].start;
                 document.getElementById('hcEnd').value = shiftsData['HC'].end;
+                document.getElementById('hcBreakStart').value = shiftsData['HC'].breakStart || '';
+                document.getElementById('hcBreakEnd').value = shiftsData['HC'].breakEnd || '';
                 const sList = document.getElementById('shiftList'); let html = '';
                 for (const [id, shift] of Object.entries(shiftsData)) {
                     let actionBtns = id === 'HC' ? '<span style="font-size:11px; color:#bdc3c7;">(Mặc định)</span>' : `
@@ -1351,13 +1406,86 @@
             });
         };
         window.closeShiftHistoryModal = function() { document.getElementById('shiftHistoryModal').style.display = 'none'; };
-        window.saveHC = function() {
-            update(ref(db, 'Settings/Shifts/HC'), { name: "Giờ hành chính", start: document.getElementById('hcStart').value, end: document.getElementById('hcEnd').value }).then(() => alert("Đã lưu Giờ Hành Chính!"));
+        function parseMin(hhmm) {
+            if (!hhmm || !hhmm.includes(':')) return null;
+            const [h, m] = hhmm.split(':').map(Number);
+            return h * 60 + m;
+        }
+
+        function checkShiftRule(start, end, bStart, bEnd) {
+            const s = parseMin(start), e = parseMin(end);
+            if (s === null || e === null) return "Vui lòng chọn đủ giờ bắt đầu và kết thúc ca!";
+            let totalMin = e - s;
+            if (totalMin <= 0) totalMin += 1440; // Hỗ trợ ca qua đêm
+
+            let breakMin = 0;
+            if (bStart || bEnd) {
+                const bs = parseMin(bStart), be = parseMin(bEnd);
+                if (bs === null || be === null) return "Vui lòng nhập đủ giờ bắt đầu và kết thúc nghỉ!";
+                breakMin = be - bs;
+                if (breakMin <= 0) breakMin += 1440;
+                if (breakMin > 60) return `Vi phạm: Thời gian nghỉ (${breakMin} phút) không được vượt quá 1 giờ (60 phút)!`;
+            }
+
+            const workMin = totalMin - breakMin;
+            if (totalMin > 540) return `Vi phạm: Tổng thời gian ca (${(totalMin/60).toFixed(1)}h) vượt quá tối đa 9 giờ (8h làm + 1h nghỉ)!`;
+            if (workMin > 480) return `Vi phạm: Thời gian làm việc (${(workMin/60).toFixed(1)}h) vượt quá tối đa 8 giờ!`;
+            if (workMin <= 0) return "Vi phạm: Thời gian nghỉ không thể lớn hơn hoặc bằng thời gian ca!";
+            return null; // Hợp lệ
+        }
+
+        window.validateHCInline = function() {
+            const err = checkShiftRule(
+                document.getElementById('hcStart').value,
+                document.getElementById('hcEnd').value,
+                document.getElementById('hcBreakStart').value,
+                document.getElementById('hcBreakEnd').value
+            );
+            const box = document.getElementById('hcErrorMsg');
+            ['hcStart','hcEnd','hcBreakStart','hcBreakEnd'].forEach(id => {
+                document.getElementById(id).style.borderColor = err ? '#e74c3c' : '#ccc';
+            });
+            if (err) { box.innerText = "⚠️ " + err; box.style.display = 'block'; }
+            else { box.style.display = 'none'; }
+            return !err;
         };
+
+        window.validateShiftModal = function() {
+            const err = checkShiftRule(
+                document.getElementById('newShiftStart').value,
+                document.getElementById('newShiftEnd').value,
+                document.getElementById('newShiftBreakStart').value,
+                document.getElementById('newShiftBreakEnd').value
+            );
+            const box = document.getElementById('shiftErrorMsg');
+            ['newShiftStart','newShiftEnd','newShiftBreakStart','newShiftBreakEnd'].forEach(id => {
+                document.getElementById(id).style.borderColor = err ? '#e74c3c' : '#ccc';
+            });
+            if (err) { box.innerText = "⚠️ " + err; box.style.display = 'block'; }
+            else { box.style.display = 'none'; }
+            return !err;
+        };
+
+        window.saveHC = function() {
+            if (!validateHCInline()) return;
+            update(ref(db, 'Settings/Shifts/HC'), {
+                name: "Giờ hành chính",
+                start: document.getElementById('hcStart').value,
+                end: document.getElementById('hcEnd').value,
+                breakStart: document.getElementById('hcBreakStart').value || "",
+                breakEnd: document.getElementById('hcBreakEnd').value || ""
+            }).then(() => alert("Đã lưu Giờ Hành Chính!"));
+        };
+
         window.openShiftModal = function() {
             document.getElementById('shiftModalTitle').innerText = "Thêm Ca Làm Việc";
             document.getElementById('editingShiftId').value = '';
-            document.getElementById('newShiftName').value = ''; document.getElementById('newShiftStart').value = ''; document.getElementById('newShiftEnd').value = '';
+            document.getElementById('newShiftName').value = '';
+            document.getElementById('newShiftStart').value = '';
+            document.getElementById('newShiftEnd').value = '';
+            document.getElementById('newShiftBreakStart').value = '';
+            document.getElementById('newShiftBreakEnd').value = '';
+            document.getElementById('shiftErrorMsg').style.display = 'none';
             document.getElementById('shiftModal').style.display = 'block';
         };
 
@@ -1366,10 +1494,31 @@
             if (!shift) return;
             document.getElementById('shiftModalTitle').innerText = "Sửa Ca Làm Việc";
             document.getElementById('editingShiftId').value = id;
-            document.getElementById('newShiftName').value = shift.name; 
-            document.getElementById('newShiftStart').value = shift.start; 
+            document.getElementById('newShiftName').value = shift.name;
+            document.getElementById('newShiftStart').value = shift.start;
             document.getElementById('newShiftEnd').value = shift.end;
+            document.getElementById('newShiftBreakStart').value = shift.breakStart || '';
+            document.getElementById('newShiftBreakEnd').value = shift.breakEnd || '';
+            validateShiftModal();
             document.getElementById('shiftModal').style.display = 'block';
+        };
+
+        window.saveNewShift = function() {
+            const name = document.getElementById('newShiftName').value.trim();
+            if (!name) return alert("Vui lòng nhập tên ca!");
+            if (!validateShiftModal()) return;
+            const editId = document.getElementById('editingShiftId').value;
+            const shiftId = editId ? editId : ('Ca_' + Date.now());
+            update(ref(db, `Settings/Shifts/${shiftId}`), {
+                name: name,
+                start: document.getElementById('newShiftStart').value,
+                end: document.getElementById('newShiftEnd').value,
+                breakStart: document.getElementById('newShiftBreakStart').value || "",
+                breakEnd: document.getElementById('newShiftBreakEnd').value || ""
+            }).then(() => {
+                alert(editId ? "Đã cập nhật ca làm việc!" : "Đã thêm ca mới!");
+                closeShiftModal();
+            });
         };
 
         window.deleteShift = function(id) {
@@ -1379,21 +1528,6 @@
         };
 
         window.closeShiftModal = function() { document.getElementById('shiftModal').style.display = 'none'; };
-
-        window.saveNewShift = function() {
-            const name = document.getElementById('newShiftName').value.trim();
-            const start = document.getElementById('newShiftStart').value;
-            const end = document.getElementById('newShiftEnd').value;
-            const editId = document.getElementById('editingShiftId').value;
-
-            if(!name || !start || !end) return alert("Vui lòng điền đủ thông tin ca!");
-            
-            const shiftId = editId ? editId : ('Ca_' + Date.now());
-            update(ref(db, `Settings/Shifts/${shiftId}`), { name: name, start: start, end: end }).then(() => { 
-                alert(editId ? "Đã cập nhật ca làm việc!" : "Đã thêm ca mới!"); 
-                closeShiftModal(); 
-            });
-        };
         window.startChangeCard = function() {
             changingUid = document.getElementById('editOldUid').value;
             set(ref(db, 'Command/mode'), 1); set(ref(db, 'Command/new_uid'), "");
@@ -2273,7 +2407,88 @@ window.openRegOTModal = function() {
     document.getElementById('otRegModal').style.display = 'block';
 };
 window.closeRegOTModal = function() { document.getElementById('otRegModal').style.display = 'none'; };
+function getISOWeekKey(dateStr) {
+            const d = new Date(dateStr + "T00:00:00");
+            const dayNum = d.getDay() || 7;
+            d.setDate(d.getDate() + 4 - dayNum);
+            const yearStart = new Date(d.getFullYear(), 0, 1);
+            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            return `${d.getFullYear()}-W${weekNo}`;
+        }
 
+        function calcUserOTStats(info, refDateStr = null) {
+            const nowStr = refDateStr || new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+            const curWeek = getISOWeekKey(nowStr);
+            const curMonth = nowStr.substring(0, 7);
+            const curYear = nowStr.substring(0, 4);
+            let weekH = 0, monthH = 0, yearH = 0;
+
+            if (info && info.Attendance) {
+                for (const att of Object.values(info.Attendance)) {
+                    const m = (att.status || '').match(/Tăng ca:\s*([\d.]+)h/i);
+                    if (m && att.time) {
+                        const h = parseFloat(m[1]) || 0;
+                        const dStr = att.time.substring(0, 10);
+                        if (getISOWeekKey(dStr) === curWeek) weekH += h;
+                        if (dStr.substring(0, 7) === curMonth) monthH += h;
+                        if (dStr.substring(0, 4) === curYear) yearH += h;
+                    }
+                }
+            }
+            return { weekH, monthH, yearH };
+        }
+
+        function updateUserOTLimitUI(info) {
+            const box = document.getElementById('userOTWarningBox');
+            const btn = document.getElementById('btnRegOT');
+            if (!box || !btn) return;
+            const st = calcUserOTStats(info);
+            const msgs = [];
+            let locked = false;
+
+            const checks = [
+                { label: "Tuần", cur: st.weekH, lim: otLimits.week },
+                { label: "Tháng", cur: st.monthH, lim: otLimits.month },
+                { label: "Năm", cur: st.yearH, lim: otLimits.year }
+            ];
+
+            checks.forEach(c => {
+                if (c.lim > 0) {
+                    if (c.cur >= c.lim) {
+                        locked = true;
+                        msgs.push(`🔒 Đã đạt tối đa tăng ca ${c.label}: ${c.cur.toFixed(1)}/${c.lim}h`);
+                    } else if (c.cur >= c.lim * 0.8) {
+                        msgs.push(`⚠️ Sắp chạm giới hạn tăng ca ${c.label}: ${c.cur.toFixed(1)}/${c.lim}h`);
+                    }
+                }
+            });
+
+            if (locked) {
+                btn.disabled = true;
+                btn.style.backgroundColor = '#95a5a6';
+                btn.style.cursor = 'not-allowed';
+                btn.innerText = '🔒 Đã Khóa Đăng Ký Tăng Ca';
+                box.style.display = 'block';
+                box.style.background = '#fdecea';
+                box.style.color = '#c0392b';
+                box.style.border = '1px solid #e74c3c';
+                box.innerHTML = msgs.join('<br>');
+            } else {
+                btn.disabled = false;
+                btn.style.backgroundColor = '#e67e22';
+                btn.style.cursor = 'pointer';
+                btn.innerText = '⏰ Đăng Ký Tăng Ca';
+                if (msgs.length > 0) {
+                    box.style.display = 'block';
+                    box.style.background = '#fef5e7';
+                    box.style.color = '#d35400';
+                    box.style.border = '1px solid #f39c12';
+                    box.innerHTML = msgs.join('<br>');
+                } else {
+                    box.style.display = 'none';
+                }
+            }
+        }
 window.submitOTRegistration = function() {
     const regDate = document.getElementById('otRegDate').value;
     const hours = document.getElementById('otRegHours').value.trim();
@@ -2281,7 +2496,21 @@ window.submitOTRegistration = function() {
     const shiftStr = document.getElementById('otRegShift').value;
 
     if (!regDate || !hours || !reason) return alert("Vui lòng nhập đầy đủ Ngày, Số giờ và Lý do!");
+    let reqHours = parseFloat(hours);
+    if (isNaN(reqHours) || reqHours <= 0) return alert("Số giờ tăng ca không hợp lệ!");
+    if (reqHours > 4) return alert("Quy định: Tăng ca 1 ngày không được vượt quá 4 giờ!");
 
+    const st = calcUserOTStats(currentUser.rawInfo, regDate);
+    let maxAllowed = 4;
+    if (otLimits.week > 0) maxAllowed = Math.min(maxAllowed, otLimits.week - st.weekH);
+    if (otLimits.month > 0) maxAllowed = Math.min(maxAllowed, otLimits.month - st.monthH);
+    if (otLimits.year > 0) maxAllowed = Math.min(maxAllowed, otLimits.year - st.yearH);
+
+    if (maxAllowed <= 0) return alert("Bạn đã đạt giới hạn giờ tăng ca quy định, không thể đăng ký thêm!");
+    if (reqHours > maxAllowed) {
+        reqHours = parseFloat(maxAllowed.toFixed(2));
+        alert(`Số giờ vượt quá hạn mức còn lại! Hệ thống tự động quy về tối đa ${reqHours} giờ.`);
+    }
     const now = new Date();
     const todayStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
     const targetObj = new Date(regDate + "T00:00:00");
@@ -2310,12 +2539,12 @@ window.submitOTRegistration = function() {
 
     const ts = Math.floor(Date.now() / 1000);
     set(ref(db, `Members/${currentUser.uid}/otRegistrations/${regDate}`), {
-        date: regDate, hours: hours, reason: reason, timestamp: ts
+        date: regDate, hours: reqHours, reason: reason, timestamp: ts
     }).then(() => {
         set(ref(db, `Members/${currentUser.uid}/earlyEntryHistory/${ts}`), {
-            timestamp: ts, reason: `[Đăng ký Tăng ca ${regDate} - ${hours}h] ${reason}`, approved: true
+            timestamp: ts, reason: `[Đăng ký Tăng ca ${regDate} - ${reqHours}h] ${reason}`, approved: true
         });
-        alert(`Đã đăng ký tăng ca ngày ${regDate} (${hours} giờ) thành công!`);
+        alert(`Đã đăng ký tăng ca ngày ${regDate} (${reqHours} giờ) thành công!`);
         closeRegOTModal();
     });
 };
