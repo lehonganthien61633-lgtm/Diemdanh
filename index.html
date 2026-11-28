@@ -360,40 +360,40 @@
                     
                     <!-- TAB LỊCH SỬ ĐIỂM DANH -->
                     <div id="uTabHistory" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
-    <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:10px; flex-shrink:0;">
-        <div style="background:#ebf5fb; border:1px solid #3498db; border-radius:6px; padding:8px; text-align:center;">
-            <div style="font-size:11px; color:#2980b9;">Làm tháng này</div>
+    <div style="display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:8px; margin-bottom:10px; flex-shrink:0;">
+        <div style="background:#f0f8ff; border:1px solid #3498db; border-radius:8px; padding:10px 6px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <div style="font-size:11px; color:#2980b9; font-weight:600; margin-bottom:4px;">Làm tháng này</div>
             <div id="uStatMonthWork" style="font-size:15px; font-weight:bold; color:#2c3e50;">0h</div>
         </div>
-        <div style="background:#fef5e7; border:1px solid #e67e22; border-radius:6px; padding:8px; text-align:center;">
-            <div style="font-size:11px; color:#d35400;">TC Tuần</div>
+        <div style="background:#fff8f0; border:1px solid #e67e22; border-radius:8px; padding:10px 6px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <div style="font-size:11px; color:#d35400; font-weight:600; margin-bottom:4px;">TC Tuần</div>
             <div id="uStatWeekOT" style="font-size:15px; font-weight:bold; color:#d35400;">0h</div>
         </div>
-        <div style="background:#fef5e7; border:1px solid #e67e22; border-radius:6px; padding:8px; text-align:center;">
-            <div style="font-size:11px; color:#d35400;">TC Tháng</div>
+        <div style="background:#fff8f0; border:1px solid #e67e22; border-radius:8px; padding:10px 6px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <div style="font-size:11px; color:#d35400; font-weight:600; margin-bottom:4px;">TC Tháng</div>
             <div id="uStatMonthOT" style="font-size:15px; font-weight:bold; color:#d35400;">0h</div>
         </div>
-        <div style="background:#fef5e7; border:1px solid #e67e22; border-radius:6px; padding:8px; text-align:center;">
-            <div style="font-size:11px; color:#d35400;">TC Năm</div>
+        <div style="background:#fff8f0; border:1px solid #e67e22; border-radius:8px; padding:10px 6px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <div style="font-size:11px; color:#d35400; font-weight:600; margin-bottom:4px;">TC Năm</div>
             <div id="uStatYearOT" style="font-size:15px; font-weight:bold; color:#d35400;">0h</div>
         </div>
-        <div style="background:#eafaf1; border:1px solid #27ae60; border-radius:6px; padding:8px; text-align:center;">
-            <div style="font-size:11px; color:#27ae60;">Lương kỳ này</div>
-            <div id="uStatSalary" style="font-size:14px; font-weight:bold; color:#1e8449;">0đ</div>
+        <div style="background:#eefaf3; border:1px solid #27ae60; border-radius:8px; padding:10px 6px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <div style="font-size:11px; color:#27ae60; font-weight:600; margin-bottom:4px;">Lương kỳ này</div>
+            <div id="uStatSalary" style="font-size:13px; font-weight:bold; color:#1e8449; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">0đ</div>
         </div>
-        <div class="filter-container" style="padding: 10px; margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; flex-shrink: 0;">
     </div>
-                            <div>
-                                <select id="uViewRows" onchange="changeUViewRows()">
-                                    <option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option>
-                                </select>
-                            </div>
-                            <div style="display:flex; gap: 5px; align-items: center;">
-                                <input type="date" id="uViewStartDate"> - <input type="date" id="uViewEndDate">
-                                <button class="btn btn-active" style="padding: 6px 10px;" onclick="applyUViewFilter()">Lọc</button>
-                                <button class="btn btn-cancel" style="display:inline-block; padding: 6px 10px; margin:0;" onclick="clearUViewFilter()">Xóa</button>
-                            </div>
-                        </div>
+    <div class="filter-container" style="padding: 10px 12px; margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; flex-shrink: 0;">
+        <div>
+            <select id="uViewRows" onchange="changeUViewRows()">
+                <option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option>
+            </select>
+        </div>
+        <div style="display:flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+            <input type="date" id="uViewStartDate"> - <input type="date" id="uViewEndDate">
+            <button class="btn btn-active" style="padding: 6px 12px; font-size: 13px;" onclick="applyUViewFilter()">Lọc</button>
+            <button class="btn btn-cancel" style="display:inline-block; padding: 6px 12px; font-size: 13px; margin:0;" onclick="clearUViewFilter()">Xóa</button>
+        </div>
+    </div>
                         <div class="history-container" style="flex: 1; overflow-y: auto; border: 1px solid #bdc3c7; border-top: none; min-height: 0;">
                             <table style="margin-top: 0; border-top: none;">
                                 <thead style="position:sticky; top:0; z-index:1; background-color: #3498db;">
@@ -502,15 +502,15 @@
                     <label>Email (Tài khoản Đăng nhập):</label>
                     <input type="email" id="editEmail" placeholder="example@email.com" oninput="checkChanges()">
                     <div style="display:flex; gap:15px;">
-                        <div style="flex:1;">
-                            <label>Lương Cơ Bản / Tháng (VNĐ):</label>
-                            <input type="number" id="editBaseSalary" min="0" step="100000" placeholder="VD: 10000000" oninput="checkChanges()">
-                        </div>
-                        <div style="flex:1;">
-                            <label>Ngày Bắt Đầu Làm:</label>
-                            <input type="date" id="editJoinDate" oninput="checkChanges()">
-                        </div>
-                    </div>
+    <div style="flex:1;">
+        <label>Lương Cơ Bản / Tháng (VNĐ):</label>
+        <input type="text" id="editBaseSalary" inputmode="numeric" placeholder="VD: 10.000.000" oninput="formatSalaryInput(this); checkChanges()">
+    </div>
+    <div style="flex:1;">
+        <label>Ngày Bắt Đầu Làm (Cố định):</label>
+        <input type="date" id="editJoinDate" readonly style="background-color:#ecf0f1; color:#555; cursor:not-allowed;">
+    </div>
+</div>
                     <!-- QUẢN LÝ CA LÀM VIỆC -->
                     <div style="border-top: 1px dashed #ccc; margin-top: 15px; padding-top: 15px;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -579,36 +579,40 @@
 
                     <!-- TAB LỊCH SỬ ĐIỂM DANH -->
                     <div id="aTabHistory" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
-    <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:10px; flex-shrink:0;">
-        <div style="background:#ebf5fb; border:1px solid #3498db; border-radius:6px; padding:8px; text-align:center;">
-            <div style="font-size:11px; color:#2980b9;">Làm tháng này</div>
+    <div style="display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:8px; margin-bottom:10px; flex-shrink:0;">
+        <div style="background:#f0f8ff; border:1px solid #3498db; border-radius:8px; padding:10px 6px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <div style="font-size:11px; color:#2980b9; font-weight:600; margin-bottom:4px;">Làm tháng này</div>
             <div id="aStatMonthWork" style="font-size:15px; font-weight:bold; color:#2c3e50;">0h</div>
         </div>
-        <div style="background:#fef5e7; border:1px solid #e67e22; border-radius:6px; padding:8px; text-align:center;">
-            <div style="font-size:11px; color:#d35400;">TC Tuần</div>
+        <div style="background:#fff8f0; border:1px solid #e67e22; border-radius:8px; padding:10px 6px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <div style="font-size:11px; color:#d35400; font-weight:600; margin-bottom:4px;">TC Tuần</div>
             <div id="aStatWeekOT" style="font-size:15px; font-weight:bold; color:#d35400;">0h</div>
         </div>
-        <div style="background:#fef5e7; border:1px solid #e67e22; border-radius:6px; padding:8px; text-align:center;">
-            <div style="font-size:11px; color:#d35400;">TC Tháng</div>
+        <div style="background:#fff8f0; border:1px solid #e67e22; border-radius:8px; padding:10px 6px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <div style="font-size:11px; color:#d35400; font-weight:600; margin-bottom:4px;">TC Tháng</div>
             <div id="aStatMonthOT" style="font-size:15px; font-weight:bold; color:#d35400;">0h</div>
         </div>
-        <div style="background:#fef5e7; border:1px solid #e67e22; border-radius:6px; padding:8px; text-align:center;">
-            <div style="font-size:11px; color:#d35400;">TC Năm</div>
+        <div style="background:#fff8f0; border:1px solid #e67e22; border-radius:8px; padding:10px 6px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <div style="font-size:11px; color:#d35400; font-weight:600; margin-bottom:4px;">TC Năm</div>
             <div id="aStatYearOT" style="font-size:15px; font-weight:bold; color:#d35400;">0h</div>
         </div>
-        <div style="background:#eafaf1; border:1px solid #27ae60; border-radius:6px; padding:8px; text-align:center;">
-            <div style="font-size:11px; color:#27ae60;">Lương kỳ này</div>
-            <div id="aStatSalary" style="font-size:14px; font-weight:bold; color:#1e8449;">0đ</div>
+        <div style="background:#eefaf3; border:1px solid #27ae60; border-radius:8px; padding:10px 6px; text-align:center; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <div style="font-size:11px; color:#27ae60; font-weight:600; margin-bottom:4px;">Lương kỳ này</div>
+            <div id="aStatSalary" style="font-size:13px; font-weight:bold; color:#1e8449; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">0đ</div>
         </div>
-        <div class="filter-container" style="padding: 10px; margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; flex-shrink: 0;">
     </div>
-                            <div><select id="personalRows" onchange="changePersonalRows()"><option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></div>
-                            <div style="display:flex; gap: 5px; align-items: center;">
-                                <input type="date" id="personalStartDate"> - <input type="date" id="personalEndDate">
-                                <button class="btn btn-active" style="padding: 6px 10px;" onclick="applyPersonalFilter()">Lọc</button>
-                                <button class="btn btn-cancel" style="display:inline-block; padding: 6px 10px; margin:0;" onclick="clearPersonalFilter()">Xóa</button>
-                            </div>
-                        </div>
+    <div class="filter-container" style="padding: 10px 12px; margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; flex-shrink: 0;">
+        <div>
+            <select id="personalRows" onchange="changePersonalRows()">
+                <option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option>
+            </select>
+        </div>
+        <div style="display:flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+            <input type="date" id="personalStartDate"> - <input type="date" id="personalEndDate">
+            <button class="btn btn-active" style="padding: 6px 12px; font-size: 13px;" onclick="applyPersonalFilter()">Lọc</button>
+            <button class="btn btn-cancel" style="display:inline-block; padding: 6px 12px; font-size: 13px; margin:0;" onclick="clearPersonalFilter()">Xóa</button>
+        </div>
+    </div>
                         <div class="history-container" style="flex: 1; overflow-y: auto; border: 1px solid #bdc3c7; border-top: none; min-height: 0;">
                             <table style="margin-top: 0; border-top: none;">
                                 <thead style="position:sticky; top:0; z-index:1; background-color: #3498db;">
@@ -1493,6 +1497,18 @@
             document.getElementById('aBtnHist').style.backgroundColor = tab === 'history' ? '#2c3e50' : '#7f8c8d';
             document.getElementById('aBtnReg').style.backgroundColor = tab === 'register' ? '#2c3e50' : '#7f8c8d';
         };
+        function formatVND(val) {
+    const num = String(val || '').replace(/\D/g, '');
+    return num ? Number(num).toLocaleString('vi-VN') : '';
+}
+
+function parseVND(str) {
+    return parseInt(String(str || '').replace(/\D/g, ''), 10) || 0;
+}
+
+window.formatSalaryInput = function(el) {
+    el.value = formatVND(el.value);
+};
         window.checkChanges = function() {
     if (currentModalMode === 'add') {
         document.getElementById('btnSaveInfo').style.display = 'block';
@@ -1506,8 +1522,7 @@
         document.getElementById('editPrimaryShift').value !== originalMemberInfo.p_id ||
         document.getElementById('permEntrySupport').checked !== originalMemberInfo.permEntrySupport ||
         document.getElementById('permHR').checked !== originalMemberInfo.permHR ||
-        (parseFloat(document.getElementById('editBaseSalary').value) || 0) !== (originalMemberInfo.baseSalary || 0) ||
-        document.getElementById('editJoinDate').value !== originalMemberInfo.joinDate
+        parseVND(document.getElementById('editBaseSalary').value) !== (originalMemberInfo.baseSalary || 0)
     );
     document.getElementById('btnSaveInfo').style.display = hasChanged ? 'block' : 'none';
 };
@@ -1537,10 +1552,10 @@
             document.getElementById('editId').value = originalMemberInfo.id;
             document.getElementById('editDob').value = originalMemberInfo.dob;
             document.getElementById('editEmail').value = originalMemberInfo.email;
-            document.getElementById('editBaseSalary').value = originalMemberInfo.baseSalary || '';
-            document.getElementById('editJoinDate').value = originalMemberInfo.joinDate;
-            document.getElementById('editBaseSalary').readOnly = isView;
-            document.getElementById('editJoinDate').readOnly = isView;
+            document.getElementById('editBaseSalary').value = originalMemberInfo.baseSalary ? formatVND(originalMemberInfo.baseSalary) : '';
+document.getElementById('editJoinDate').value = originalMemberInfo.joinDate;
+document.getElementById('editBaseSalary').readOnly = isView;
+document.getElementById('editJoinDate').readOnly = true;
             document.getElementById('editPrimaryShift').value = originalMemberInfo.p_id;
             
             document.getElementById('shiftPanelWrapper').style.display = 'none';
@@ -1647,8 +1662,10 @@
             updates['Members/' + uid + '/p_id'] = pShiftId;
             updates['Members/' + uid + '/p_start'] = shiftsData[pShiftId] ? shiftsData[pShiftId].start : "07:00";
             updates['Members/' + uid + '/p_end'] = shiftsData[pShiftId] ? shiftsData[pShiftId].end : "17:00";
-            updates['Members/' + uid + '/baseSalary'] = parseFloat(document.getElementById('editBaseSalary').value) || 0;
-            updates['Members/' + uid + '/joinDate'] = document.getElementById('editJoinDate').value || new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+            updates['Members/' + uid + '/baseSalary'] = parseVND(document.getElementById('editBaseSalary').value);
+if (currentModalMode === 'add' || !originalMemberInfo.joinDate) {
+    updates['Members/' + uid + '/joinDate'] = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+}
             const tsStr = new Date().toLocaleString();
             let shiftChanges = false; let histLog = "";
             if (pShiftId !== originalMemberInfo.p_id) { shiftChanges = true; histLog += `Đổi ca chính thành ${shiftsData[pShiftId]?shiftsData[pShiftId].name:"HC"}. `; }
@@ -1661,7 +1678,7 @@
                 alert('Đã lưu thông tin cơ bản!');
                 if (currentModalMode === 'add') closeModal();
                 else { originalMemberInfo.name = nameVal; originalMemberInfo.id = idVal; originalMemberInfo.dob = dobVal; originalMemberInfo.email = emailVal; originalMemberInfo.p_id = pShiftId; window.checkChanges(); }
-            originalMemberInfo.baseSalary = parseFloat(document.getElementById('editBaseSalary').value) || 0; originalMemberInfo.joinDate = document.getElementById('editJoinDate').value;
+            originalMemberInfo.baseSalary = parseVND(document.getElementById('editBaseSalary').value);
             });
         };
 
